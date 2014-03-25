@@ -47,15 +47,9 @@ data_schema = {
 	't':{'type':'datetime','required':True},   # datetime 
 	'v':{'type':'float','required':True},      # value
 	'p':{'type':'string','required':True},     # pod
-	's':{'type':'string','required':True},     # sensor id (SID)
-	'notebook':{
-		'type':'objectid',
-		'data_relation': {
-			'resource' :'notebooks',
-			'field': '_id',
-			'embeddable':True,
-		},
-	},
+	's':{'type':'string','required':True},     # sensor name
+	'nbkId':{'type':'string'},				   # nbkId
+
 	'sensor':{
 		'type':'objectid',
 		'data_relation': {
@@ -63,7 +57,25 @@ data_schema = {
 			'field': '_id',
 			'embeddable': True
 		},
-	}
+	},
+
+	'pod':{
+		'type':'objectid',
+		'data_relation': {
+			'resource': 'pods',
+			'field': '_id',
+			'embeddable': True
+		},
+	},
+	
+	'notebook':{
+		'type':'objectid',
+		'data_relation': {
+			'resource': 'notebooks',
+			'field': '_id',
+			'embeddable': True
+		},
+	},
 }
 
 user_schema = {
