@@ -1,7 +1,5 @@
 Cerberus==0.6
-#Eve==0.4-dev
-git+https://github.com/nicolaiarocci/eve.git@develop#egg=eve
-#Eve==0.3
+Eve==0.4-dev
 Events==0.2.0
 Flask==0.10.1
 Flask-PyMongo==0.3.0
@@ -13,5 +11,4 @@ itsdangerous==0.22
 newrelic==2.16.0.12
 pymongo==2.6.3
 simplejson==3.3.0
-waitress==0.8.8
 wsgiref==0.1.2
