@@ -32,9 +32,9 @@ def before_insert_notebook(documents):
 # Heroku defines a $PORT environment variable that we use to determine
 
 # Start the application
-if __name__ == '__main__':
+if __name__ == 'api':
 # Adding data to the system:
 	app.on_insert_data += before_insert_data
 # Administering pods, gateways, and sensors:
 # Run the program:
-	app.run(host=host, port=port, debug=debug)
+#	app.run(host=host, port=port, debug=debug)
