@@ -312,11 +312,11 @@ messages_schema = {
 		'type':'list',
 		'schema':{
 			'type':'string', # becomes objectid when gateway and evepod are consolidated
-#			'data_relation': { 
-#				'resource':'data',
-#				'field': '_id',
-#				'embeddable': True
-#			},
+			'data_relation': { 
+				'resource':'data',
+				'field': '_id',
+				'embeddable': True
+			},
 		}
 	},
 	'frameID':{
