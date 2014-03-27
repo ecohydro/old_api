@@ -19,7 +19,7 @@ from rq import Queue
 from worker import conn
 
 # Set up the worker queues:
-post_q = Queue('high',connection=conn)	 	# This is the queue for parse/post jobs
+post_q = Queue(connection=conn)	 	# This is the queue for parse/post jobs
 
 # We've defined a ONHEROKU variable to determine if we are, well, on Heroku. 
 if os.environ.get('ONHEROKU'):
