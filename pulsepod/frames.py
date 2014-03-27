@@ -187,9 +187,11 @@ def pod_status_parse(message):
 def pod_status_patch(message):
 	patched={}
 	patched['type'] = message.type()	# Update the gateway message type
+	patched['status'] = message.status
 	return patched
 
 def pod_status_post(message):
+
 	return message
 
 #####################################################
@@ -204,6 +206,7 @@ def invalid_parse(message):
 def invalid_patch(message):
 	patched={}
 	patched['type'] = message.type()	# Update the gateway message type
+	patched['status'] = message.status
 	return patched
 
 def invalid_post(message):
