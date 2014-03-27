@@ -9,57 +9,11 @@ from pulsepod.utils import cfg
 from pulsepod.utils.utils import InvalidMessage
 from pulsepod.utils.utils import update_voltage, get_sensor, get_time, get_value
 
-def pod_number_post(message):
- 	status = post_data(message)
- 	return status
-
-# 	dataurl = cfg.API_URL + '/data'
-# 	headers = {'content-type':'application/json'}
-# 	d = requests.post(url=dataurl, data=json.dumps(message.data), headers=headers) 
-# 	return d.status_code # RQ REPORTING
-
-def pod_imei_post(message):
- 	status = post_data(message)
- 	return status
-
-# 	dataurl = cfg.API_URL + '/data'
-# 	headers = {'content-type':'application/json'}
-# 	d = requests.post(url=dataurl, data=json.dumps(message.data), headers=headers) 
-# 	return d.status_code # RQ REPORTING
-
-def pod_status_post(message):
-	return 200
-
-def invalid_post(message):
-	return None
-
-##############################################
-# POSTING FUNCTIONS	    					 #
-##############################################
-def post_data(message):
-	nposted = 0
-	dataids = []
-	dataurl = cfg.API_URL + '/data'
-	headers = {'content-type':'application/json'}
-	d = requests.post(url=dataurl, data=json.dumps(message.data), headers=headers)
-	print d.status_code
-	if d.status_code == cfg.CREATED:
-		items = d.json()
-		for item in items:
-			print 'Item status: ' + item[cfg.STATUS]
-			if not item[cfg.STATUS] == cfg.ERR:
-				nposted = nposted + 1
-				message.data_ids.append(item[u'_id'])
-	message.nposted = nposted
-	return message # RQ REPORTING
-
-##############################################
-# PARSING FUNCTIONS 						 #
-##############################################
-def invalid_parse(message):
-	message.status = 'invalid'
-	return message
-
+#####################################################
+#
+# POD_NUMBER MESSAGE TYPES
+#
+####################################################
 def pod_number_parse(message):
 	message.data = []
 	i=2 # Start at position 2 in the frame, since FrameID is position 1. 
@@ -108,7 +62,27 @@ def pod_number_parse(message):
 	message.status = 'parsed'
 	return message
 
+def pod_number_patch(message):
+	patched={}
+	patched['status'] = message.status 	# Update the gateway message status
+	patched['nobs'] = message.nobs		# Update the number of observations in this message
+	#print 'message status: ' + patched['status']
+	if message.nposted > 0:	# Need to make sure this actually DID post data. Returns 200 with errors.
+		patched['status'] = 'posted'	# Update the gateway message status
+		patched['nposted'] = message.nposted
+		patched['data_ids'] = message.data_ids
+	patched['type'] = message.type()	# Update the gateway message type
+	return patched
+		
+def pod_number_post(message):
+ 	status = post_data(message)
+ 	return status
 
+#####################################################
+#
+# POD_IMEI MESSAGE TYPES
+#
+####################################################
 def pod_imei_parse(message):
 	message.data = []
 	i=2 # Start at position 2 in the frame, since FrameID is position 1.
@@ -157,6 +131,28 @@ def pod_imei_parse(message):
  	message.nobs = total_obs
 	return message
 
+def pod_imei_patch(message):
+	patched={}
+	patched['status'] = message.status 	# Update the gateway message status
+	patched['nobs'] = message.nobs		# Update the number of observations in this message
+	#print 'message status: ' + patched['status']
+	if message.nposted > 0:	# Need to make sure this actually DID post data. Returns 200 with errors.
+		patched['status'] = 'posted'	# Update the gateway message status
+		patched['nposted'] = message.nposted
+		patched['data_ids'] = message.data_ids
+	patched['type'] = message.type()	# Update the gateway message type
+	return patched
+
+def pod_imei_post(message):
+ 	status = post_data(message)
+ 	return status
+
+#####################################################
+#
+# POD_STATUS MESSAGE TYPES
+#
+####################################################
+
 def pod_status_parse(message):
 	json = []
 	i=2 # Start at position 2 in the frame, since FrameID is position 1. 
@@ -188,4 +184,49 @@ def pod_status_parse(message):
 
 	message.data = {'lac': lac, 'ci': cell_id, 'nSensors': n_sensors, 'sensorlist': sids}
 	return message
+
+def pod_status_patch(message):
+	patched={}
+	patched['type'] = message.type()	# Update the gateway message type
+	return patched
+
+def pod_status_post(message):
+	return 200
+
+#####################################################
+#
+# INVALID MESSAGE TYPES
+#
+####################################################
+def invalid_parse(message):
+	message.status = 'invalid'
+	return message
+
+def invalid_patch(message):
+	patched={}
+	patched['type'] = message.type()	# Update the gateway message type
+	return patched
+
+def invalid_post(message):
+	return None
+
+##############################################
+# POSTING FUNCTIONS	    					 #
+##############################################
+def post_data(message):
+	nposted = 0
+	dataids = []
+	dataurl = cfg.API_URL + '/data'
+	headers = {'content-type':'application/json'}
+	d = requests.post(url=dataurl, data=json.dumps(message.data), headers=headers)
+	print d.status_code
+	if d.status_code == cfg.CREATED:
+		items = d.json()
+		for item in items:
+			print 'Item status: ' + item[cfg.STATUS]
+			if not item[cfg.STATUS] == cfg.ERR:
+				nposted = nposted + 1
+				message.data_ids.append(item[u'_id'])
+	message.nposted = nposted
+	return message # RQ REPORTING
 

@@ -45,24 +45,20 @@ def post_data_to_API(objID,res):
 	 3. update the message status on the gateway as required
 	""" 
 	if message.status == 'queued':
+		# Define critical message attributes:
 		message.content = r.json()['message'] # Extract message content
 		message.number = r.json()['pod'] # Determine source pod of message (by number)
+		# Specify message methods based on message type
 		parse_method = getattr(frames,message.type() + '_parse') # frameID methods based on cfg.FRAMES
-		post_method = getattr(frames,message.type() + '_post') # frameID methods based on cfg.FRAMES
-		message = parse_method(message)	# Parse the message.
-		patched['status'] = message.status 	# Update the gateway message status
-		patched['nobs'] = message.nobs		# Update the number of observations in this message
-		#print 'message status: ' + patched['status']
-		message = post_method(message) # POST the message (requires a placeholder method for all frames)
-		if message.nposted > 0:	# Need to make sure this actually DID post data. Returns 200 with errors.
-			patched['status'] = 'posted'	# Update the gateway message status
-			patched['nposted'] = message.nposted
-			patched['data_ids'] = message.data_ids
-		patched['type'] = message.type()	# Update the gateway message type
-		headers = {'If-Match':str(r.headers[cfg.ETAG]),'content-type':'application/json'}
-		# Patch the gateway message with the new status and message type
-		#print 'patching ' + message.url +' with :' + json.dumps(patched)
+		post_method = getattr(frames,message.type() + '_post')   # frameID methods based on cfg.FRAMES
+		patch_method = getattr(frames.message.type() + '_patch') # frameID methods based on cfg.FRAMES
 		
+		message = parse_method(message)	# parse the message.
+		message = post_method(message)  # POST the message data to the API
+		patched = patch_method(message) # Set PATCH message status and other info for the API
+		
+		# Patch the message
+		headers = {'If-Match':str(r.headers[cfg.ETAG]),'content-type':'application/json'}
 		p = requests.patch(message.url,data=json.dumps(patched),headers=headers)
 		
 		if p.status_code == requests.codes.ok:

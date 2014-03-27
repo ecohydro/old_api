@@ -35,14 +35,12 @@ else:
 
 app = Eve(settings=settings)
 
-
 # Error handling with json output:
 @app.errorhandler(InvalidMessage)
 def handle_invalid_message(error):
 	response = jsonify(error.to_dict())
 	response.status_code = error.status_code
 	return response
-
 
 #### BEFORE INSERT METHODS
 def before_insert_pod(documents):
