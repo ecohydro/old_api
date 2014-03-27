@@ -20,3 +20,4 @@ simplejson==3.3.0
 six==1.4.1
 times==0.6.2
 wsgiref==0.1.2
+newrelic
