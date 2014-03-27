@@ -20,7 +20,7 @@ If status message:
 """
 def post_data_to_API(objID,res):
 	# Setup the URLs:
-	#print "Posting data to the API (in post_data_to_API)"
+	print "Posting data to the API (in post_data_to_API)"
 	message = SMS(objID,res)
 	message.url = cfg.MESSAGES_URL + '/' + message.source + '/' + message._id
 	# Init dicts for message updates and RQ responses:
@@ -51,7 +51,7 @@ def post_data_to_API(objID,res):
 		# Specify message methods based on message type
 		parse_method = getattr(frames,message.type() + '_parse') # frameID methods based on cfg.FRAMES
 		post_method = getattr(frames,message.type() + '_post')   # frameID methods based on cfg.FRAMES
-		patch_method = getattr(frames.message.type() + '_patch') # frameID methods based on cfg.FRAMES
+		patch_method = getattr(frames,message.type() + '_patch') # frameID methods based on cfg.FRAMES
 		
 		message = parse_method(message)	# parse the message.
 		message = post_method(message)  # POST the message data to the API
