@@ -199,7 +199,6 @@ def pod_status_post(message):
 ####################################################
 def invalid_parse(message):
 	message.status = 'invalid'
-	message.type = 'invalid'
 	return message
 
 def invalid_patch(message):
