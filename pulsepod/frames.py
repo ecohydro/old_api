@@ -190,7 +190,7 @@ def pod_status_patch(message):
 	return patched
 
 def pod_status_post(message):
-	return 200
+	return message
 
 #####################################################
 #
@@ -207,7 +207,7 @@ def invalid_patch(message):
 	return patched
 
 def invalid_post(message):
-	return None
+	return message
 
 ##############################################
 # POSTING FUNCTIONS	    					 #
