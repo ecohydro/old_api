@@ -455,7 +455,8 @@ smssync = {
 	'allow_unknown':True,
 	'datasource':{
 		'default_sort':[('_created',-1)]
-	}
+	},
+	'embedded_fields':'data_ids',
 }
 twilio = {
 	# most global settings can be overridden at resource level
@@ -469,7 +470,8 @@ twilio = {
 	},
 	'datasource':{
 		'default_sort':[('_created',-1)]
-	}
+	},
+	'embedded_fields':'data_ids'
 }
 nexmo = {
 	# most global settings can be overridden at resource level
@@ -483,7 +485,8 @@ nexmo = {
 	},
 	'datasource':{
 		'default_sort':[('_created',-1)]
-	}
+	},
+	'embedded_fields':'data_ids'
 }
 
 #------------------------------------------------------------------------------
