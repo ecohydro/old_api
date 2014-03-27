@@ -54,6 +54,7 @@ def get_sensor(sid):
 			
 	try:
 		print s.json()
+		print resp
 		sensor['value_length'] = resp[u'nbytes']
 		sensor['name'] = resp[u'name'] 
 		sensor['_id'] = resp[u'_id']
