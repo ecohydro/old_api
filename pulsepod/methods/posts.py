@@ -53,11 +53,11 @@ def post_data_to_API(objID,res):
 		post_method = getattr(frames,message.type() + '_post')   # frameID methods based on cfg.FRAMES
 		patch_method = getattr(frames,message.type() + '_patch') # frameID methods based on cfg.FRAMES
 		
-		print 'Pre parse: ' + json.dumps(message)
+		print 'Pre parse: ' + message.type()
 		message = parse_method(message)	# parse the message.
-		print 'Pre post: ' + json.dumps(message)
+		print 'Pre post: ' + message.type()
 		message = post_method(message)  # POST the message data to the API
-		print 'Pre patch: ' + json.dumps(message)
+		print 'Pre patch: ' + message.type()
 		patched = patch_method(message) # Set PATCH message status and other info for the API
 		
 		# Patch the message

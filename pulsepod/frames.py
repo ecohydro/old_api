@@ -3,7 +3,6 @@ import requests
 import json
 import os
 
-
 from pulsepod.SMS import SMS
 from pulsepod.utils import cfg
 from pulsepod.utils.utils import InvalidMessage
