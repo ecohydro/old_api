@@ -67,7 +67,7 @@ data_schema = {
 			'embeddable': True
 		},
 	},
-	
+
 	'notebook':{
 		'type':'objectid',
 		'data_relation': {
@@ -262,6 +262,82 @@ sensor_schema = {
 	
 }
 
+messages_schema = {
+	# Schema definition, based on Cerberus grammar. Check the Cerberus project
+	# (https://github.com/nicolaiarocci/cerberus) for details.
+	# Note: using short variable names to save space in MongoDB.
+	'message':{
+		'type':'string',
+		'required':True,
+		'maxlength':170,
+		'unique':False,
+		},
+	'status':{
+		'type':'string',
+		'required':True,
+		'allowed':['queued','parsed','posted','unknown','invalid'],
+		'default':'queued',
+	},
+	'pod':{
+		'type':'string',
+		'required':True,
+		'maxlength':20,
+	},
+	'imei': {
+		'type':'string',
+		'required':True,
+		'maxlength':20,
+	},
+	't':{
+		'type':'datetime',
+		'required':False,
+	},
+	'source':{
+		'type':'string',
+		'required':True,
+		'allowed':['smssync','twilio','nexmo'],
+	}, 
+	'id':{
+		'type':'string',
+		'required':True,
+		'unique':True,
+	},
+	'type':{
+		'type':'string',
+		'required':False,
+		'allowed':['unknown','pod_status','deploy','invalid','pod_number','pod_imei'],
+		'default':'unknown'
+	},
+	'data_ids':{
+		'type':'list',
+		'schema':{
+			'type':'string', # becomes objectid when gateway and evepod are consolidated
+#			'data_relation': { 
+#				'resource':'data',
+#				'field': '_id',
+#				'embeddable': True
+#			},
+		}
+	},
+	'frameID':{
+		'type':'number',
+		'required':False,
+		'allowed':[0,1,2],
+		'default':0
+	},
+	'nobs':{
+		'type':'number',
+		'required':False,
+		'default':0
+	},
+	'nposted':{
+		'type':'number',
+		'required':'False',
+		'default':0
+	}
+}
+
+
 #------------------------------------------------------------------------------
 #
 # RESOURCE DEFINITIONS
@@ -282,12 +358,6 @@ pods = {
 		'field': 'name'
 	},
 
-#	'datasource': {
-#        'projection': {	'owner': 0,
-#        				'firmware': 0,
-#        			},
-#     },
-
 	# We choose to override global cache-control directives for this resource.
 	'cache_control': 'max-age=10,must-revalidate',
 	'cache_expires': 10,
@@ -300,20 +370,29 @@ pods = {
 #	'public_methods': ['GET'],
 #    'public_item_methods': ['GET'],
 
-	'schema': pod_schema
+	'schema': pod_schema,
+	'datasource':{
+		'default_sort':[('_created',-1)],
+	}
 }
 
 data = {
 	# most global settings can be overridden at resource level
 	'resource_methods': ['GET', 'POST'],
-	'schema': data_schema	
+	'schema': data_schema,
+	'datasource':{
+		'default_sort':[('_created',-1)],
+	}
 }
 
 
 notebooks = {
 	# most global settings can be overridden at resource level
 	'resource_methods': ['GET', 'POST'],
-	'schema': notebook_schema
+	'schema': notebook_schema,
+	'datasource':{
+		'default_sort':[('_created',-1)],
+	}
 }
 
 users = {
@@ -366,6 +445,47 @@ sensors = {
 	'resource_methods': ['GET', 'POST'],
 	'schema': sensor_schema
 }
+
+# MESSAGES RESOURCE DOMAINS:
+smssync = {
+	# most global settings can be overridden at resource level
+	'url':'messages/smssync',
+	'resource_methods': ['GET', 'POST'],
+	'schema': messages_schema,
+	'allow_unknown':True,
+	'datasource':{
+		'default_sort':[('_created',-1)]
+	}
+}
+twilio = {
+	# most global settings can be overridden at resource level
+	'url':'messages/twilio',
+	'resource_methods': ['GET', 'POST'],
+	'schema': messages_schema,
+	'allow_unknown':True,
+	'additional_lookup': {
+		'url' : 'regex("[\w]+")',
+		'field': 'id'
+	},
+	'datasource':{
+		'default_sort':[('_created',-1)]
+	}
+}
+nexmo = {
+	# most global settings can be overridden at resource level
+	'url':'messages/nexmo',
+	'resource_methods': ['GET', 'POST'],
+	'schema': messages_schema,
+	'allow_unknown':True,
+	'additional_lookup': {
+		'url' : 'regex("[\w]+")',
+		'field': 'id'
+	},
+	'datasource':{
+		'default_sort':[('_created',-1)]
+	}
+}
+
 #------------------------------------------------------------------------------
 #
 # DOMAINS
@@ -380,5 +500,8 @@ DOMAIN = {
 		'sensors':sensors,
 		'data':data,
 		'notebooks':notebooks,
+		'smssync':smssync,
+		'twilio':twilio,
+		'nexmo':nexmo,
 }
 
