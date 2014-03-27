@@ -311,7 +311,7 @@ messages_schema = {
 	'data_ids':{
 		'type':'list',
 		'schema':{
-			'type':'string', # becomes objectid when gateway and evepod are consolidated
+			'type':'objectid', # becomes objectid when gateway and evepod are consolidated
 			'data_relation': { 
 				'resource':'data',
 				'field': '_id',
