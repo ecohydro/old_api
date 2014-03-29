@@ -373,7 +373,8 @@ pods = {
 	'schema': pod_schema,
 	'datasource':{
 		'default_sort':[('_created',-1)],
-	}
+	},
+	'versioning':True
 }
 
 data = {
