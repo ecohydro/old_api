@@ -1,5 +1,6 @@
 Cerberus==0.6
-Eve==0.3
+#Eve==0.3
+git+https://github.com/nicolaiarocci/eve.git@develop#egg=eve
 Events==0.2.0
 Flask==0.10.1
 Flask-PyMongo==0.3.0
