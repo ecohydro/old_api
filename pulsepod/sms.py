@@ -61,7 +61,6 @@ class SMS(object):
 		dataurl = cfg.API_URL + '/data'
 		headers = {'content-type':'application/json'}
 		d = requests.post(url=dataurl, data=json.dumps(self.data), headers=headers)
-		print "posted data status code: " + d.status_code
 		if d.status_code == cfg.CREATED:
 			items = d.json()
 		 	for item in items:
