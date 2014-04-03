@@ -130,9 +130,9 @@ class SMS(object):
 					entry = {
 							  's': str(sensor['name']), 
 							  'p': str(self.pod()['name']),
-							  'senId': str(sensor['_id']),
-							  'podId':str(self.podId()),
-							  'nbkId':str(self.nbkId())
+							  'senId': sensor['_id'],
+							  'podId': self.pod()['_id'],
+							  'nbkId': self.nbkId()
 							}
 				except:
 					raise InvalidMessage('Error reading sensorname or address', status_code=400)
