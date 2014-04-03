@@ -64,7 +64,7 @@ data_schema = {
 			 'embeddable':True
 		},
 	},
-	'sensor':{
+	'senId':{
 		'type':'objectid',
 		'data_relation': {
 			'resource': 'sensors',
@@ -134,10 +134,10 @@ pod_schema = {
 		'required': True,
 		'unique': True,
 	},
-	'podId' : { # Pod ID (usually phone number)
+	'podId' : { # Pod ID for use in SMS
 		'type':'string',
 		'minlength':10,
-		'maxlength':15,
+		'maxlength':10,
 		'required':True,
 		'unique': True,
 	},

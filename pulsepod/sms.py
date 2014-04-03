@@ -61,15 +61,17 @@ class SMS(object):
 		dataurl = cfg.API_URL + '/data'
 		headers = {'content-type':'application/json'}
 		d = requests.post(url=dataurl, data=json.dumps(self.data), headers=headers)
-		print d.status_code
+		print "posted data status code: " + d.status_code
 		if d.status_code == cfg.CREATED:
-			print d.json()
 			items = d.json()
 		 	for item in items:
 		 		print 'Item status: ' + item[cfg.STATUS]
 		 		if not item[cfg.STATUS] == cfg.ERR:
 		 			nposted = nposted + 1
 		 			self.data_ids.append(item[u'_id'])
+		else
+			print 'POST:[' + str(d.status_code) + ']:' + d.json()[cfg.STATUS] + ':' + json.dumps(d.json()['_issues']
+
 		self.nposted = nposted
 
 	def patch(self): 
