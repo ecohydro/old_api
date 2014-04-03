@@ -24,7 +24,7 @@ RESOURCE_METHODS = ['GET', 'POST']
 
 # Enable reads (GET), edits (PATCH) and deletes of individual items
 # (defaults to read-only item access).
-ITEM_METHODS = ['GET', 'PATCH','HEAD']
+ITEM_METHODS = ['GET', 'PATCH']
 
 # Set the public methods for the read-only API. 
 # Only authorized users can write, edit and delete
@@ -358,7 +358,7 @@ pods = {
 
 	# most global settings can be overridden at resource level
 	'resource_methods': ['GET', 'POST'],
-	'item_methods': ['GET','PATCH','HEAD'],
+	'item_methods': ['GET','PATCH'],
 
 	# Public read-only access:
 #	'public_methods': ['GET'],
@@ -385,7 +385,6 @@ notebooks = {
 	# most global settings can be overridden at resource level
 	'resource_methods': ['GET', 'POST'],
 	'schema': notebook_schema,
-	'item_methods': ['GET','PATCH','HEAD'],
 	'datasource':{
 		'default_sort':[('_created',-1)],
 	}
@@ -439,7 +438,6 @@ sensors = {
 
 	# most global settings can be overridden at resource level
 	'resource_methods': ['GET', 'POST'],
-	'item_methods': ['GET','PATCH','HEAD'],
 	'schema': sensor_schema
 }
 
@@ -448,7 +446,6 @@ smssync = {
 	# most global settings can be overridden at resource level
 	'url':'messages/smssync',
 	'resource_methods': ['GET', 'POST'],
-	'item_methods': ['GET','PATCH','HEAD'],
 	'schema': messages_schema,
 	'allow_unknown':True,
 	'datasource':{
@@ -460,7 +457,6 @@ twilio = {
 	# most global settings can be overridden at resource level
 	'url':'messages/twilio',
 	'resource_methods': ['GET', 'POST'],
-	'item_methods': ['GET','PATCH','HEAD'],
 	'schema': messages_schema,
 	'allow_unknown':True,
 	'additional_lookup': {
@@ -476,7 +472,6 @@ nexmo = {
 	# most global settings can be overridden at resource level
 	'url':'messages/nexmo',
 	'resource_methods': ['GET', 'POST'],
-	'item_methods': ['GET','PATCH','HEAD'],
 	'schema': messages_schema,
 	'allow_unknown':True,
 	'additional_lookup': {
