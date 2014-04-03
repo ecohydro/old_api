@@ -63,6 +63,7 @@ class SMS(object):
 		d = requests.post(url=dataurl, data=json.dumps(self.data), headers=headers)
 		print d.status_code
 		if d.status_code == cfg.CREATED:
+			print d.json()
 			items = d.json()
 		 	for item in items:
 		 		print 'Item status: ' + item[cfg.STATUS]
