@@ -54,7 +54,6 @@ def get_sensor(sid):
 		raise InvalidMessage('sid not found',status_code=400)
 			
 	try:
-		print resp
 		sensor['value_length'] = resp[u'nbytes']
 		sensor['name'] = resp[u'name'] 
 		sensor['_id'] = resp[u'_id']
