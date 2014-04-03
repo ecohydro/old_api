@@ -17,7 +17,7 @@ class SMS(object):
 			self.content = data['message'] if 'message' in data else None
 			self.number = data['pod'] if 'pod' in data else None
 			self.href = data['_links']['self']['href'] 
-			self.url = 'http://' + self.href
+			self.url = cfg.API_URL + self.href
 			self.json = data
 			self.podIdvalue = None
 			self.pod_data = None
