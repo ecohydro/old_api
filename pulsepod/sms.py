@@ -69,7 +69,7 @@ class SMS(object):
 		 		if not item[cfg.STATUS] == cfg.ERR:
 		 			nposted = nposted + 1
 		 			self.data_ids.append(item[u'_id'])
-		else
+		else:
 			print 'POST:[' + str(d.status_code) + ']:' + d.json()[cfg.STATUS] + ':' + json.dumps(d.json()['_issues']
 
 		self.nposted = nposted
