@@ -69,7 +69,8 @@ class SMS(object):
 		 			nposted = nposted + 1
 		 			self.data_ids.append(item[u'_id'])
 		else:
-			print 'POST:[' + str(d.status_code) + ']:' + d.json()[cfg.STATUS] + ':' + json.dumps(d.json()['_issues'])
+			print json.dumps(d.json())
+			# print 'POST:[' + str(d.status_code) + ']:' + d.json()[cfg.STATUS] + ':' + json.dumps(d.json()['_issues'])
 		self.nposted = nposted
 
 	def patch(self): 
