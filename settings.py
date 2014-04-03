@@ -48,30 +48,26 @@ data_schema = {
 	'v':{'type':'float','required':True},      # value
 	'p':{'type':'string','required':True},     # pod
 	's':{'type':'string','required':True},     # sensor name
-	'nbkId':{'type':'string'},				   # nbkId
-
+	'nbkId':{
+		'type':'objectid',
+		'data_relation': {
+			 'resource': 'notebooks',
+			 'field': '_id',
+			 'embeddable':True
+		},
+	},				   # nbkId
+	'podId':{
+		'type':'objectid',
+		'data_relation': {
+			 'resource': 'pods',
+			 'field': '_id',
+			 'embeddable':True
+		},
+	},
 	'sensor':{
 		'type':'objectid',
 		'data_relation': {
 			'resource': 'sensors',
-			'field': '_id',
-			'embeddable': True
-		},
-	},
-
-	'pod':{
-		'type':'objectid',
-		'data_relation': {
-			'resource': 'pods',
-			'field': '_id',
-			'embeddable': True
-		},
-	},
-
-	'notebook':{
-		'type':'objectid',
-		'data_relation': {
-			'resource': 'notebooks',
 			'field': '_id',
 			'embeddable': True
 		},
@@ -94,84 +90,6 @@ notebook_schema = {
 		'maxlength':60,
 		'required':True
 	},
-	'pod_list' : {
-		'type':'list','items':[{
-			'type':'objectid'
-		}],
-		'required': False,
-	},
-	'owner' :  {
-		'type' : 'string', # will be objectid eventually
-		'maxlength' : 30,  # will be objectid limit eventually
-		'required' : False,
-	},
-	'public': {
-		'type':'boolean',
-		'required': False,
-		'default': True
-	},
-	'pod' : {
-		'type':'objectid',
-		'data_relation': {
-			'resource': 'pods',
-			'field': '_id',
-			'embeddable': True
-		}
-	},
-	# need to add spatial information to notebook.
-	# need to add notes to notebook.
-	# A users list will allow sharing of notebooks.
-}
-
-pod_schema = { 
-	# Schema definition, based on Cerberus grammar. Check the Cerberus project
-	# (https://github.com/nicolaiarocci/cerberus) for details.
-	# Sensor text ID for use in URLs and in API data queries/submissions
-	'name' : { # Pod URL name (use the pod name generator)
-		'type': 'string',
-		'minlength': 10,
-		'maxlength': 40,
-		'required': True,
-		'unique': True,
-	},
-	'pid' : { # Pod ID (usually phone number)
-		'type':'string',
-		'minlength':10,
-		'maxlength':15,
-		'required':False,
-		'unique': False,
-	},
-	'number' : {  # Pod number (E.164 format)
-		'type':'string',
-		'minlength':10,
-		'maxlength':15,
-		'required':False,
-		'unique':False,
-	},
-	'imei':{ # IMEI address of cellular radio, acts as Serial Number for the Pod
-		'type':'string', # Need to define an IMEI address type
-		'unique':True,
-		'required':True,
-		'minlength':15,
-		'maxlength':20,
-	},
-	'firmware':{
-		'type':'integer',
-		'minlength':1,
-		'maxlength':2,
-		'default':0
-	},
-	'status': {
-		'type': 'string',
-		'allowed': ['dead','deployed','provisioned','active','unknown'],
-		'required':False,
-		'default' : 'provisioned'
-	},
-	'mode': {
-		'type': 'string',
-		'allowed': ['teen','asleep','normal'],
-		'default' : 'normal'
-	},
 	'last': {
 		'type':'datetime',
 	},
@@ -189,7 +107,74 @@ pod_schema = {
 		'type':'number',
 		'required':False,
 		'default':0
-	}
+	},
+	'favorite': {
+		'type':'number',
+		'required':False,
+	},
+	'status': {
+		'type': 'string',
+		'allowed': ['dead','deployed','provisioned','active','unknown'],
+		'required':False,
+		'default' : 'provisioned'
+	},	
+	# need to add spatial information to notebook.
+	# need to add notes to notebook.
+	# A users list will allow sharing of notebooks.
+}
+
+pod_schema = { 
+	# Schema definition, based on Cerberus grammar. Check the Cerberus project
+	# (https://github.com/nicolaiarocci/cerberus) for details.
+	# Sensor text ID for use in URLs and in API data queries/submissions
+	'name' : { # Pod URL name (use the pod name generator)
+		'type': 'string',
+		'minlength': 10,
+		'maxlength': 40,
+		'required': True,
+		'unique': True,
+	},
+	'podId' : { # Pod ID (usually phone number)
+		'type':'string',
+		'minlength':10,
+		'maxlength':15,
+		'required':True,
+		'unique': True,
+	},
+	'nbkId' : { # Pod ID (usually phone number)
+		'type':'objectid',
+		'data_relation': {
+			 'resource': 'notebooks',
+			 'field': '_id',
+			 'embeddable':True
+		},
+	},
+	'number' : {  # Pod number (E.164 format)
+		'type':'string',
+		'minlength':10,
+		'maxlength':15,
+		'required':True,
+		'unique':False,
+	},
+	'imei':{ # IMEI address of cellular radio, acts as Serial Number for the Pod
+		'type':'string', # Need to define an IMEI address type
+		'unique':True,
+		'required':True,
+		'minlength':15,
+		'maxlength':20,
+	},
+	'firmware':{
+		'type':'integer',
+		'minlength':1,
+		'maxlength':2,
+		'default':0,
+		'required':False
+	},
+	'mode': {
+		'type': 'string',
+		'allowed': ['teen','asleep','normal'],
+		'default' : 'normal'
+	},
 	
 }
 
@@ -259,7 +244,16 @@ sensor_schema = {
 		'required':False,
 		'maxlength':100,
 	},	
-	
+	'm' : {
+		'type':'number',
+		'required':False,
+		'default':1
+	},
+	'b' : { 
+		'type':'number',
+		'required':False,
+		'default':0
+	}
 }
 
 messages_schema = {
@@ -305,7 +299,7 @@ messages_schema = {
 	'type':{
 		'type':'string',
 		'required':False,
-		'allowed':['unknown','pod_status','deploy','invalid','pod_number','pod_imei'],
+		'allowed':['unknown','status','deploy','invalid','number','imei'],
 		'default':'unknown'
 	},
 	'data_ids':{
@@ -355,7 +349,7 @@ pods = {
 	# GET requests at '/<item_title>/<urlname>/'.
 	'additional_lookup': {
 		'url' : 'regex("[\w]+")',
-		'field': 'name'
+		'field': 'podId'
 	},
 
 	# We choose to override global cache-control directives for this resource.

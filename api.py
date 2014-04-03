@@ -123,7 +123,7 @@ def post_return_callback(res,request,r):
 		resp = json.loads(r.get_data())
 		if not (resp[cfg.STATUS] == cfg.ERR):
 			print "Starting worker process"
-			post_job = post_q.enqueue(post_data_to_API,resp['_id'],res)
+			post_job = post_q.enqueue(post_data_to_API,str(resp['_id']),res)
 		else:
 			raise InvalidMessage('Data not sent to API',status_code=400,payload=resp)
 

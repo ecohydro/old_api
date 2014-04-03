@@ -36,6 +36,7 @@ def pod_name():
 ##############################################
 # PARSING UTILITIES 						 #
 ##############################################
+
 def get_sensor(sid):
 	sensor = {}
 	try:
@@ -84,32 +85,6 @@ def get_value(content,i,sensor):
 	# Right here we would do some initial QA/QC based on whatever 
 	# QA/QC limits we eventually add to the sensor specifications.
 	return float(value)
-
-# Data posting utilities
-def update_voltage(message):
-	v = next((item for item in message.data if item["sensor"] == "525ebfa0f84a085391000495"), None)
-	# But we need to extract the vbatt_tellit out of the data blob. 
-	# Use the Sensor Id, which should be relatively constant. HACKY! 
-	if v:
-		podupdate={}
-		podupdate["last"] = v["t"]
-		podupdate["voltage"] = v["v"]
-		# Don't forget to set the content type, because it defaults to html
-		thispod = podurl + "/" + str(message.pod['_id'])				
-		headers= {'If-Match':str(message.pod[cfg.ETAG]),'content-type':'application/json'}
-		u = requests.patch(thispod,data=json.dumps(podupdate),headers=headers)
-		# Need to have some graceful failures here... Response Code? HACKY!
-		return u.status_code
-	else: 
-		return None	
-
-def get_notebook(nid):
-	# This function will return a notebook JSON object from the API
-	# It takes a nid object, which is of the form:
-	# {'field':'value'}, where 'field' is '_id'.
-	HEADERS = {'content-type':'application/json'} # Headers for the requests call
-	pass
-
 
 
 

@@ -13,9 +13,7 @@ import os
 REDIS_URL = os.getenv('REDISTOGO_URL','redis://localhost:6379')
 
 # URLs for production on Heroku or local:
-GATEWAY_URL = os.getenv('GATEWAY_URL')
-API_URL = os.getenv('API_URL') 
-MESSAGES_URL = os.getenv('MESSAGES_URL') 
+API_URL = os.getenv('API_URL','http://0.0.0.0:5000') 
 
 # EVE API status ERR response (who knows if this will 
 # ever change):
@@ -35,17 +33,10 @@ ISSUES='_issues'
 # Any other id will be assigned invalid
 
 FRAMES={
-	0:'pod_number',
-	1:'pod_status',
-	2:'pod_imei',
+	0:'number',
+	1:'status',
+	2:'imei',
 	99:'invalid',
-}
-
-PID={
-	'pod_number':'number',
-	'pod_status':'imei',
-	'pod_imei':'imei',
-	'invalid':None
 }
 
 # Content-type Headers:
@@ -53,4 +44,6 @@ FORM='application/x-www-form-urlencoded; charset=UTF-8'
 JSON='application/json'
 ETAG='etag' # Will change to _etag sometime soon.
 CREATED=201 # Eve returns 200 when a POST is valid 
+
+IMEI_LENGTH = 2
 
