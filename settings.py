@@ -196,6 +196,11 @@ sensor_schema = {
 		'required': True,
 		'unique': True,
 	},
+	'context': {
+		'type': 'string',
+		'required': True,
+		'default': ''
+	},
 	# Number of bytes required for each piece of sensor data
 	'nbytes' : {
 		'type':'integer',
