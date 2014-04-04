@@ -122,17 +122,22 @@ class SMS(object):
 				sid = int(self.content[i:i+2], 16)
 			except:
 				raise InvalidMessage('Error reading sid',status_code=400)
-			
+
 			sensor = get_sensor(sid) # Retrieve sensor information from API
 			i += 2
 			nobs = int(self.content[i:i+2], 16) # Read nObs from message content
 			i += 2
 			total_obs = total_obs + nobs
+			if sensor['context'] == '':
+				sensor_string = str(sensor['variable'])
+			else:
+				sensor_string = str(sensor['context']) + ' ' + str(sensor['variable'])
+
 			# add entry for each observation (nObs) by the same sensor
 			while nobs > 0:
 				try:
 					entry = {
-							  's': str(sensor['variable']), 
+							  's': sensor_string, 
 							  'p': str(self.pod()['name']),
 							  'sensor': sensor['_id'],
 							  'pod': self.pod()['_id'],

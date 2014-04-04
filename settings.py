@@ -263,6 +263,11 @@ messages_schema = {
 		'allowed':['queued','parsed','posted','unknown','invalid'],
 		'default':'queued',
 	},
+	'id':{
+		'type':'string',
+		'required':True,
+		'maxlength':20,
+	},
 	'number':{
 		'type':'string',
 		'required':True,
@@ -453,7 +458,6 @@ smssync = {
 	'datasource':{
 		'default_sort':[('_created',-1)]
 	},
-	'embedded_fields':'data_ids',
 }
 twilio = {
 	# most global settings can be overridden at resource level
@@ -468,7 +472,6 @@ twilio = {
 	'datasource':{
 		'default_sort':[('_created',-1)]
 	},
-	'embedded_fields':'data_ids'
 }
 nexmo = {
 	# most global settings can be overridden at resource level
@@ -483,7 +486,6 @@ nexmo = {
 	'datasource':{
 		'default_sort':[('_created',-1)]
 	},
-	'embedded_fields':'data_ids'
 }
 
 #------------------------------------------------------------------------------
