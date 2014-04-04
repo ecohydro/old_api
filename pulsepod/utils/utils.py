@@ -40,7 +40,7 @@ def pod_name():
 
 def get_sensor(sid):
 	sensor = {}
-	sensor_url = cfg.API_URL + '/sensors/?where={"sid":	' + str(sid) + "}"
+	sensor_url = cfg.API_URL + '/sensors?where={"sid":' + str(sid) + '}'
 	print "Requesting: " + sensor_url
 	try:
 		s = requests.get(sensor_url)
@@ -53,12 +53,13 @@ def get_sensor(sid):
 	# sensor data is packed as a dict, but through a couple of layers
 	try:
 		sensor = s.json()["_items"][0]
+		print sensor
 	except:
 		raise InvalidMessage('Error getting sensor json from API',status_code=400)
 			
 	try:
-		sensor['value_length'] = sensor[u'nbytes']
-		sensor['fmt'] = sensor[u'byteorder'] + sensor[u'fmt'] 
+		sensor['value_length'] = sensor['nbytes']
+		sensor['fmt'] = sensor['byteorder'] + sensor['fmt'] 
 	except:
 		raise InvalidMessage('Error creating sensor variables',status_code=400)
 
