@@ -40,8 +40,10 @@ def pod_name():
 
 def get_sensor(sid):
 	sensor = {}
+	sensor_url = cfg.API_URL + '/sensors/?where={"sid":	' + str(sid) + "}"
+	print "Requesting: " + sensor_url
 	try:
-		s = requests.get(cfg.API_URL + '/sensors/?where={"sid":	' + str(sid) + "}")
+		s = requests.get(sensor_url)
 	except:
 		raise InvalidMessage('Unable to contact the API [sensors]',status_code=503) 
 	if not s.status_code == requests.codes.ok:
