@@ -50,18 +50,15 @@ def get_sensor(sid):
 	
 	# sensor data is packed as a dict, but through a couple of layers
 	try:
-		resp = s.json()["_items"][0]
+		sensor = s.json()["_items"][0]
 	except:
-		raise InvalidMessage('sid not found',status_code=400)
+		raise InvalidMessage('Error getting sensor json from API',status_code=400)
 			
 	try:
-		sensor['value_length'] = resp[u'nbytes']
-		sensor['name'] = resp[u'name'] 
-		sensor['_id'] = resp[u'_id']
-		sensor['fmt'] = resp[u'byteorder'] + resp[u'fmt'] 
-		sensor['variable'] = resp[u'variable']
+		sensor['value_length'] = sensor[u'nbytes']
+		sensor['fmt'] = sensor[u'byteorder'] + sensor[u'fmt'] 
 	except:
-		raise InvalidMessage('Error reading sid',status_code=400)
+		raise InvalidMessage('Error creating sensor variables',status_code=400)
 
 	return sensor
 

@@ -282,11 +282,6 @@ messages_schema = {
 		'required':True,
 		'allowed':['smssync','twilio','nexmo'],
 	}, 
-	'id':{
-		'type':'string',
-		'required':True,
-		'unique':True,
-	},
 	'type':{
 		'type':'string',
 		'required':False,
