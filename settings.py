@@ -201,6 +201,11 @@ sensor_schema = {
 		'required': True,
 		'default': ''
 	},
+	'variable': {
+		'type': 'string',
+		'required': True,
+		'default': ''
+	},
 	# Number of bytes required for each piece of sensor data
 	'nbytes' : {
 		'type':'integer',
