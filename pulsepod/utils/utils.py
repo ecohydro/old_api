@@ -55,7 +55,6 @@ def get_sensor(sid):
 		raise InvalidMessage('sid not found',status_code=400)
 			
 	try:
-		print resp
 		sensor['value_length'] = resp[u'nbytes']
 		sensor['name'] = resp[u'name'] 
 		sensor['_id'] = resp[u'_id']
@@ -69,13 +68,11 @@ def get_time(content,i):
 	#parse unixtime to long int, then convert to database time
 	try:
 		unixtime = struct.unpack('<L', content[i:i+8].decode('hex'))[0]
-		print "unixtime:" + str(unixtime)
 	except:
 		raise InvalidMessage('Error decoding timestamp',status_code=400)
 	t = time.gmtime(unixtime)
 	#dbtime is (e.g.) "Tue, 17 Sep 2013 01:33:56 GMT"
 	dbtime = time.strftime("%a, %d %b %Y %H:%M:%S GMT", t)
-	print "dbtime: " + str(dbtime)
 	return dbtime
 
 def get_value(content,i,sensor):

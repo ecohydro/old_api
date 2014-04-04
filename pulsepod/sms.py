@@ -31,16 +31,12 @@ class SMS(object):
 			self.nobs = data['nobs']
 			self.nposted = data['nposted']
 			self.data_ids = data['data_ids']
-			self.podId = data['podId']
-			self.nbkId = data['nbkId']
 		else:
 			self.nobs = 0
 			self.nposted = 0
 			self.data_ids = []
 			self.data = []
-			self.podId = None
-			self.nbkId = None
-
+	
 	@staticmethod
 	def create(data=None, url=None):
 		if data == None and url == None:
@@ -143,7 +139,7 @@ class SMS(object):
 							  'nbkId': self.nbkId()
 							}
 				except:
-					raise InvalidMessage('Error reading sensorname or address', status_code=400, payload=self.pod())
+					raise InvalidMessage('Error reading sensorname or address', status_code=400, payload=self.pod)
 			
 				entry['t'] = get_time(self.content,i) # Get the timestamp 
 				i += 8
