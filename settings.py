@@ -328,7 +328,23 @@ messages_schema = {
 		'type':'number',
 		'required':'False',
 		'default':0
-	}
+	},
+	'nbkId':{
+		'type':'objectid',
+		'data_relation': {
+			 'resource': 'notebooks',
+			 'field': '_id',
+			 'embeddable':True
+		},
+	},				   # nbkId
+	'podId':{
+		'type':'objectid',
+		'data_relation': {
+			 'resource': 'pods',
+			 'field': '_id',
+			 'embeddable':True
+		},
+	},
 }
 
 

@@ -15,7 +15,8 @@ class SMS(object):
 			self.source = data['source'] if 'source' in data else None
 			self.status = data['status'] if 'status' in data else  None
 			self.content = data['message'] if 'message' in data else None
-			self.number = data['pod'] if 'pod' in data else None
+			self.number = data['number'] if 'number' in data else None
+			self.pod_name = data['p'] if 'p' in data else None
 			self.href = data['_links']['self']['href'] 
 			self.url = cfg.API_URL + self.href
 			self.json = data
@@ -30,12 +31,16 @@ class SMS(object):
 			self.nobs = data['nobs']
 			self.nposted = data['nposted']
 			self.data_ids = data['data_ids']
+			self.podId = data['podId']
+			self.nbkId = data['nbkId']
 		else:
 			self.nobs = 0
 			self.nposted = 0
 			self.data_ids = []
 			self.data = []
-		
+			self.podId = None
+			self.nbkId = None
+
 	@staticmethod
 	def create(data=None, url=None):
 		if data == None and url == None:
@@ -77,6 +82,9 @@ class SMS(object):
 		patched={}
 		patched['status'] = self.status 	# Update the gateway message status
 		patched['nobs'] = self.nobs			# Update the number of observations in this message
+		patched['podId'] = self.pod()['_id']
+		patched['p'] = self.pod()['name']
+		patched['nbkId'] = self.notebook()['_id']
 		#print 'message status: ' + patched['status']
 		if self.nposted > 0:	# Need to make sure this actually DID post data. Returns 200 with errors.
 			patched['status'] = 'posted'	# Update the gateway message status
@@ -185,7 +193,6 @@ class SMS(object):
 
 	def frameId(self):
 		return str(self.content[0:2])
-
 
 # SUB CLASSES (ONE FOR EACH FRAME TYPE)
 class number(SMS): 
