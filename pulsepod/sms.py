@@ -133,7 +133,7 @@ class SMS(object):
 			else:
 				sensor_string = str(sensor['context']) + ' ' + str(sensor['variable'])
 			
-			print "Sensor string":sensor_string
+			print "Sensor string" + str(sensor_string)
 			# add entry for each observation (nObs) by the same sensor
 			while nobs > 0:
 				try:
