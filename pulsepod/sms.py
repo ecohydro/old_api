@@ -132,12 +132,13 @@ class SMS(object):
 				sensor_string = str(sensor['variable'])
 			else:
 				sensor_string = str(sensor['context']) + ' ' + str(sensor['variable'])
-
+			
+			print "Sensor string":sensor_string
 			# add entry for each observation (nObs) by the same sensor
 			while nobs > 0:
 				try:
 					entry = {
-							  's': sensor_string, 
+							  's': str(sensor_string), 
 							  'p': str(self.pod()['name']),
 							  'sensor': sensor['_id'],
 							  'pod': self.pod()['_id'],

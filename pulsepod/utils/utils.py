@@ -41,7 +41,6 @@ def pod_name():
 def get_sensor(sid):
 	sensor = {}
 	sensor_url = cfg.API_URL + '/sensors?where={"sid":' + str(sid) + '}'
-	print "Requesting: " + sensor_url
 	try:
 		s = requests.get(sensor_url)
 	except:
@@ -53,7 +52,6 @@ def get_sensor(sid):
 	# sensor data is packed as a dict, but through a couple of layers
 	try:
 		sensor = s.json()["_items"][0]
-		print sensor
 	except:
 		raise InvalidMessage('Error getting sensor json from API',status_code=400)
 			
