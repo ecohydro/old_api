@@ -143,7 +143,7 @@ class SMS(object):
 							  'nbkId': self.nbkId()
 							}
 				except:
-					raise InvalidMessage('Error reading sensorname or address', status_code=400)
+					raise InvalidMessage('Error reading sensorname or address', status_code=400, payload=self.pod())
 			
 				entry['t'] = get_time(self.content,i) # Get the timestamp 
 				i += 8
