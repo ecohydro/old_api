@@ -175,7 +175,7 @@ class SMS(object):
 		return self.pod()['nbkId']
 
 	def etag(self): # Return this message's etag
-		return str(requests.get(self.url).json()['_etag'])
+		return str(requests.head(url).headers['Etag'])
 
 	def type(self):
 		return self.__class__.__name__
