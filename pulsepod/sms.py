@@ -80,7 +80,7 @@ class SMS(object):
 		patched['nobs'] = self.nobs			# Update the number of observations in this message
 		patched['pod'] = self.pod()['_id']
 		patched['p'] = self.pod()['name']
-		patched['notebook'] = self.pod()['nbkId']
+		patched['notebook'] = self.pod()['notebook']
 		#print 'message status: ' + patched['status']
 		if self.nposted > 0:	# Need to make sure this actually DID post data. Returns 200 with errors.
 			patched['status'] = 'posted'	# Update the gateway message status
@@ -133,12 +133,18 @@ class SMS(object):
 			else:
 				sensor_string = str(sensor['context']) + ' ' + str(sensor['variable'])
 			
-			print "Sensor string" + str(sensor_string)
+			print "s:" + str(sensor_string)
+			print 'p:' + str(self.pod()['name'])
+			print 'sensor:' + sensor['_id']
+			print 'pod:' + self.pod()['_id']
+			print 'notebook:' + self.nbkId()
+
 			# add entry for each observation (nObs) by the same sensor
+			entry = {}
 			while nobs > 0:
 				try:
 					entry = {
-							  's': str(sensor_string), 
+							  's': sensor_string, 
 							  'p': str(self.pod()['name']),
 							  'sensor': sensor['_id'],
 							  'pod': self.pod()['_id'],
@@ -182,7 +188,7 @@ class SMS(object):
 		return podId
 
 	def nbkId(self): # Get the notebook ID for this message by querying the pod
-		return self.pod()['nbkId']
+		return self.pod()['notebook']
 
 	def etag(self): # Return this message's etag
 		return str(requests.head(self.url).headers['Etag'])

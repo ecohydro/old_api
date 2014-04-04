@@ -22,7 +22,7 @@ def post_data_to_API(objId,res):
 
 # Data posting utilities
 def update_notebook(SMS):
-	v = next((item for item in SMS.data if item["senId"] == "525ebfa0f84a085391000495"), None)
+	v = next((item for item in SMS.data if item["sensor"] == "525ebfa0f84a085391000495"), None)
 	# But we need to extract the vbatt_tellit out of the data blob. 
 	# Use the Sensor Id, which should be relatively constant. HACKY! 
 	if v:
