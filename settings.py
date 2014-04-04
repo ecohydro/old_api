@@ -272,7 +272,7 @@ messages_schema = {
 		'allowed':['queued','parsed','posted','unknown','invalid'],
 		'default':'queued',
 	},
-	'pod':{
+	'number':{
 		'type':'string',
 		'required':True,
 		'maxlength':20,
