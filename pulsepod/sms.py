@@ -80,7 +80,7 @@ class SMS(object):
 		patched['nobs'] = self.nobs			# Update the number of observations in this message
 		patched['podId'] = self.pod()['_id']
 		patched['p'] = self.pod()['name']
-		patched['nbkId'] = self.notebook()['_id']
+		patched['nbkId'] = self.pod()['nbkId']
 		#print 'message status: ' + patched['status']
 		if self.nposted > 0:	# Need to make sure this actually DID post data. Returns 200 with errors.
 			patched['status'] = 'posted'	# Update the gateway message status
@@ -179,7 +179,7 @@ class SMS(object):
 		return self.pod()['nbkId']
 
 	def etag(self): # Return this message's etag
-		return str(requests.head(url).headers['Etag'])
+		return str(requests.head(self.url).headers['Etag'])
 
 	def type(self):
 		return self.__class__.__name__
