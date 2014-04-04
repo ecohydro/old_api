@@ -78,14 +78,14 @@ class SMS(object):
 		patched={}
 		patched['status'] = self.status 	# Update the gateway message status
 		patched['nobs'] = self.nobs			# Update the number of observations in this message
-		patched['podId'] = self.pod()['_id']
+		patched['pod'] = self.pod()['_id']
 		patched['p'] = self.pod()['name']
-		patched['nbkId'] = self.pod()['nbkId']
+		patched['notebook'] = self.pod()['nbkId']
 		#print 'message status: ' + patched['status']
 		if self.nposted > 0:	# Need to make sure this actually DID post data. Returns 200 with errors.
 			patched['status'] = 'posted'	# Update the gateway message status
 			patched['nposted'] = self.nposted
-			patched['data_ids'] = self.data_ids
+			patched['data'] = self.data_ids
 		patched['type'] = self.type()	# Update the gateway message type
 		self.patch_message(patched)
 
@@ -122,7 +122,7 @@ class SMS(object):
 				sid = int(self.content[i:i+2], 16)
 			except:
 				raise InvalidMessage('Error reading sid',status_code=400)
-
+			
 			sensor = get_sensor(sid) # Retrieve sensor information from API
 			i += 2
 			nobs = int(self.content[i:i+2], 16) # Read nObs from message content
@@ -132,11 +132,11 @@ class SMS(object):
 			while nobs > 0:
 				try:
 					entry = {
-							  's': str(sensor['name']), 
+							  's': str(sensor['variable']), 
 							  'p': str(self.pod()['name']),
-							  'senId': sensor['_id'],
-							  'podId': self.pod()['_id'],
-							  'nbkId': self.nbkId()
+							  'sensor': sensor['_id'],
+							  'pod': self.pod()['_id'],
+							  'notebook': self.nbkId()
 							}
 				except:
 					raise InvalidMessage('Error creating data record', status_code=400, payload=self.pod())

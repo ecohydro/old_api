@@ -48,7 +48,7 @@ data_schema = {
 	'v':{'type':'float','required':True},      # value
 	'p':{'type':'string','required':True},     # pod
 	's':{'type':'string','required':True},     # sensor name
-	'nbkId':{
+	'notebook':{
 		'type':'objectid',
 		'data_relation': {
 			 'resource': 'notebooks',
@@ -56,7 +56,7 @@ data_schema = {
 			 'embeddable':True
 		},
 	},				   # nbkId
-	'podId':{
+	'pod':{
 		'type':'objectid',
 		'data_relation': {
 			 'resource': 'pods',
@@ -64,7 +64,7 @@ data_schema = {
 			 'embeddable':True
 		},
 	},
-	'senId':{
+	'sensor':{
 		'type':'objectid',
 		'data_relation': {
 			'resource': 'sensors',
@@ -141,7 +141,7 @@ pod_schema = {
 		'required':True,
 		'unique': True,
 	},
-	'nbkId' : { # Pod ID (usually phone number)
+	'notebook' : { # Pod ID (usually phone number)
 		'type':'objectid',
 		'data_relation': {
 			 'resource': 'notebooks',
@@ -210,7 +210,6 @@ sensor_schema = {
 		'allowed': ['x','c','b','B','?','h','H','i','I','l','L','q','Q','f','d','s','p','P'],
 	},
 	
-	
 	# Byte order of data values, based on structs library http://docs.python.org/2/library/struct.html
 	'byteorder' : {
 		'type':'string',
@@ -228,14 +227,6 @@ sensor_schema = {
 		'minlength':1,
 		'maxlength':256,
 		'default':'no additional information is available for this sensor',
-	},
-
-	# Magnitude: A multiplier for sensor values
-	'magnitude' : {
-		'type':'float',
-		'required':False,
-		'maxlength':100,
-		'default':1.0,
 	},
 	
 	# Units: A text string that identifies the units for sensor values
@@ -302,7 +293,7 @@ messages_schema = {
 		'allowed':['unknown','status','deploy','invalid','number','imei'],
 		'default':'unknown'
 	},
-	'data_ids':{
+	'data':{
 		'type':'list',
 		'schema':{
 			'type':'objectid', # becomes objectid when gateway and evepod are consolidated
@@ -329,7 +320,7 @@ messages_schema = {
 		'required':'False',
 		'default':0
 	},
-	'nbkId':{
+	'notebook':{
 		'type':'objectid',
 		'data_relation': {
 			 'resource': 'notebooks',
@@ -337,7 +328,7 @@ messages_schema = {
 			 'embeddable':True
 		},
 	},				   # nbkId
-	'podId':{
+	'pod':{
 		'type':'objectid',
 		'data_relation': {
 			 'resource': 'pods',

@@ -59,6 +59,7 @@ def get_sensor(sid):
 		sensor['name'] = resp[u'name'] 
 		sensor['_id'] = resp[u'_id']
 		sensor['fmt'] = resp[u'byteorder'] + resp[u'fmt'] 
+		sensor['variable'] = resp[u'variable']
 	except:
 		raise InvalidMessage('Error reading sid',status_code=400)
 
