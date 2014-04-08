@@ -42,25 +42,16 @@ def handle_invalid_message(error):
 	response.status_code = error.status_code
 	return response
 
-#### BEFORE INSERT METHODS
-def before_insert_pod(documents):
-	for d in documents:
-		print "Adding " + d["name"] + " to the database"
-
-def before_insert_data(documents):
-	print "A POST to data was just performed!"
-	for d in documents:
-		print "Posting " + d["s"] + " data from " + d["p"] + " to the database"
-
-def before_insert_notebook(documents):
-	for d in documents:
-		print "Adding " + d["name"] + " notebook to the database"
-
 # app.on_pre_POST_<resource> functions
 # These functions prepare the document for posting
 def before_post(resource, request):
 	print 'Post to ' + resource + ' recieved'
+
+def before_post_notebook(resource, request):
+	print 'Recieved request to create notebook'
 	
+def before_patch_notebook(resource, request):
+	print 'Recieved request to patch notebook'	
 # SMSSync:
 """ 
 SMSSync uses the Ushahidi-developed SMS forwarding app for android
@@ -92,7 +83,20 @@ def before_post_twilio(request):
 def before_post_nexmo(request):
 	print "Posting nexmo JSON entry"
 
-# app.on_insert functions
+#### BEFORE INSERT METHODS
+def before_insert_pod(documents):
+	for d in documents:
+		print "Adding " + d["name"] + " to the database"
+
+def before_insert_data(documents):
+	print "A POST to data was just performed!"
+	for d in documents:
+		print "Posting " + d["s"] + " data from " + d["p"] + " to the database"
+
+def before_insert_notebook(documents):
+	for d in documents:
+		print "Adding " + d["name"] + " notebook to the database"
+
 def before_insert_smssync(documents):
 	print "Adding SMSSync SMS to messages database"
 

@@ -117,7 +117,30 @@ notebook_schema = {
 		'allowed': ['dead','deployed','provisioned','active','unknown'],
 		'required':False,
 		'default' : 'provisioned'
-	},	
+	},
+	'sensors': {
+		'type': 'list',
+		'schema': {
+			'type':'objectid', # becomes objectid when gateway and evepod are consolidated
+			'data_relation': { 
+				'resource':'data',
+				'field': '_id',
+				'embeddable': True
+			},
+		},
+	},
+	'tags': {
+		'type': 'list',
+		'schema': {'type':'string'}
+	},
+	'location': {
+		'type':'dict',
+		'schema': {
+			'lat':{'type':'number','required':True},
+			'lng':{'type':'number','required':True},
+			'accuracy':{'type':'number','required':True}
+		},
+	}
 	# need to add spatial information to notebook.
 	# need to add notes to notebook.
 	# A users list will allow sharing of notebooks.
@@ -175,7 +198,26 @@ pod_schema = {
 		'allowed': ['teen','asleep','normal'],
 		'default' : 'normal'
 	},
-	
+	'radioType':{
+		'type': 'string',
+		'allowed': ['gsm','cdma','wcdma'],
+		'required':True,
+		'defaul':'gsm',
+	},
+	'carrier':{
+		'type':'string',
+		'required':False
+	},
+	'cellTowers':{ # Follows the Google Location API schema
+		'type':'dict',
+		'schema':{
+			'cellId':{'type':'number','required':True,'default':42},
+			'locationAreaCode':{'type':'number','required':True,'default':415},
+			'mobileCountryCode':{'type':'number','required':True,'default':310},
+			'mobileNetworkCode':{'type':'number','required':True,'default':410},
+			'age':{'type':'number','required':True,'default':0}
+		},
+	}
 }
 
 sensor_schema = { 
@@ -443,7 +485,7 @@ sensors = {
 	# GET requests at '/<item_title>/<lastname>/'.
 	'additional_lookup': {
 		'url' : 'regex("[\w]+")',
-		'field': 'name'
+		'field': 'sid'
 	},
 	# We choose to override global cache-control directives for this resource.
 	'cache_control': 'max-age=10,must-revalidate',

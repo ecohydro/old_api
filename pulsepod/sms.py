@@ -53,6 +53,7 @@ class SMS(object):
 		if type == "imei": 		return imei(data)
 		if type == "status": 	return status(data)
 		if type == "invalid":	return invalid(data)
+		if type == "deploy":	return deploy(data)
 		assert 0, "Bad SMS creation: " + type
 
 	def post_data(self):
@@ -280,6 +281,60 @@ class invalid(SMS):
 		patched['status'] = self.status
 		self.patch_message(patched)
 
+class deploy(SMS):
+	
+	def nbkurl(self):
+		pass
+
+	def parse(self):
+		print "parsing deploy message"
+		# Deployment message
+		##################################################################
+		# FrameID |  PodId   |   LAC  |   CI     | nSensors |  sID1  | ... |  sIDn  |
+		# 2 byte  | 2 byte   | 2 byte |  1 byte  | 1 byte   | 1 byte | ... | 1 byte |
+		###############################################################################
+		json=[]
+		i=2
+		# make sure message is long enough to read everything
+		i += cfg.IMEI_LENGTH			
+		payload = {'_id':self._id,'type':self.type(),'content':self.content,'frame_id':self.frameId()}
+		
+		# Need to get geolocation data
+		# Need to format notebook for this pod
+		if len(self.content) < 12:
+			raise InvalidMessage('Status message too short', status_code=400, payload=payload)
+		lac = int(self.content[i:i+4], 16)
+		i += 4
+		cell_id = int(self.content[i:i+4], 16)
+		i += 4
+		n_sensors = int(self.content[i:i+2], 16)
+		i += 2
+		# now make sure length is actually correct
+		if len(self.content) != 12 + 2*n_sensors:
+			raise InvalidMessage('Status message improperly formatted', status_code=400, payload=payload)
+
+		# sIDs is list of sensor objectIds
+		sids = []
+
+		for j in range(n_sensors):
+			this_url = cfg.API_URL + '/senors/' + str(int(self.content[i:i+2], 16))
+			sids.append(requests.get(this_url).json()['_id'])
+			i += 2
+
+		self.data = {'locationAreaCode': lac, 'cellId': cell_id, 'sensors': sids}
+	
+	def post(self):
+		print "posting deploy message"
+		# Need to create new notebook 
+		
+		# Need to update pod information to point to new notebook
+
+
+	def patch(self):
+		patched={}
+		patched['type'] = self.type()	# Update the gateway message type
+		patched['status'] = self.status
+		self.patch_message(patched)
 
 
 

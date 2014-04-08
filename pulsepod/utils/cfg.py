@@ -15,6 +15,8 @@ REDIS_URL = os.getenv('REDISTOGO_URL','redis://localhost:6379')
 # URLs for production on Heroku or local:
 API_URL = os.getenv('API_URL','http://0.0.0.0:5000') 
 
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
+
 # EVE API status ERR response (who knows if this will 
 # ever change):
 ERR='ERR'
@@ -36,6 +38,7 @@ FRAMES={
 	0:'number',
 	1:'status',
 	2:'imei',
+	3:'deploy',
 	99:'invalid',
 }
 
