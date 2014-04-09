@@ -121,13 +121,15 @@ def google_elevation_api(loc):
 		return { 'elevation':'unknown','resolution':'unknown'}
 
 def google_geocoding_api(loc):
+	# must pre-seed this with all the data we want shorted:
 	address={
-		'country':'unknown',
-		'locality':'unknown',
-		'neighborhood':'unknown',
-		'administrative_area_level_1':'unknown',
-		'administrative_area_level_2':'unknown',
-		'route':'unknown',
+		'country':{'short':'unknown','full':'unknown'},
+		'locality':{'short':'unknown','full':'unknown'},
+		'administrative_area_level_1':{'short':'unknown','full':'unknown'},
+		'administrative_area_level_2':{'short':'unknown','full':'unknown'},
+		'administrative_area_level_3':{'short':'unknown','full':'unknown'},
+		'route':{'short':'unknown','full':'unknown'},
+		'street_address':{'short':'unknown','full':'unknown'},
 	}
 	api_key = cfg.GOOGLE_API_KEY
 	baseurl = 'https://maps.googleapis.com/maps/api/geocode/json?latlng='
@@ -137,7 +139,11 @@ def google_geocoding_api(loc):
 	if response['status'] == 'OK':
 		for result in response['results']:
 			for address_component in result['address_components']:
-				address[address_component['types'][0]] = address_component['long_name']
+				if address_component['types'][0] in address and 'short' in address[address_component['types'][0]]:
+					address[address_component['types'][0]]['full'] = str(address_component['long_name'])
+					address[address_component['types'][0]]['short'] = str(address_component['short_name'])
+				else:
+					address[address_component['types'][0]] = str(address_component['long_name'])
 	return address
 	
 			

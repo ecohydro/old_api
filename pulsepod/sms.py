@@ -381,8 +381,9 @@ class deploy(SMS):
 		self.data['elevation'] = google_elevation_api(self.data['location'])
 		self.data['address'] = google_geocoding_api(self.data['location'])		
 		self.data['name'] = self.pod()['name'] + ' data from ' + \
-							self.data['address']['locality'] + \
-						    ' in ' + self.data['address']['country']
+							self.data['address']['locality']['short'] + ', ' + \
+							self.data['address']['administrative_area_level_1']['short'] + \
+						    ' in ' + self.data['address']['country']['short']
 
 	def post(self):
 		print "posting deploy message"
