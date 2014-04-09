@@ -231,6 +231,12 @@ pod_schema = {
 		'required': True,
 		'unique': True,
 	},
+	'owner' : {
+		'type':'string',
+		'required':True,
+		'maxlength':25,
+		'minlength':15,
+	},
 	'podId' : { # Pod ID for use in SMS
 		'type':'string',
 		'minlength':10,
