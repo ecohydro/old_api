@@ -118,21 +118,33 @@ notebook_schema = {
 		'required':False,
 		'default' : 'provisioned'
 	},
+	# Information about what sensors are included in this notebook:
 	'sensors': {
 		'type': 'list',
 		'schema': {
-			'type':'objectid', # becomes objectid when gateway and evepod are consolidated
+			'type':'objectid', # is objectid for API embedded (remove sids from default projection)
 			'data_relation': { 
-				'resource':'data',
+				'resource':'sensors',
 				'field': '_id',
 				'embeddable': True
 			},
 		},
 	},
+	# sids facilitate lookups in meteor. May not need this. 
+	# Depends on how the $in mongodb query behaves with objectids in meteor (likely badly)
+	'sids': {	
+		'type': 'list',
+		'schema': {
+			'type':'number'
+		}
+	},
+	# Tags related to the location and user-supplied information about this notebook
+	# (not yet implemented)
 	'tags': {
 		'type': 'list',
 		'schema': {'type':'string'}
 	},
+	# Location information for this notebook
 	'location': {
 		'type':'dict',
 		'schema': {
@@ -140,10 +152,66 @@ notebook_schema = {
 			'lng':{'type':'number','required':True},
 			'accuracy':{'type':'number','required':True}
 		},
-	}
-	# need to add spatial information to notebook.
-	# need to add notes to notebook.
-	# A users list will allow sharing of notebooks.
+	},
+	'elevation' : {
+		'type':'dict',
+		'schema': {
+			'elevation':{'type':'number','required':True,'default':-9999},
+			'resolution':{'type':'number','required':True,'default':-9999}
+		}
+	},
+	# Notebook cellular information:
+	'cellTowers':{ # Follows the Google Location API schema
+		'type':'dict',
+		'schema':{
+			'cellId':{'type':'number','required':True,'default':39627456},
+			'locationAreaCode':{'type':'number','required':True,'default':40495},
+			'mobileCountryCode':{'type':'number','required':True,'default':310},
+			'mobileNetworkCode':{'type':'number','required':True,'default':260},
+			'age':{'type':'number','required':True,'default':0}
+		},
+	},
+	'address' : {
+		'type':'dict',
+		'schema':{
+			'street_address':{'type':'string','required':True,'default':'none'},
+			'route':{'type':'string','required':True,'default':'unknown'},
+			'intersection':{'type':'string','required':False},
+			'country':{'type':'string','required':True,'default':'unknown'},
+			'administrative_area_level_1':{'type':'string','required':True,'default':'unknown'},
+			'administrative_area_level_2':{'type':'string','required':True,'default':'unknown'},
+			'administrative_area_level_3':{'type':'string','required':False,},
+			'colloquial_area':{'type':'string','required':False},
+			'locality':{'type':'string','required':True,'default':'unknown'},
+			'sublocality':{'type':'string','required':False},
+			'sublocality_level_1':{'type':'string','required':False},
+			'sublocality_level_2':{'type':'string','required':False},
+			'sublocality_level_3':{'type':'string','required':False},
+			'sublocality_level_4':{'type':'string','required':False},
+			'sublocality_level_5':{'type':'string','required':False},
+			'neighborhood':{'type':'string','required':False},
+			'premise':{'type':'string','required':False},
+			'subpremise':{'type':'string','required':False},
+			'postal_code':{'type':'string','required':True,'default':'unknown'},
+			'natural_feature':{'type':'string','required':False},
+			'airport':{'type':'string','required':False},
+			'park':{'type':'string','required':False},
+			'point_of_interest':{'type':'string','required':False},
+			'floor':{'type':'string','required':False},
+			'establishment':{'type':'string','required':False},
+			'parking':{'type':'string','required':False},
+			'post_box':{'type':'string','required':False},
+			'postal_town':{'type':'string','required':False},
+			'room':{'type':'string','required':False},
+			'street_number':{'type':'string','required':False},
+			'bus_station':{'type':'string','required':False},
+			'train_station':{'type':'string','required':False},
+			'transit_station':{'type':'string','required':False}
+		}
+	},
+	# need to add geocoding information to the notebook...
+	# need to add notes to notebook...
+	# a users list would allow sharing of notebooks...
 }
 
 pod_schema = { 
@@ -204,20 +272,6 @@ pod_schema = {
 		'required':True,
 		'defaul':'gsm',
 	},
-	'carrier':{
-		'type':'string',
-		'required':False
-	},
-	'cellTowers':{ # Follows the Google Location API schema
-		'type':'dict',
-		'schema':{
-			'cellId':{'type':'number','required':True,'default':42},
-			'locationAreaCode':{'type':'number','required':True,'default':415},
-			'mobileCountryCode':{'type':'number','required':True,'default':310},
-			'mobileNetworkCode':{'type':'number','required':True,'default':410},
-			'age':{'type':'number','required':True,'default':0}
-		},
-	}
 }
 
 sensor_schema = { 
@@ -325,11 +379,6 @@ messages_schema = {
 		'required':True,
 		'maxlength':20,
 	},
-	'imei': {
-		'type':'string',
-		'required':True,
-		'maxlength':20,
-	},
 	't':{
 		'type':'datetime',
 		'required':False,
@@ -355,12 +404,6 @@ messages_schema = {
 				'embeddable': True
 			},
 		}
-	},
-	'frameID':{
-		'type':'number',
-		'required':False,
-		'allowed':[0,1,2],
-		'default':0
 	},
 	'nobs':{
 		'type':'number',

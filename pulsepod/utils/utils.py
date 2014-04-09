@@ -85,5 +85,61 @@ def get_value(content,i,sensor):
 	# QA/QC limits we eventually add to the sensor specifications.
 	return float(value)
 
+def google_geolocate_api(tower):
+	api_key = cfg.GOOGLE_API_KEY
+	url = 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + api_key
+	headers = {'content-type':'application/json'}
+	data = {'cellTowers':[{
+		'cellId':tower['cellId'],
+		'locationAreaCode':tower['locationAreaCode'],
+		'mobileCountryCode':tower['mobileCountryCode'],
+		'mobileNetworkCode':tower['mobileNetworkCode']
+		}]}
+	response =  requests.post(url,data=json.dumps(data),headers=headers).json()
+	location={}
+	location['lat'] = response['location']['lat']
+	location['lng'] = response['location']['lng']
+	location['accuracy'] = response['accuracy']
+	return location
+
+def google_elevation_api(loc):
+	api_key = cfg.GOOGLE_API_KEY
+	baseurl = 'https://maps.googleapis.com/maps/api/elevation/json?locations='
+	tailurl = '&sensor=false&key=' + api_key
+	url = baseurl + str(loc['lat']) + ',' + str(loc['lng']) + tailurl
+	response = requests.get(url).json()
+	if response['status'] == 'OK':
+		return {
+				'elevation':response['results'][0]['elevation'],
+				'resolution':reponse['results'][0]['resolution']
+				}
+	else:
+		return { 'elevation':'unknown','resolution':'unknown'}
+
+def google_geocoding_api(loc):
+	address={
+		'country':'unknown',
+		'locality':'unknown',
+		'neighborhood':'unknown',
+		'administrative_area_level_1':'unknown',
+		'administrative_area_level_2':'unknown',
+		'route':'unknown',
+	}
+	api_key = cfg.GOOGLE_API_KEY
+	baseurl = 'https://maps.googleapis.com/maps/api/geocode/json?latlng='
+	tailurl = '&sensor=false&key=' + api_key
+	url = baseurl + str(loc['lat']) + ',' + str(loc['lng']) + tailurl
+	response = requests.get(url).json()
+	if response['status'] == 'OK':
+		for result in response['results']:
+			for address_component in result['address_components']:
+				address[address_component['types'][0]] = address_component['long_name']
+	return address
+	
+			
+
+
+
+
 
 

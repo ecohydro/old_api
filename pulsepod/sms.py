@@ -5,6 +5,7 @@ import json
 from pulsepod.utils import cfg
 from pulsepod.utils.utils import InvalidMessage
 from pulsepod.utils.utils import get_sensor, get_time, get_value
+from pulsepod.utils.utils import google_geolocate_api, google_elevation_api, google_geocoding_api
 
 class SMS(object):
 	
@@ -22,7 +23,7 @@ class SMS(object):
 			self.json = data
 			self.podIdvalue = None
 			self.pod_data = None
-			self.notebook_data = None
+			self.nbk_data = None
 		else:
 			assert 0, "Must provide message data to initialize SMS"	
 				
@@ -47,14 +48,17 @@ class SMS(object):
 			assert 0, "Must provide a url or message data"
 
 		# Do a bunch of stuff to determine type:
-		# (3) Read FrameID from message content
+		# (3) Read message type from message content
 		type = cfg.FRAMES[int(data['message'][0:2],16)]
 		if type == "number": 	return number(data)
-		if type == "imei": 		return imei(data)
+		if type == "imei": 		return podId(data)
 		if type == "status": 	return status(data)
 		if type == "invalid":	return invalid(data)
 		if type == "deploy":	return deploy(data)
 		assert 0, "Bad SMS creation: " + type
+
+	def pod_serial_number_length(self):
+		return 4
 
 	def post_data(self):
 		print "posting data"
@@ -89,6 +93,7 @@ class SMS(object):
 			patched['data'] = self.data_ids
 		patched['type'] = self.type()	# Update the gateway message type
 		self.patch_message(patched)
+		self.update_notebook() # update notebook for data messages
 
 	def patch_message(self,patched):
 		# Patch the message
@@ -116,7 +121,7 @@ class SMS(object):
     	unixtime = 4 bytes LITTLE ENDIAN
     	value = look up length
     	"""    
-		payload = {'_id':self._id,'type':self.type(),'content':self.content,'frame_id':self.frameId()}
+		payload = {'_id':self._id,'type':self.type(),'content':self.content}
 		while i < self.len():
 			sensor={} # Reset sensor information
 			try:
@@ -167,15 +172,32 @@ class SMS(object):
 		self.nobs = total_obs
 		self.status = 'parsed'
 
+	def update_notebook():
+		v = next((item for item in self.data if item["sensor"] == "525ebfa0f84a085391000495"), None)
+		# But we need to extract the vbatt_tellit out of the data blob. 
+		# Use the Sensor Id, which should be relatively constant. HACKY! 
+		if v:
+			nbk_update={}
+			nbk_update["last"] = v["t"]
+			nbk_update["voltage"] = v["v"]
+			# Don't forget to set the content type, because it defaults to html
+			this_notebook = cfg.API_URL + "/notebooks/" + str(self.nbkId())				
+			headers= {'If-Match':str(self.notebook()['_etag']),'content-type':'application/json'}
+			u = requests.patch(this_notebook,data=json.dumps(nbk_update),headers=headers)
+			# Need to have some graceful failures here... Response Code? HACKY!
+			return u.status_code
+		else: 
+			return None	
+
 	def pod(self): # Get the pod document for this message
-		if self.pod_data == None:
+		if self.pod_data == None or not self.pod_data['_etag'] == requests.head(self.podurl()).headers['Etag']:
 			self.pod_data = requests.get(self.podurl()).json()
 		return self.pod_data
 
 	def notebook(self): # Get the notebook document for this message
-		if self.notebook_data == None:
-			self.notebook_data =  requests.get(self.nbkurl()).json()
-		return self.notebook_data
+		if self.nbk_data == None or not self.nbk_data['_etag'] == requests.head(self.nbkurl()).headers['Etag']:
+			self.nbk_data =  requests.get(self.nbkurl()).json()
+		return self.nbk_data
 
 	def podurl(self): # Get the pod url for this message
 		return str(cfg.API_URL + '/pods/' + self.podId())
@@ -184,7 +206,7 @@ class SMS(object):
 		return str(cfg.API_URL + '/notebooks/' + str(self.nbkId()))
 
 	def podId(self):
-		POD_SERIAL_NUMBER_LENGTH = 2
+		self.POD_SERIAL_NUMBER_LENGTH = 4
 		podId =  str(hashlib.sha224(str(int(self.content[2:2+POD_SERIAL_NUMBER_LENGTH], 16))).hexdigest()[:10])	
 		return podId
 
@@ -200,11 +222,11 @@ class SMS(object):
 	def len(self):
 		return len(self.content)
 
-	def frameId(self):
-		return str(self.content[0:2])
-
 # SUB CLASSES (ONE FOR EACH FRAME TYPE)
 class number(SMS): 
+
+	def pod_serial_number_length(self):
+		return 0
 
 	def podId(self):
 		if self.podIdvalue == None:
@@ -218,28 +240,26 @@ class number(SMS):
 	def parse(self):
 		self.parse_message(i=2)
 
-class imei(SMS):
+class podId(SMS):
 	
 	def post(self):
 		self.post_data()
 
 	def parse(self):
-		self.parse_message(i=4)
+		self.parse_message(i=2+self.pod_serial_number_length())
 	
 class status(SMS):
 
 	def parse(self):
 		json = []
-		i=2 # Start at position 2 in the frame, since FrameID is position 1. 
-		# Deployment message
+		i=2+self.pod_serial_number_length() 
 		##################################################################
 		# |   LAC  |   CI   | nSensors |  sID1  |  sID1  | ... |  sIDn  |
-		# | 2 byte | 2 byte |  1 byte  | 1 byte | 1 byte | ... | 1 byte |
+		# | 2 byte | 8 byte |  1 byte  | 1 byte | 1 byte | ... | 1 byte |
 		##################################################################
 		# make sure message is long enough to read everything
-		i += cfg.IMEI_LENGTH			
-
-		payload = {'_id':self._id,'type':self.type(),'content':self.content,'frame_id':self.frameId()}
+		
+		payload = {'_id':self._id,'type':self.type(),'content':self.content}
 		if len(self.content) < 12:
 			raise InvalidMessage('Status message too short', status_code=400, payload=payload)
 		lac = int(self.content[i:i+4], 16)
@@ -270,6 +290,99 @@ class status(SMS):
 		patched['status'] = self.status
 		self.patch_message(patched)	
 
+
+class deploy(SMS):
+	
+	def nbkurl(self):
+		pass
+
+	def parse(self):
+		print "parsing deploy message"
+		# Deployment message
+		# Length = 2 + 20 + 2 + 2*n_sensors = 24 + 2*n_sensors
+		##############################################################
+		#Var:  |FrameId|PodId|MCC|MNC|LAC|CI|n_sensors|sID1| ... |sIDn|
+		#len:  |  2    | 4   | 3 | 3 | 4 | 8| 1    	  | 2  | ... | 2  |
+		##############################################################
+		json=[]
+		i=2+self.pod_serial_number_length()
+		min_length = 2 + self.pod_serial_number_length() + 3 + 3 + 4 + 8 + 1
+
+		# make sure message is long enough to read everything
+		payload = {'_id':self._id,'type':self.type(),'content':self.content}
+		
+		# Need to get geolocation data
+		# Need to format notebook for this pod
+		if len(self.content) < min_length:
+			raise InvalidMessage('Status message too short', status_code=400, payload=payload)
+		mcc = int(self.content[i:i+3], 16)
+		i +=3
+		mnc = int(self.content[i:i+3], 16)
+		i += 3
+		lac = int(self.content[i:i+4], 16)
+		i += 4
+		cell_id = int(self.content[i:i+8], 16)
+		i += 8
+		n_sensors = int(self.content[i:i+1], 16)
+		i += 1
+		# now make sure length is actually correct
+		if len(self.content) != (25 + 2*n_sensors):
+			raise InvalidMessage('Status message improperly formatted', status_code=400, payload=payload)
+		# sIDs is list of sensor objectIds
+		sids = []
+		s_ids = []
+		for j in range(n_sensors):
+			this_url = cfg.API_URL + '/sensors/' + str(int(self.content[i:i+2], 16))
+			print this_url
+			s = requests.get(this_url).json()
+			sids.append(s['sid'])
+			s_ids.append(s['_id'])
+			i += 2
+
+		self.data = {
+			'cellTowers': {
+				'locationAreaCode': lac, 
+				'cellId': cell_id, 
+				'mobileNetworkCode': mnc,
+				'mobileCountryCode': mcc
+			},
+			'sensors': s_ids,
+			'sids': sids,
+		}
+		
+		self.data['location'] = google_geolocate_api(self.data['cellTowers'])
+		self.data['elevation'] = google_elevation_api(self.data['location'])
+		self.data['address'] = google_geocoding_api(self.data['location'])		
+	
+	def post(self):
+		print "posting deploy message"
+		# Need to create new notebook 
+		print "creating new notebook"
+		nbkurl = cfg.API_URL + '/notebooks'
+		headers = {'content-type':'application/json'}
+		print self.data
+		d = requests.post(url=nbkurl, data=json.dumps(self.data), headers=headers)
+		if d.status_code == cfg.CREATED:
+			pod_update={}
+			item = d.json()
+			print 'Item status: ' + item[cfg.STATUS]
+		 	if not item[cfg.STATUS] == cfg.ERR:
+		 		# PATCH THE POD ASAP:
+		 		pod_update['notebook'] = item[u'_id']
+		 		headers= {'If-Match':str(self.pod()['_etag']),'content-type':'application/json'}
+		 		p = requests.patch(self.podurl(),data=json.dumps(pod_update),headers=headers)
+		else:
+			print d.status_code
+			print d.text
+		
+
+	def patch(self):
+		patched={}
+		patched['type'] = self.type()	# Update the gateway message type
+		patched['status'] = self.status
+		self.patch_message(patched)
+
+
 class invalid(SMS):
 	def parse(self):
 		pass
@@ -280,63 +393,6 @@ class invalid(SMS):
 		patched['type'] = self.type()	# Update the gateway message type
 		patched['status'] = self.status
 		self.patch_message(patched)
-
-class deploy(SMS):
-	
-	def nbkurl(self):
-		pass
-
-	def parse(self):
-		print "parsing deploy message"
-		# Deployment message
-		##################################################################
-		# FrameID |  PodId   |   LAC  |   CI     | nSensors |  sID1  | ... |  sIDn  |
-		# 2 byte  | 2 byte   | 2 byte |  1 byte  | 1 byte   | 1 byte | ... | 1 byte |
-		###############################################################################
-		json=[]
-		i=2
-		# make sure message is long enough to read everything
-		i += cfg.IMEI_LENGTH			
-		payload = {'_id':self._id,'type':self.type(),'content':self.content,'frame_id':self.frameId()}
-		
-		# Need to get geolocation data
-		# Need to format notebook for this pod
-		if len(self.content) < 12:
-			raise InvalidMessage('Status message too short', status_code=400, payload=payload)
-		lac = int(self.content[i:i+4], 16)
-		i += 4
-		cell_id = int(self.content[i:i+4], 16)
-		i += 4
-		n_sensors = int(self.content[i:i+2], 16)
-		i += 2
-		# now make sure length is actually correct
-		if len(self.content) != 12 + 2*n_sensors:
-			raise InvalidMessage('Status message improperly formatted', status_code=400, payload=payload)
-
-		# sIDs is list of sensor objectIds
-		sids = []
-
-		for j in range(n_sensors):
-			this_url = cfg.API_URL + '/senors/' + str(int(self.content[i:i+2], 16))
-			sids.append(requests.get(this_url).json()['_id'])
-			i += 2
-
-		self.data = {'locationAreaCode': lac, 'cellId': cell_id, 'sensors': sids}
-	
-	def post(self):
-		print "posting deploy message"
-		# Need to create new notebook 
-		
-		# Need to update pod information to point to new notebook
-
-
-	def patch(self):
-		patched={}
-		patched['type'] = self.type()	# Update the gateway message type
-		patched['status'] = self.status
-		self.patch_message(patched)
-
-
 
 
 

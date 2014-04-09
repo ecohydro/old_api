@@ -37,7 +37,7 @@ ISSUES='_issues'
 FRAMES={
 	0:'number',
 	1:'status',
-	2:'imei',
+	2:'podId',
 	3:'deploy',
 	99:'invalid',
 }
@@ -48,5 +48,4 @@ JSON='application/json'
 ETAG='etag' # Will change to _etag sometime soon.
 CREATED=201 # Eve returns 200 when a POST is valid 
 
-IMEI_LENGTH = 2
 
