@@ -148,6 +148,7 @@ def google_geocoding_api(loc):
 		url = baseurl + str(loc['lat']) + ',' + str(loc['lng']) + tailurl
 		response = requests.get(url).json()
 		if response['status'] == 'OK':
+			address['formatted_address'] = response['results'][0]['formatted_address']
 			for result in response['results']:
 				for address_component in result['address_components']:
 					if address_component['types'][0] in address and 'short' in address[address_component['types'][0]]:

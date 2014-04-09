@@ -187,6 +187,7 @@ notebook_schema = {
 	'address' : {
 		'type':'dict',
 		'schema':{
+			'formatted_address':{'type':'string','required':False,'default':'unknown'},
 			'street_address':{'type':'dict',
 				'schema': {
 					'short':{'type':'string','required':False,'default':'none'},

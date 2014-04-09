@@ -186,6 +186,7 @@ class SMS(object):
 			nbk_update={}
 			nbk_update['last'] = v['t']
 			nbk_update['voltage'] = v['v']
+			nbh_update['status'] = 'active'
 			# Don't forget to set the content type, because it defaults to html			
 			headers= {'If-Match':str(self.notebook()['_etag']),'content-type':'application/json'}
 			u = requests.patch(self.nbkurl(),data=json.dumps(nbk_update),headers=headers)
