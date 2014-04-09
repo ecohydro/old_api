@@ -102,27 +102,33 @@ def google_geolocate_api(tower):
 	response =  requests.post(url,data=json.dumps(data),headers=headers).json()
 	print response
 	location={}
-	location['lat'] = response['location']['lat']
-	location['lng'] = response['location']['lng']
-	location['accuracy'] = response['accuracy']
+	if not error in response:
+		location['lat'] = response['location']['lat']
+		location['lng'] = response['location']['lng']
+		location['accuracy'] = response['accuracy']
+	else:
+		location['lat'] = 'unknown'
+		location['lng'] = 'unknown'
+		location['accuracy'] = 'unknown'
 	return location
 
 def google_elevation_api(loc):
-	api_key = cfg.GOOGLE_API_KEY
-	baseurl = 'https://maps.googleapis.com/maps/api/elevation/json?locations='
-	tailurl = '&sensor=false&key=' + api_key
-	url = baseurl + str(loc['lat']) + ',' + str(loc['lng']) + tailurl
-	response = requests.get(url).json()
-	if response['status'] == 'OK':
-		return {
-				'elevation':response['results'][0]['elevation'],
-				'resolution':response['results'][0]['resolution']
-				}
+	if not loc['lat'] == 'unknown' or loc['lng'] == 'unknown':
+		api_key = cfg.GOOGLE_API_KEY
+		baseurl = 'https://maps.googleapis.com/maps/api/elevation/json?locations='
+		tailurl = '&sensor=false&key=' + api_key
+		url = baseurl + str(loc['lat']) + ',' + str(loc['lng']) + tailurl
+		response = requests.get(url).json()
+		if response['status'] == 'OK':
+			return {
+					'elevation':response['results'][0]['elevation'],
+					'resolution':response['results'][0]['resolution']
+					}
 	else:
 		return { 'elevation':'unknown','resolution':'unknown'}
 
+
 def google_geocoding_api(loc):
-	# must pre-seed this with all the data we want shorted:
 	address={
 		'country':{'short':'unknown','full':'unknown'},
 		'locality':{'short':'unknown','full':'unknown'},
@@ -132,19 +138,21 @@ def google_geocoding_api(loc):
 		'route':{'short':'unknown','full':'unknown'},
 		'street_address':{'short':'unknown','full':'unknown'},
 	}
-	api_key = cfg.GOOGLE_API_KEY
-	baseurl = 'https://maps.googleapis.com/maps/api/geocode/json?latlng='
-	tailurl = '&sensor=false&key=' + api_key
-	url = baseurl + str(loc['lat']) + ',' + str(loc['lng']) + tailurl
-	response = requests.get(url).json()
-	if response['status'] == 'OK':
-		for result in response['results']:
-			for address_component in result['address_components']:
-				if address_component['types'][0] in address and 'short' in address[address_component['types'][0]]:
-					address[address_component['types'][0]]['full'] = str(address_component['long_name'])
-					address[address_component['types'][0]]['short'] = str(address_component['short_name'])
-				else:
-					address[address_component['types'][0]] = str(address_component['long_name'])
+	if not loc['lat'] == 'unknown' or loc['lng'] == 'unknown':
+		# must pre-seed this with all the data we want shorted:
+		api_key = cfg.GOOGLE_API_KEY
+		baseurl = 'https://maps.googleapis.com/maps/api/geocode/json?latlng='
+		tailurl = '&sensor=false&key=' + api_key
+		url = baseurl + str(loc['lat']) + ',' + str(loc['lng']) + tailurl
+		response = requests.get(url).json()
+		if response['status'] == 'OK':
+			for result in response['results']:
+				for address_component in result['address_components']:
+					if address_component['types'][0] in address and 'short' in address[address_component['types'][0]]:
+						address[address_component['types'][0]]['full'] = str(address_component['long_name'])
+						address[address_component['types'][0]]['short'] = str(address_component['short_name'])
+					else:
+						address[address_component['types'][0]] = str(address_component['long_name'])
 	return address
 	
 			
