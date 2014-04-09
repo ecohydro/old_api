@@ -85,6 +85,13 @@ notebook_schema = {
 	# Schema definition, based on Cerberus grammar. Check the Cerberus project
 	# (https://github.com/nicolaiarocci/cerberus) for details.
 	# Sensor text ID for use in URLs and in API data queries/submissions
+	'nbkId' : {
+		'type': 'string',
+		'unqiue': True,
+		'required': True,
+		'maxlength': 10,
+		'minlength': 10,
+	},
 	'name' : {
 		'type': 'string',
 		'maxlength':100,
@@ -496,6 +503,10 @@ data = {
 
 
 notebooks = {
+	'additional_lookup': {
+		'url' : 'regex("[\w]+")',
+		'field': 'nbkId'
+	},
 	# most global settings can be overridden at resource level
 	'resource_methods': ['GET', 'POST'],
 	'schema': notebook_schema,

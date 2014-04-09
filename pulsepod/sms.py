@@ -38,7 +38,7 @@ class SMS(object):
 			self.nobs = 0
 			self.nposted = 0
 			self.data_ids = []
-			self.data = []
+			self.data = None
 	
 	@staticmethod
 	def create(data=None, url=None):
@@ -116,6 +116,7 @@ class SMS(object):
 		return response
 
 	def parse_message(self,i=2):
+		self.data=[]
 		total_obs=0 # Initialize observation counter
 		"""
     	go through the user data of the message
@@ -310,62 +311,62 @@ class status(SMS):
 
 
 class deploy(SMS):
+	# Deployment message format (numbers are str length, so 2 x nBytes)
+	# 		2 + 4 + 3 + 3 + 4 + 8 + 3 + 1 = 28		   |
+	##############################################################
+	#Var:  |FrameId|PodId|MCC|MNC|LAC|CI| V | n_sensors|sID1| ... |sIDn|
+	#len:  |  2    | 4   | 3 | 3 | 4 | 8| 3 |    1     | 2  | ... | 2  |
+	##############################################################
+	# Hard-coded based on Deployment message format:
+	def mcc(self):
+		return int(self.content[6:9],16)
+
+	def mnc(self):
+		return int(self.content[9:12],16)
+
+	def lac(self):
+		return int(self.content[12:16],16)
+
+	def cell_id(self):
+		return int(self.content[16:24],16)
+
+	def voltage(self):
+		return int(self.content[24:27],16)
+
+	def n_sensors(self):
+		return int(self.content[27:28],16)
 
 	def nbkId(self):
 		return str(hashlib.sha224(str(self._created) + str(self.content)).hexdigest()[:10])
 
 	def parse(self):
+		self.data={}
 		print "parsing deploy message"
-		# Deployment message
-		# Length = 2 + 20 + 2 + 2*n_sensors = 24 + 2*n_sensors
-		##############################################################
-		#Var:  |FrameId|PodId|MCC|MNC|LAC|CI|n_sensors|sID1| ... |sIDn|
-		#len:  |  2    | 4   | 3 | 3 | 4 | 8| 1    	  | 2  | ... | 2  |
-		##############################################################
-		json=[]
-		i=2+self.pod_serial_number_length()
-		min_length = 2 + self.pod_serial_number_length() + 3 + 3 + 4 + 8 + 1
 
-		# make sure message is long enough to read everything
 		payload = {'_id':self._id,'type':self.type(),'content':self.content}
 		
-		# Need to get geolocation data
-		# Need to format notebook for this pod
-		if len(self.content) < min_length:
-			raise InvalidMessage('Status message too short', status_code=400, payload=payload)
-		mcc = int(self.content[i:i+3], 16)
-		i +=3
-		mnc = int(self.content[i:i+3], 16)
-		i += 3
-		lac = int(self.content[i:i+4], 16)
-		i += 4
-		cell_id = int(self.content[i:i+8], 16)
-		i += 8
-		n_sensors = int(self.content[i:i+1], 16)
-		i += 1
 		# now make sure length is actually correct
-		if len(self.content) != (25 + 2*n_sensors):
+		i=28
+		print self.n_sensors()
+
+		if len(self.content) != (i + 2*self.n_sensors()):
 			raise InvalidMessage('Status message improperly formatted', status_code=400, payload=payload)
 		# sIDs is list of sensor objectIds
-		sids = []
-		s_ids = []
-		for j in range(n_sensors):
+		self.data['sids'] = []
+		self.data['sensors'] = []
+		for j in range(self.n_sensors()):
 			this_url = cfg.API_URL + '/sensors/' + str(int(self.content[i:i+2], 16))
 			print this_url
 			s = requests.get(this_url).json()
-			sids.append(s['sid'])
-			s_ids.append(s['_id'])
+			self.data['sids'].append(s['sid'])
+			self.data['sensors'].append(s['_id'])
 			i += 2
 
-		self.data = {
-			'cellTowers': {
-				'locationAreaCode': lac, 
-				'cellId': cell_id, 
-				'mobileNetworkCode': mnc,
-				'mobileCountryCode': mcc
-			},
-			'sensors': s_ids,
-			'sids': sids,
+		self.data['cellTowers'] = {
+			'locationAreaCode': self.lac(), 
+			'cellId': self.cell_id(), 
+			'mobileNetworkCode': self.mnc(),
+			'mobileCountryCode': self.mcc()
 		}
 		
 		# Set new notebook Id:
@@ -373,6 +374,8 @@ class deploy(SMS):
 		# Transfer ownership of pod to notebook:
 		self.data['owner'] = self.pod()['owner']	# Owner is always a single user
 		self.data['shared'] = [self.pod()['owner']] # Shared is a list of users
+		self.data['last'] = get_now()
+		self.data['voltage'] = self.voltage()
 		self.data['location'] = google_geolocate_api(self.data['cellTowers'])
 		self.data['elevation'] = google_elevation_api(self.data['location'])
 		self.data['address'] = google_geocoding_api(self.data['location'])		
