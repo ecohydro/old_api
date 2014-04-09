@@ -376,6 +376,7 @@ class deploy(SMS):
 		self.data['shared'] = [self.pod()['owner']] # Shared is a list of users
 		self.data['last'] = get_now()
 		self.data['voltage'] = self.voltage()
+		print self.data['cellTowers']
 		self.data['location'] = google_geolocate_api(self.data['cellTowers'])
 		self.data['elevation'] = google_elevation_api(self.data['location'])
 		self.data['address'] = google_geocoding_api(self.data['location'])		
