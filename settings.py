@@ -87,7 +87,7 @@ notebook_schema = {
 	# Sensor text ID for use in URLs and in API data queries/submissions
 	'name' : {
 		'type': 'string',
-		'maxlength':60,
+		'maxlength':100,
 		'required':True
 	},
 	'last': {
@@ -168,21 +168,21 @@ notebook_schema = {
 			'locationAreaCode':{'type':'number','required':True,'default':40495},
 			'mobileCountryCode':{'type':'number','required':True,'default':310},
 			'mobileNetworkCode':{'type':'number','required':True,'default':260},
-			'age':{'type':'number','required':True,'default':0}
+			'age':{'type':'number','required':False}
 		},
 	},
 	'address' : {
 		'type':'dict',
 		'schema':{
-			'street_address':{'type':'string','required':True,'default':'none'},
-			'route':{'type':'string','required':True,'default':'unknown'},
+			'street_address':{'type':'string','required':False,'default':'none'},
+			'route':{'type':'string','required':False,'default':'unknown'},
 			'intersection':{'type':'string','required':False},
-			'country':{'type':'string','required':True,'default':'unknown'},
-			'administrative_area_level_1':{'type':'string','required':True,'default':'unknown'},
-			'administrative_area_level_2':{'type':'string','required':True,'default':'unknown'},
+			'country':{'type':'string','required':False,'default':'unknown'},
+			'administrative_area_level_1':{'type':'string','required':False,'default':'unknown'},
+			'administrative_area_level_2':{'type':'string','required':False,'default':'unknown'},
 			'administrative_area_level_3':{'type':'string','required':False,},
 			'colloquial_area':{'type':'string','required':False},
-			'locality':{'type':'string','required':True,'default':'unknown'},
+			'locality':{'type':'string','required':False,'default':'unknown'},
 			'sublocality':{'type':'string','required':False},
 			'sublocality_level_1':{'type':'string','required':False},
 			'sublocality_level_2':{'type':'string','required':False},
@@ -192,7 +192,7 @@ notebook_schema = {
 			'neighborhood':{'type':'string','required':False},
 			'premise':{'type':'string','required':False},
 			'subpremise':{'type':'string','required':False},
-			'postal_code':{'type':'string','required':True,'default':'unknown'},
+			'postal_code':{'type':'string','required':False,'default':'unknown'},
 			'natural_feature':{'type':'string','required':False},
 			'airport':{'type':'string','required':False},
 			'park':{'type':'string','required':False},

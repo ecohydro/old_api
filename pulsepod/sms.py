@@ -206,8 +206,7 @@ class SMS(object):
 		return str(cfg.API_URL + '/notebooks/' + str(self.nbkId()))
 
 	def podId(self):
-		self.POD_SERIAL_NUMBER_LENGTH = 4
-		podId =  str(hashlib.sha224(str(int(self.content[2:2+POD_SERIAL_NUMBER_LENGTH], 16))).hexdigest()[:10])	
+		podId =  str(hashlib.sha224(str(int(self.content[2:2+self.pod_serial_number_length()], 16))).hexdigest()[:10])	
 		return podId
 
 	def nbkId(self): # Get the notebook ID for this message by querying the pod

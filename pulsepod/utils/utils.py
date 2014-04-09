@@ -96,6 +96,7 @@ def google_geolocate_api(tower):
 		'mobileNetworkCode':tower['mobileNetworkCode']
 		}]}
 	response =  requests.post(url,data=json.dumps(data),headers=headers).json()
+	print response
 	location={}
 	location['lat'] = response['location']['lat']
 	location['lng'] = response['location']['lng']
@@ -111,7 +112,7 @@ def google_elevation_api(loc):
 	if response['status'] == 'OK':
 		return {
 				'elevation':response['results'][0]['elevation'],
-				'resolution':reponse['results'][0]['resolution']
+				'resolution':response['results'][0]['resolution']
 				}
 	else:
 		return { 'elevation':'unknown','resolution':'unknown'}
