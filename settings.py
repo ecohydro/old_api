@@ -95,8 +95,14 @@ notebook_schema = {
 	},
 	'owner': {
 		'type':'string',
-		'required': False,
-		'default': 'qcjPMcLwR3xWAHFrm'
+		'required': True,
+	},
+	'shared': {
+		'type':'list',
+		'schema': {
+			'type':'string'
+		},
+		'required': True,
 	},
 	'public': {
 		'type':'boolean',

@@ -1,10 +1,11 @@
 import requests
 import hashlib
 import json
+import datetime
 
 from pulsepod.utils import cfg
 from pulsepod.utils.utils import InvalidMessage
-from pulsepod.utils.utils import get_sensor, get_time, get_value
+from pulsepod.utils.utils import get_sensor, get_time, get_value, get_now
 from pulsepod.utils.utils import google_geolocate_api, google_elevation_api, google_geocoding_api
 
 class SMS(object):
@@ -19,6 +20,7 @@ class SMS(object):
 			self.number = data['number'] if 'number' in data else None
 			self.pod_name = data['p'] if 'p' in data else None
 			self.href = data['_links']['self']['href'] 
+			self._created = data['_created'] if '_created' in data else get_now()
 			self.url = cfg.API_URL + self.href
 			self.json = data
 			self.podIdvalue = None
@@ -93,7 +95,9 @@ class SMS(object):
 			patched['data'] = self.data_ids
 		patched['type'] = self.type()	# Update the gateway message type
 		self.patch_message(patched)
-		self.update_notebook() # update notebook for data messages
+		self.patch_notebook() # update notebook for data messages
+		self.patch_pod() 	  # update the pod if number has changed
+
 
 	def patch_message(self,patched):
 		# Patch the message
@@ -122,7 +126,7 @@ class SMS(object):
     	value = look up length
     	"""    
 		payload = {'_id':self._id,'type':self.type(),'content':self.content}
-		while i < self.len():
+		while i < len(self.content):
 			sensor={} # Reset sensor information
 			try:
 				sid = int(self.content[i:i+2], 16)
@@ -172,23 +176,35 @@ class SMS(object):
 		self.nobs = total_obs
 		self.status = 'parsed'
 
-	def update_notebook():
+	# Update function for notebooks (updates voltage, last)
+	def patch_notebook(self):
 		v = next((item for item in self.data if item["sensor"] == "525ebfa0f84a085391000495"), None)
 		# But we need to extract the vbatt_tellit out of the data blob. 
 		# Use the Sensor Id, which should be relatively constant. HACKY! 
 		if v:
 			nbk_update={}
-			nbk_update["last"] = v["t"]
-			nbk_update["voltage"] = v["v"]
-			# Don't forget to set the content type, because it defaults to html
-			this_notebook = cfg.API_URL + "/notebooks/" + str(self.nbkId())				
+			nbk_update['last'] = v['t']
+			nbk_update['voltage'] = v['v']
+			# Don't forget to set the content type, because it defaults to html			
 			headers= {'If-Match':str(self.notebook()['_etag']),'content-type':'application/json'}
-			u = requests.patch(this_notebook,data=json.dumps(nbk_update),headers=headers)
+			u = requests.patch(self.nbkurl(),data=json.dumps(nbk_update),headers=headers)
 			# Need to have some graceful failures here... Response Code? HACKY!
 			return u.status_code
 		else: 
 			return None	
 
+	# Update function for pods (updates pod number if SIM has changed)
+	def patch_pod(self):
+		if not self.number == self.pod()['number']:
+			pod_update={}
+			pod_update['number'] = self.number
+			headers= {'If-Match':str(self.pod()['_etag']),'content-type':'application/json'}
+			u = requests.patch(self.podurl(),data=json.dumps(pod_update),headers=headers)
+			return u.status_code
+		else:
+			return None
+
+	# Pod and Notebook Identity Functions:
 	def pod(self): # Get the pod document for this message
 		if self.pod_data == None or not self.pod_data['_etag'] == requests.head(self.podurl()).headers['Etag']:
 			self.pod_data = requests.get(self.podurl()).json()
@@ -199,12 +215,14 @@ class SMS(object):
 			self.nbk_data =  requests.get(self.nbkurl()).json()
 		return self.nbk_data
 
+	# Pod and Notebook URLs:
 	def podurl(self): # Get the pod url for this message
 		return str(cfg.API_URL + '/pods/' + self.podId())
 
 	def nbkurl(self): # Determine the URL to access this message's notebook
 		return str(cfg.API_URL + '/notebooks/' + str(self.nbkId()))
 
+	# Pod and Notebook Ids:
 	def podId(self):
 		podId =  str(hashlib.sha224(str(int(self.content[2:2+self.pod_serial_number_length()], 16))).hexdigest()[:10])	
 		return podId
@@ -212,14 +230,13 @@ class SMS(object):
 	def nbkId(self): # Get the notebook ID for this message by querying the pod
 		return self.pod()['notebook']
 
+	# Return Message Etag:
 	def etag(self): # Return this message's etag
 		return str(requests.head(self.url).headers['Etag'])
 
+	# Return Message Type (corresponds to SMS subclass name)
 	def type(self):
 		return self.__class__.__name__
-		
-	def len(self):
-		return len(self.content)
 
 # SUB CLASSES (ONE FOR EACH FRAME TYPE)
 class number(SMS): 
@@ -288,12 +305,14 @@ class status(SMS):
 		patched['type'] = self.type()	# Update the gateway message type
 		patched['status'] = self.status
 		self.patch_message(patched)	
+		self.patch_pod() 	  # update the pod if number has changed
+
 
 
 class deploy(SMS):
-	
-	def nbkurl(self):
-		pass
+
+	def nbkId(self):
+		return str(hashlib.sha224(str(self._created) + str(self.content)).hexdigest()[:10])
 
 	def parse(self):
 		print "parsing deploy message"
@@ -349,6 +368,11 @@ class deploy(SMS):
 			'sids': sids,
 		}
 		
+		# Set new notebook Id:
+		self.data['nbkId'] = self.nbkId()
+		# Transfer ownership of pod to notebook:
+		self.data['owner'] = self.pod()['owner']	# Owner is always a single user
+		self.data['shared'] = [self.pod()['owner']] # Shared is a list of users
 		self.data['location'] = google_geolocate_api(self.data['cellTowers'])
 		self.data['elevation'] = google_elevation_api(self.data['location'])
 		self.data['address'] = google_geocoding_api(self.data['location'])		
@@ -383,6 +407,7 @@ class deploy(SMS):
 		patched['type'] = self.type()	# Update the gateway message type
 		patched['status'] = self.status
 		self.patch_message(patched)
+		self.patch_pod() 	  # update the pod if number has changed
 
 
 class invalid(SMS):

@@ -63,6 +63,9 @@ def get_sensor(sid):
 
 	return sensor
 
+def get_now():
+	return time.strftime("%a, %d %b %Y %H:%M:%S GMT",time.gmtime())
+
 def get_time(content,i):
 	#parse unixtime to long int, then convert to database time
 	try:
