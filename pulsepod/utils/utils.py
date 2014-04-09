@@ -102,7 +102,7 @@ def google_geolocate_api(tower):
 	response =  requests.post(url,data=json.dumps(data),headers=headers).json()
 	print response
 	location={}
-	if not error in response:
+	if not 'error' in response:
 		location['lat'] = response['location']['lat']
 		location['lng'] = response['location']['lng']
 		location['accuracy'] = response['accuracy']
