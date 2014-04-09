@@ -89,6 +89,7 @@ def get_value(content,i,sensor):
 	return float(value)
 
 def google_geolocate_api(tower):
+	print tower
 	api_key = cfg.GOOGLE_API_KEY
 	url = 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + api_key
 	headers = {'content-type':'application/json'}
