@@ -89,7 +89,12 @@ def get_value(content,i,sensor):
 	return float(value)
 
 def google_geolocate_api(tower):
-	print tower
+	location={}
+	# Assume this doesn't work:
+	location['lat'] = 'unknown'
+	location['lng'] = 'unknown'
+	location['accuracy'] = 'unknown'
+
 	api_key = cfg.GOOGLE_API_KEY
 	url = 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + api_key
 	headers = {'content-type':'application/json'}
@@ -101,19 +106,14 @@ def google_geolocate_api(tower):
 		}]}
 	response =  requests.post(url,data=json.dumps(data),headers=headers).json()
 	print response
-	location={}
 	if not 'error' in response:
 		location['lat'] = response['location']['lat']
 		location['lng'] = response['location']['lng']
 		location['accuracy'] = response['accuracy']
-	else:
-		location['lat'] = 'unknown'
-		location['lng'] = 'unknown'
-		location['accuracy'] = 'unknown'
 	return location
 
 def google_elevation_api(loc):
-	if not loc['lat'] == 'unknown' or loc['lng'] == 'unknown':
+	if not 'unknown' in loc:
 		api_key = cfg.GOOGLE_API_KEY
 		baseurl = 'https://maps.googleapis.com/maps/api/elevation/json?locations='
 		tailurl = '&sensor=false&key=' + api_key
@@ -138,7 +138,7 @@ def google_geocoding_api(loc):
 		'route':{'short':'unknown','full':'unknown'},
 		'street_address':{'short':'unknown','full':'unknown'},
 	}
-	if not loc['lat'] == 'unknown' or loc['lng'] == 'unknown':
+	if not 'unknown' in loc:
 		# must pre-seed this with all the data we want shorted:
 		api_key = cfg.GOOGLE_API_KEY
 		baseurl = 'https://maps.googleapis.com/maps/api/geocode/json?latlng='
