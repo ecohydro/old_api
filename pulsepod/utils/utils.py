@@ -113,7 +113,7 @@ def google_geolocate_api(tower):
 	return location
 
 def google_elevation_api(loc):
-	if not 'unknown' in loc:
+	if not 'unknown' in loc.values():
 		print loc
 		api_key = cfg.GOOGLE_API_KEY
 		baseurl = 'https://maps.googleapis.com/maps/api/elevation/json?locations='
@@ -139,7 +139,7 @@ def google_geocoding_api(loc):
 		'route':{'short':'unknown','full':'unknown'},
 		'street_address':{'short':'unknown','full':'unknown'},
 	}
-	if not 'unknown' in loc:
+	if not 'unknown' in loc.values():
 		# must pre-seed this with all the data we want shorted:
 		print loc
 		api_key = cfg.GOOGLE_API_KEY
