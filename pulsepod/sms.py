@@ -209,6 +209,7 @@ class SMS(object):
 	# Pod and Notebook Identity Functions:
 	def pod(self): # Get the pod document for this message
 		if self.pod_data == None or not self.pod_data['_etag'] == requests.head(self.podurl()).headers['Etag']:
+			print "Updating pod information for concurrency...."
 			self.pod_data = requests.get(self.podurl()).json()
 		return self.pod_data
 
@@ -220,6 +221,9 @@ class SMS(object):
 	# Pod and Notebook URLs:
 	def podurl(self): # Get the pod url for this message
 		return str(cfg.API_URL + '/pods/' + self.podId())
+
+	def podurl_objid(self):
+		return str(cfg.API_URL + '/pods/' + self.pod()['_id'])
 
 	def nbkurl(self): # Determine the URL to access this message's notebook
 		return str(cfg.API_URL + '/notebooks/' + str(self.nbkId()))
@@ -388,20 +392,27 @@ class deploy(SMS):
 	def post(self):
 		print "posting deploy message"
 		# Need to create new notebook 
-		print "creating new notebook"
 		nbkurl = cfg.API_URL + '/notebooks'
 		headers = {'content-type':'application/json'}
 		print self.data
 		d = requests.post(url=nbkurl, data=json.dumps(self.data), headers=headers)
+		print self.type() + " deployment status_code: " +  str(d.status_code)
 		if d.status_code == cfg.CREATED:
 			pod_update={}
 			item = d.json()
 			print 'Item status: ' + item[cfg.STATUS]
+			print 'Item returned' + json.dumps(item)
 		 	if not item[cfg.STATUS] == cfg.ERR:
 		 		# PATCH THE POD ASAP:
+		 		print "Patching " + self.pod()['name'] + " with notebook " + item[u'_id']
 		 		pod_update['notebook'] = item[u'_id']
+		 		print self.pod()['_etag']
+		 		print self.podurl()
 		 		headers= {'If-Match':str(self.pod()['_etag']),'content-type':'application/json'}
-		 		p = requests.patch(self.podurl(),data=json.dumps(pod_update),headers=headers)
+		 		p = requests.patch(self.podurl_objid(),data=json.dumps(pod_update),headers=headers)
+		 		if not p.json()['_status'] == cfg.OK:
+			 		print "Pod patch successful"
+		 			print p.json()
 		else:
 			print d.status_code
 			print d.text
