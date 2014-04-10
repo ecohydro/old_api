@@ -427,7 +427,7 @@ messages_schema = {
 	'id':{
 		'type':'string',
 		'required':True,
-		'maxlength':20,
+		'maxlength':40,
 	},
 	'number':{
 		'type':'string',
