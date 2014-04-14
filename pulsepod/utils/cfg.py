@@ -20,8 +20,11 @@ GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 # EVE API status ERR response (who knows if this will 
 # ever change):
 ERR='ERR'
+OK='OK'
 STATUS='_status'
 ISSUES='_issues'
+ETAG='_etag'
+ID='_id'
 
 
 # POD DATA FRAMES 

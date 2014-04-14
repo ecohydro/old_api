@@ -44,8 +44,8 @@ data_schema = {
 	# Schema definition, based on Cerberus grammar. Check the Cerberus project
 	# (https://github.com/nicolaiarocci/cerberus) for details.
 	# Note: using short variable names to save space in MongoDB.
-	't':{'type':'datetime','required':True},   # datetime 
-	'v':{'type':'float','required':True},      # value
+	't':{'type':'datetime','required':True},   			# datetime 
+	'v':{'type':'float','required':True,'default','1'}, # value
 	'p':{'type':'string','required':True},     # pod
 	's':{'type':'string','required':True},     # sensor name
 	'notebook':{

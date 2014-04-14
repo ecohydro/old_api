@@ -188,7 +188,7 @@ class SMS(object):
 			nbk_update['voltage'] = v['v']
 			nbh_update['status'] = 'active'
 			# Don't forget to set the content type, because it defaults to html			
-			headers= {'If-Match':str(self.notebook()['_etag']),'content-type':'application/json'}
+			headers= {'If-Match':str(self.notebook()[cfg.ETAG]),'content-type':'application/json'}
 			u = requests.patch(self.nbkurl(),data=json.dumps(nbk_update),headers=headers)
 			# Need to have some graceful failures here... Response Code? HACKY!
 			return u.status_code
@@ -200,7 +200,7 @@ class SMS(object):
 		if not self.number == self.pod()['number']:
 			pod_update={}
 			pod_update['number'] = self.number
-			headers= {'If-Match':str(self.pod()['_etag']),'content-type':'application/json'}
+			headers= {'If-Match':str(self.pod()[cfg.ETAG]),'content-type':'application/json'}
 			u = requests.patch(self.podurl(),data=json.dumps(pod_update),headers=headers)
 			return u.status_code
 		else:
@@ -208,13 +208,13 @@ class SMS(object):
 
 	# Pod and Notebook Identity Functions:
 	def pod(self): # Get the pod document for this message
-		if self.pod_data == None or not self.pod_data['_etag'] == requests.head(self.podurl()).headers['Etag']:
+		if self.pod_data == None or not self.pod_data[cfg.ETAG] == requests.head(self.podurl()).headers['Etag']:
 			print "Updating pod information for concurrency...."
 			self.pod_data = requests.get(self.podurl()).json()
 		return self.pod_data
 
 	def notebook(self): # Get the notebook document for this message
-		if self.nbk_data == None or not self.nbk_data['_etag'] == requests.head(self.nbkurl()).headers['Etag']:
+		if self.nbk_data == None or not self.nbk_data[cfg.ETAG] == requests.head(self.nbkurl()).headers['Etag']:
 			self.nbk_data =  requests.get(self.nbkurl()).json()
 		return self.nbk_data
 
@@ -223,7 +223,7 @@ class SMS(object):
 		return str(cfg.API_URL + '/pods/' + self.podId())
 
 	def podurl_objid(self):
-		return str(cfg.API_URL + '/pods/' + self.pod()['_id'])
+		return str(cfg.API_URL + '/pods/' + self.pod()[cfg.ID])
 
 	def nbkurl(self): # Determine the URL to access this message's notebook
 		return str(cfg.API_URL + '/notebooks/' + str(self.nbkId()))
@@ -346,14 +346,12 @@ class deploy(SMS):
 
 	def parse(self):
 		self.data={}
-		print "parsing deploy message"
-
+		
 		payload = {'_id':self._id,'type':self.type(),'content':self.content}
 		
 		# now make sure length is actually correct
 		i=28
-		print self.n_sensors()
-
+		
 		if len(self.content) != (i + 2*self.n_sensors()):
 			raise InvalidMessage('Status message improperly formatted', status_code=400, payload=payload)
 		# sIDs is list of sensor objectIds
@@ -361,10 +359,9 @@ class deploy(SMS):
 		self.data['sensors'] = []
 		for j in range(self.n_sensors()):
 			this_url = cfg.API_URL + '/sensors/' + str(int(self.content[i:i+2], 16))
-			print this_url
 			s = requests.get(this_url).json()
 			self.data['sids'].append(s['sid'])
-			self.data['sensors'].append(s['_id'])
+			self.data['sensors'].append(s[cfg.ID])
 			i += 2
 
 		self.data['cellTowers'] = {
@@ -394,23 +391,18 @@ class deploy(SMS):
 		# Need to create new notebook 
 		nbkurl = cfg.API_URL + '/notebooks'
 		headers = {'content-type':'application/json'}
-		print self.data
 		d = requests.post(url=nbkurl, data=json.dumps(self.data), headers=headers)
-		print self.type() + " deployment status_code: " +  str(d.status_code)
 		if d.status_code == cfg.CREATED:
 			pod_update={}
 			item = d.json()
-			print 'Item status: ' + item[cfg.STATUS]
-			print 'Item returned' + json.dumps(item)
-		 	if not item[cfg.STATUS] == cfg.ERR:
+			if not item[cfg.STATUS] == cfg.ERR:
 		 		# PATCH THE POD ASAP:
-		 		print "Patching " + self.pod()['name'] + " with notebook " + item[u'_id']
-		 		pod_update['notebook'] = item[u'_id']
-		 		print self.pod()['_etag']
+		 		pod_update['notebook'] = item[cfg.ID]
+		 		print self.pod()[cfg.ETAG]
 		 		print self.podurl()
-		 		headers= {'If-Match':str(self.pod()['_etag']),'content-type':'application/json'}
+		 		headers= {'If-Match':str(self.pod()[cfg.ETAG]),'content-type':'application/json'}
 		 		p = requests.patch(self.podurl_objid(),data=json.dumps(pod_update),headers=headers)
-		 		if not p.json()['_status'] == cfg.OK:
+		 		if not p.json()[cfg.STATUS] == cfg.OK:
 			 		print "Pod patch successful"
 		 			print p.json()
 		else:
