@@ -15,6 +15,12 @@ MONGO_USERNAME = os.getenv('MONGO_USERNAME')
 MONGO_PASSWORD = os.getenv('MONGO_PASSWORD')
 MONGO_DBNAME = os.getenv('MONGO_DBNAME')
 
+VERSIONS = '_notebooks'
+VERSION_PARAM = 'notebook'
+VERSION = '_notebook'
+LATEST_VERSION = '_current_notebook'
+VERSION_ID_SUFFIX = '_pod'
+
 SERVER_NAME = os.getenv('SERVER_NAME')
 
 # Enable reads (GET), inserts (POST) and DELETE for resources/collections
@@ -81,55 +87,131 @@ user_schema = {
 	'keys': {'type': 'list','items':[{'type':'string'}]},
 }
 
-notebook_schema = {
-	# Schema definition, based on Cerberus grammar. Check the Cerberus project
-	# (https://github.com/nicolaiarocci/cerberus) for details.
+
+
+pod_schema = { 
+	# Non-versioned pod data:
+	# Non-versioned pod data should be consistent for any notebook. 
+	# These are fixed attributes of the pod itself, or dynamic attributes
+	# that do not need to be associated with notebooks.
+	# Original Pod schema:
 	# Sensor text ID for use in URLs and in API data queries/submissions
-	'nbkId' : {
+	# Provisioning Properties (MUST BE SENT WITH POST):
+	'name' : { # Pod URL name (use the pod name generator)
 		'type': 'string',
-		'unqiue': True,
-		'required': True,
-		'maxlength': 10,
 		'minlength': 10,
+		'maxlength': 40,
+		'required': True,
+		'unique': True,
+		'versioned':False,
 	},
-	'name' : {
+	'qr' : {
+		'type': 'string',
+		'required':False,
+		'unique' : True,
+		'versioned': False,
+		'default':'https://s3.amazonaws.com/pulsepodqrsvgs/default.svg',
+	},
+	'owner' : {
+		'type':'string',
+		'required':True,
+		'maxlength':25,
+		'minlength':4,
+		'versioned':False,
+	},
+	'podId' : { # Pod ID for use in SMS messages.
+		'type':'number',
+		'max':65535,
+		'min':0,
+		'required':False,
+		'versioned':False,
+		'default':0
+	},
+	'imei':{ # IMEI address of cellular radio, acts as Serial Number for the Pod
+		'type':'string', # Need to define an IMEI address type
+		'unique':False,
+		'required':False,
+		'minlength':15,
+		'maxlength':20,
+		'versioned':False,
+		'default':'0000000000000000'
+	},
+	'nbk_name' : {
 		'type': 'string',
 		'maxlength':100,
-		'required':True
+		'required':False,
+		'versioned':True,
+		'default':'Default Notebook'
 	},
-	'last': {
+	# Non-provisioning fields:
+	# Let's just assume this is always GSM for now.
+	'radio':{
+		'type': 'string',
+		'allowed': ['gsm','cdma','wcdma','wifi','irridium'],
+		'required':False,
+		'default':'gsm',
+		'versioned':False,
+	},
+	# Status Properties (returned via status resource calls)
+	'last': {	# Most recent reporting date
 		'type':'datetime',
-	},
-	'owner': {
-		'type':'string',
-		'required': True,
-	},
-	'shared': {
-		'type':'list',
-		'schema': {
-			'type':'string'
-		},
-		'required': True,
-	},
-	'public': {
-		'type':'boolean',
-		'required': False,
-		'default': True
+		'versioned':False
 	},
 	'voltage':{
 		'type':'number',
 		'required':False,
-		'default':0
+		'default':0,
+		'versioned':False
 	},
-	'favorite': {
-		'type':'number',
+	'mode': {
+		'type': 'string',
+		'allowed': ['inactive','teen','asleep','normal'],
+		'default' : 'inactive',
+		'versioned':False
+	},
+	'number' : {  # Pod number (E.164 format)
+		'type':'string',
+		'minlength':10,
+		'maxlength':15,
 		'required':False,
+		'unique':False,
+		'versioned':True,
+		'default':'18005551212'
+	},
+	# Deployment specific data (versioned)
+	# Schema definition, based on Cerberus grammar. Check the Cerberus project
+	# (https://github.com/nicolaiarocci/cerberus) for details.
+
+	# Tags related to the location and user-supplied information about this notebook
+	# (not yet implemented)
+	'tags': {
+		'type': 'list',
+		'schema': {'type':'string'},
+		'versioned':True,
+		'required':False,
+		'default':['none']
+	},
+	'shared': {
+		'type':'list',
+		'schema': {'type':'string'},
+		'required':False,
+		'versioned':True,
+		'default':['pulsepod'],
+	},
+	'firmware':{
+		'type':'integer',
+		'minlength':1,
+		'maxlength':2,
+		'default':0,
+		'required':False,
+		'versioned':True
 	},
 	'status': {
 		'type': 'string',
-		'allowed': ['dead','deployed','provisioned','active','unknown'],
+		'allowed': ['born','dead','deployed','provisioned','active','unknown'],
 		'required':False,
-		'default' : 'provisioned'
+		'default' : 'born',
+		'versioned':True,
 	},
 	# Information about what sensors are included in this notebook:
 	'sensors': {
@@ -142,6 +224,7 @@ notebook_schema = {
 				'embeddable': True
 			},
 		},
+		'versioned':True,
 	},
 	# sids facilitate lookups in meteor. May not need this. 
 	# Depends on how the $in mongodb query behaves with objectids in meteor (likely badly)
@@ -149,40 +232,38 @@ notebook_schema = {
 		'type': 'list',
 		'schema': {
 			'type':'number'
-		}
-	},
-	# Tags related to the location and user-supplied information about this notebook
-	# (not yet implemented)
-	'tags': {
-		'type': 'list',
-		'schema': {'type':'string'}
+		},
+		'versioned':True,
 	},
 	# Location information for this notebook
 	'location': {
 		'type':'dict',
 		'schema': {
-			'lat':{'type':'number','required':True},
-			'lng':{'type':'number','required':True},
-			'accuracy':{'type':'number','required':True}
+			'lat':{'type':'number','required':False,'default':0},
+			'lng':{'type':'number','required':False,'default':0},
+			'accuracy':{'type':'number','required':False,'default':100},
 		},
+		'versioned':True,
 	},
 	'elevation' : {
 		'type':'dict',
 		'schema': {
-			'elevation':{'type':'number','required':True,'default':-9999},
-			'resolution':{'type':'number','required':True,'default':-9999}
-		}
+			'elevation':{'type':'number','required':False,'default':0},
+			'resolution':{'type':'number','required':False,'default':1}
+		},
+		'versioned':True
 	},
 	# Notebook cellular information:
 	'cellTowers':{ # Follows the Google Location API schema
 		'type':'dict',
 		'schema':{
-			'cellId':{'type':'number','required':True,'default':39627456},
-			'locationAreaCode':{'type':'number','required':True,'default':40495},
-			'mobileCountryCode':{'type':'number','required':True,'default':310},
-			'mobileNetworkCode':{'type':'number','required':True,'default':260},
+			'cellId':{'type':'number','required':False,'default':39627456},
+			'locationAreaCode':{'type':'number','required':False,'default':40495},
+			'mobileCountryCode':{'type':'number','required':False,'default':310},
+			'mobileNetworkCode':{'type':'number','required':False,'default':260},
 			'age':{'type':'number','required':False}
 		},
+		'versioned':True,
 	},
 	'address' : {
 		'type':'dict',
@@ -256,76 +337,33 @@ notebook_schema = {
 			'bus_station':{'type':'string','required':False},
 			'train_station':{'type':'string','required':False},
 			'transit_station':{'type':'string','required':False}
-		}
+		},
+		'versioned':True,
 	},
 	# need to add geocoding information to the notebook...
 	# need to add notes to notebook...
 	# a users list would allow sharing of notebooks...
 }
 
-pod_schema = { 
-	# Schema definition, based on Cerberus grammar. Check the Cerberus project
-	# (https://github.com/nicolaiarocci/cerberus) for details.
-	# Sensor text ID for use in URLs and in API data queries/submissions
-	'name' : { # Pod URL name (use the pod name generator)
+status_schema = {
+	# Status Properties (returned via status resource calls)
+	'last': {	# Most recent reporting date
+		'type':'datetime',
+	},
+	'voltage':{
+		'type':'number',
+		'required':False,
+		'default':0,
+	},
+	'mode': {
 		'type': 'string',
-		'minlength': 10,
-		'maxlength': 40,
-		'required': True,
-		'unique': True,
-	},
-	'owner' : {
-		'type':'string',
-		'required':True,
-		'maxlength':25,
-		'minlength':15,
-	},
-	'podId' : { # Pod ID for use in SMS
-		'type':'string',
-		'minlength':10,
-		'maxlength':10,
-		'required':True,
-		'unique': True,
-	},
-	'notebook' : { # Pod ID (usually phone number)
-		'type':'objectid',
-		'data_relation': {
-			 'resource': 'notebooks',
-			 'field': '_id',
-			 'embeddable':True
-		},
+		'allowed': ['teen','asleep','normal'],
+		'default' : 'normal',
 	},
 	'number' : {  # Pod number (E.164 format)
 		'type':'string',
 		'minlength':10,
 		'maxlength':15,
-		'required':True,
-		'unique':False,
-	},
-	'imei':{ # IMEI address of cellular radio, acts as Serial Number for the Pod
-		'type':'string', # Need to define an IMEI address type
-		'unique':True,
-		'required':True,
-		'minlength':15,
-		'maxlength':20,
-	},
-	'firmware':{
-		'type':'integer',
-		'minlength':1,
-		'maxlength':2,
-		'default':0,
-		'required':False
-	},
-	'mode': {
-		'type': 'string',
-		'allowed': ['teen','asleep','normal'],
-		'default' : 'normal'
-	},
-	'radioType':{
-		'type': 'string',
-		'allowed': ['gsm','cdma','wcdma'],
-		'required':True,
-		'defaul':'gsm',
 	},
 }
 
@@ -470,6 +508,7 @@ messages_schema = {
 		'required':'False',
 		'default':0
 	},
+	# Can remove this with versions....
 	'notebook':{
 		'type':'objectid',
 		'data_relation': {
@@ -515,7 +554,7 @@ pods = {
 
 	# most global settings can be overridden at resource level
 	'resource_methods': ['GET','POST'],
-	'item_methods': ['GET','PATCH'],
+	'item_methods': ['GET','PUT','PATCH'],
 
 	# Public read-only access:
 #	'public_methods': ['GET'],
@@ -537,18 +576,19 @@ data = {
 	}
 }
 
-
-notebooks = {
-	'additional_lookup': {
-		'url' : 'regex("[\w]+")',
-		'field': 'nbkId'
-	},
-	# most global settings can be overridden at resource level
-	'resource_methods': ['GET', 'POST'],
-	'schema': notebook_schema,
+status = {
+	'url':'pods/status',
+	'item_lookup_field':'name',
+	'item_url':'regex("([\w]+\-){1,3}[0-9]{4}")',
+	'resource_methods': ['GET'],
+	'item_methods': ['GET','PATCH'],
+	'schema' : status_schema,
 	'datasource':{
-		'default_sort':[('_created',-1)],
-	}
+		'default_sort':[('_updated',-1)],
+		'source':'pods',
+		'projection': {'_id':1,'name':1,'voltage':1,'_updated':1,'last':1,'_latest_notebook':1,'mode':10}
+	},
+	'item_title':'Status',
 }
 
 users = {
@@ -651,11 +691,12 @@ nexmo = {
 #------------------------------------------------------------------------------
 
 DOMAIN = {
+		'status':status,
     	'pods': pods,
 		'users':users,
 		'sensors':sensors,
 		'data':data,
-		'notebooks':notebooks,
+#		'notebooks':notebooks,
 		'smssync':smssync,
 		'twilio':twilio,
 		'nexmo':nexmo,

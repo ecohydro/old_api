@@ -21,7 +21,7 @@ class SMS(object):
 			self.pod_name = data['p'] if 'p' in data else None
 			self.href = data['_links']['self']['href'] 
 			self._created = data['_created'] if '_created' in data else get_now()
-			self.url = cfg.API_URL + self.href
+			self.url = 'http://' + self.href
 			self.json = data
 			self.podIdvalue = None
 			self.pod_data = None
@@ -51,7 +51,14 @@ class SMS(object):
 
 		# Do a bunch of stuff to determine type:
 		# (3) Read message type from message content
-		type = cfg.FRAMES[int(data['message'][0:2],16)]
+		try: # Catch invalid messages
+			frame_number = int(data['message'][0:2],16)
+		except ValueError:
+			frame_number = 99
+		try: # Catch undefined Frame IDs.
+			type = cfg.FRAMES[frame_number]
+		except KeyError:
+			type = cfg.FRAMES[99]
 		if type == "number": 	return number(data)
 		if type == "imei": 		return podId(data)
 		if type == "status": 	return status(data)
@@ -95,14 +102,12 @@ class SMS(object):
 			patched['data'] = self.data_ids
 		patched['type'] = self.type()	# Update the gateway message type
 		self.patch_message(patched)
-		self.patch_notebook() # update notebook for data messages
-		self.patch_pod() 	  # update the pod if number has changed
-
+		self.patch_status() # update pod with voltages, last, number, etc...
 
 	def patch_message(self,patched):
 		# Patch the message
 		response = {}
-		headers = {'If-Match':str(self.etag()),'content-type':'application/json'}
+		headers = {'If-Match':str(self.msgEtag()),'content-type':'application/json'}
 		p = requests.patch(self.url,data=json.dumps(patched),headers=headers)
 		if p.status_code == requests.codes.ok:
 			response['status'] = patched['status'] 	# RQ reporting
@@ -114,6 +119,28 @@ class SMS(object):
 		else:
 			print "That shit didn't work"
 		return response
+
+	# Update function for pods (updates voltage, last)
+	def patch_status(self):
+		v = next((item for item in self.data if item["sensor"] == "525ebfa0f84a085391000495"), None)
+		# But we need to extract the vbatt_tellit out of the data blob. 
+		# Use the Sensor Id, which should be relatively constant. HACKY! 
+		stat_update={}
+		if v:
+			stat_update['last'] = v['t']
+			stat_update['voltage'] = v['v']
+			stat_update['status'] = 'active'
+		if not self.number == self.pod()['number']:
+			stat_update['number'] = self.number 
+
+		if stat_update:
+			# Don't forget to set the content type, because it defaults to html			
+			headers= {'If-Match':str(self.statEtag()),'content-type':'application/json'}
+			u = requests.patch(self.staturl(),data=json.dumps(stat_update),headers=headers)
+			# Need to have some graceful failures here... Response Code? HACKY!
+			return u.status_code
+		else: 
+			return None	
 
 	def parse_message(self,i=2):
 		self.data=[]
@@ -144,12 +171,6 @@ class SMS(object):
 			else:
 				sensor_string = str(sensor['context']) + ' ' + str(sensor['variable'])
 			
-			print "s:" + str(sensor_string)
-			print 'p:' + str(self.pod()['name'])
-			print 'sensor:' + sensor['_id']
-			print 'pod:' + self.pod()['_id']
-			print 'notebook:' + self.nbkId()
-
 			# add entry for each observation (nObs) by the same sensor
 			entry = {}
 			while nobs > 0:
@@ -159,7 +180,7 @@ class SMS(object):
 							  'p': str(self.pod()['name']),
 							  'sensor': sensor['_id'],
 							  'pod': self.pod()['_id'],
-							  'notebook': self.nbkId()
+							  'notebook': self.pod()['_current_notebook']
 							}
 				except:
 					raise InvalidMessage('Error creating data record', status_code=400, payload=self.pod())
@@ -177,46 +198,12 @@ class SMS(object):
 		self.nobs = total_obs
 		self.status = 'parsed'
 
-	# Update function for notebooks (updates voltage, last)
-	def patch_notebook(self):
-		v = next((item for item in self.data if item["sensor"] == "525ebfa0f84a085391000495"), None)
-		# But we need to extract the vbatt_tellit out of the data blob. 
-		# Use the Sensor Id, which should be relatively constant. HACKY! 
-		if v:
-			nbk_update={}
-			nbk_update['last'] = v['t']
-			nbk_update['voltage'] = v['v']
-			nbh_update['status'] = 'active'
-			# Don't forget to set the content type, because it defaults to html			
-			headers= {'If-Match':str(self.notebook()[cfg.ETAG]),'content-type':'application/json'}
-			u = requests.patch(self.nbkurl(),data=json.dumps(nbk_update),headers=headers)
-			# Need to have some graceful failures here... Response Code? HACKY!
-			return u.status_code
-		else: 
-			return None	
-
-	# Update function for pods (updates pod number if SIM has changed)
-	def patch_pod(self):
-		if not self.number == self.pod()['number']:
-			pod_update={}
-			pod_update['number'] = self.number
-			headers= {'If-Match':str(self.pod()[cfg.ETAG]),'content-type':'application/json'}
-			u = requests.patch(self.podurl(),data=json.dumps(pod_update),headers=headers)
-			return u.status_code
-		else:
-			return None
-
 	# Pod and Notebook Identity Functions:
 	def pod(self): # Get the pod document for this message
 		if self.pod_data == None or not self.pod_data[cfg.ETAG] == requests.head(self.podurl()).headers['Etag']:
 			print "Updating pod information for concurrency...."
 			self.pod_data = requests.get(self.podurl()).json()
 		return self.pod_data
-
-	def notebook(self): # Get the notebook document for this message
-		if self.nbk_data == None or not self.nbk_data[cfg.ETAG] == requests.head(self.nbkurl()).headers['Etag']:
-			self.nbk_data =  requests.get(self.nbkurl()).json()
-		return self.nbk_data
 
 	# Pod and Notebook URLs:
 	def podurl(self): # Get the pod url for this message
@@ -225,20 +212,20 @@ class SMS(object):
 	def podurl_objid(self):
 		return str(cfg.API_URL + '/pods/' + self.pod()[cfg.ID])
 
-	def nbkurl(self): # Determine the URL to access this message's notebook
-		return str(cfg.API_URL + '/notebooks/' + str(self.nbkId()))
+	def staturl(self):
+		return str(cfg.API_URL + '/pods/status/' + str(self.pod()['name']))
 
 	# Pod and Notebook Ids:
 	def podId(self):
 		podId =  str(hashlib.sha224(str(int(self.content[2:2+self.pod_serial_number_length()], 16))).hexdigest()[:10])	
 		return podId
 
-	def nbkId(self): # Get the notebook ID for this message by querying the pod
-		return self.pod()['notebook']
-
 	# Return Message Etag:
-	def etag(self): # Return this message's etag
+	def msgEtag(self): # Return this message's etag
 		return str(requests.head(self.url).headers['Etag'])
+
+	def statEtag(self):
+		return str(requests.head(self.staturl()).headers['Etag'])
 
 	# Return Message Type (corresponds to SMS subclass name)
 	def type(self):
@@ -311,7 +298,7 @@ class status(SMS):
 		patched['type'] = self.type()	# Update the gateway message type
 		patched['status'] = self.status
 		self.patch_message(patched)	
-		self.patch_pod() 	  # update the pod if number has changed
+		self.patch_status() 	  # update the pod if number has changed
 
 
 
@@ -345,8 +332,13 @@ class deploy(SMS):
 		return str(hashlib.sha224(str(self._created) + str(self.content)).hexdigest()[:10])
 
 	def parse(self):
-		self.data={}
-		
+		# Start by copying pod data to self.data, since PUT is document complete 
+		self.data = {}
+		self.data['name'] = self.pod()['name'] 
+		self.data['imei'] = self.pod()['imei'] 
+		self.data['radio'] = self.pod()['radio']
+		self.data['podId'] = self.pod()['podId']
+
 		payload = {'_id':self._id,'type':self.type(),'content':self.content}
 		
 		# now make sure length is actually correct
@@ -358,8 +350,8 @@ class deploy(SMS):
 		self.data['sids'] = []
 		self.data['sensors'] = []
 		for j in range(self.n_sensors()):
-			this_url = cfg.API_URL + '/sensors/' + str(int(self.content[i:i+2], 16))
-			s = requests.get(this_url).json()
+			sensor_url = cfg.API_URL + '/sensors/' + str(int(self.content[i:i+2], 16))
+			s = requests.get(sensor_url).json()
 			self.data['sids'].append(s['sid'])
 			self.data['sensors'].append(s[cfg.ID])
 			i += 2
@@ -370,9 +362,7 @@ class deploy(SMS):
 			'mobileNetworkCode': self.mnc(),
 			'mobileCountryCode': self.mcc()
 		}
-		
-		# Set new notebook Id:
-		self.data['nbkId'] = self.nbkId()
+		self.data['number'] = self.number
 		# Transfer ownership of pod to notebook:
 		self.data['owner'] = self.pod()['owner']	# Owner is always a single user
 		self.data['shared'] = [self.pod()['owner']] # Shared is a list of users
@@ -381,41 +371,27 @@ class deploy(SMS):
 		self.data['location'] = google_geolocate_api(self.data['cellTowers'])
 		self.data['elevation'] = google_elevation_api(self.data['location'])
 		self.data['address'] = google_geocoding_api(self.data['location'])		
-		self.data['name'] = self.pod()['name'] + ' data from ' + \
+		self.data['nbk_name'] = self.pod()['name'] + ' data from ' + \
 							self.data['address']['locality']['short'] + ', ' + \
 							self.data['address']['administrative_area_level_1']['short'] + \
 						    ' in ' + self.data['address']['country']['short']
 
 	def post(self):
 		print "posting deploy message"
-		# Need to create new notebook 
-		nbkurl = cfg.API_URL + '/notebooks'
-		headers = {'content-type':'application/json'}
-		d = requests.post(url=nbkurl, data=json.dumps(self.data), headers=headers)
+		# Note, use podurl_objid for PUT requets (podId is read-only!) and send Etag
+		headers = {'If-Match':str(self.pod()[cfg.ETAG]),'content-type':'application/json'}
+		d = requests.put(url=self.podurl_objid(), data=json.dumps(self.data), headers=headers)
 		if d.status_code == cfg.CREATED:
-			pod_update={}
-			item = d.json()
-			if not item[cfg.STATUS] == cfg.ERR:
-		 		# PATCH THE POD ASAP:
-		 		pod_update['notebook'] = item[cfg.ID]
-		 		print self.pod()[cfg.ETAG]
-		 		print self.podurl()
-		 		headers= {'If-Match':str(self.pod()[cfg.ETAG]),'content-type':'application/json'}
-		 		p = requests.patch(self.podurl_objid(),data=json.dumps(pod_update),headers=headers)
-		 		if not p.json()[cfg.STATUS] == cfg.OK:
-			 		print "Pod patch successful"
-		 			print p.json()
+			print "New deployment created"
 		else:
 			print d.status_code
 			print d.text
-		
 
 	def patch(self):
 		patched={}
 		patched['type'] = self.type()	# Update the gateway message type
 		patched['status'] = self.status
 		self.patch_message(patched)
-		self.patch_pod() 	  # update the pod if number has changed
 
 
 class invalid(SMS):

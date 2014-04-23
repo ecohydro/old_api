@@ -8,9 +8,9 @@ from datetime import datetime
 from eve import Eve
 from flask import jsonify, request
 from eve.utils import config
-
+import qrcode, qrcode.image.svg
 from pulsepod.utils import cfg
-from pulsepod.methods.posts import post_data_to_API
+from pulsepod.methods.posts import post_data_to_API, post_pod_create_qr
 from pulsepod.utils.utils import *
 
 # Create an rq queue from rq and worker.py:
@@ -47,11 +47,9 @@ def handle_invalid_message(error):
 def before_post(resource, request):
 	print 'Post to ' + resource + ' recieved'
 
-def before_post_notebook(resource, request):
-	print 'Recieved request to create notebook'
-	
-def before_patch_notebook(resource, request):
-	print 'Recieved request to patch notebook'	
+def before_post_pods(request):
+	pass
+
 # SMSSync:
 """ 
 SMSSync uses the Ushahidi-developed SMS forwarding app for android
@@ -84,18 +82,18 @@ def before_post_nexmo(request):
 	print "Posting nexmo JSON entry"
 
 #### BEFORE INSERT METHODS
-def before_insert_pod(documents):
+def before_insert_pods(documents):
 	for d in documents:
 		print "Adding " + d["name"] + " to the database"
+		d['nbk_name'] = str(d['name']) + "'s Default Notebook"
+		d['podId'] = make_podId(d['name'])
+		d['qr'] = 'https://s3.amazonaws.com/' + cfg.AWS_BUCKET \
+				  + '/' + str(d['name']) + '.svg'
 
 def before_insert_data(documents):
 	print "A POST to data was just performed!"
 	for d in documents:
 		print "Posting " + d["s"] + " data from " + d["p"] + " to the database"
-
-def before_insert_notebook(documents):
-	for d in documents:
-		print "Adding " + d["name"] + " notebook to the database"
 
 def before_insert_smssync(documents):
 	print "Adding SMSSync SMS to messages database"
@@ -108,38 +106,40 @@ def before_insert_nexmo(documents):
 
 # app.on_post_POST functions:	
 # These functions prepare gateway-specific responses to the client 
-def post_smssync_return_callback(request, r):
-	pass
-
-def post_twilio_return_callback(request, r):
-	pass
-
-def post_nexmo_return_callback(request,r):
-	pass
+def after_POST_pods_callback(request,r):
+	resp = json.loads(r.get_data())
+	if not (resp[cfg.STATUS] == cfg.ERR):
+	 	qr_job = post_q.enqueue(post_pod_create_qr,str(resp[cfg.ID]))
+	else:
+	 	raise InvalidMessage('Pod not posted to API',status_code=400,payload=resp)
 
 # Do this one last...`
-def post_return_callback(res,request,r):
+def after_POST_callback(res,request,r):
 	# Check to make sure we're not dealing with form data from twilio or nexmo:
 	# If it's JSON, then we're ready to parse this message
 	if (res in ['twilio','smssync','nexmo']):
-		print "Queueing " + res + " message for parsing and posting to the API"
 		sys.stdout.flush()
 		resp = json.loads(r.get_data())
 		if not (resp[cfg.STATUS] == cfg.ERR):
-			print "Starting worker process"
-			post_job = post_q.enqueue(post_data_to_API,str(resp[cfg.ID]),res)
+			post_job = post_q.enqueue(post_data_to_API,str(resp[cfg.ID]))
 		else:
 			raise InvalidMessage('Data not sent to API',status_code=400,payload=resp)
 
 # We're running inside of gunicorn now, so we have to change the module name:
 if __name__ == 'api':
 
-#	app.on_post_POST_nexmo += post_nexmo_return_callback
-	app.on_post_POST += post_return_callback
+	app.on_pre_POST += before_post
+	app.on_pre_POST_pods += before_post_pods
+	
+	app.on_insert_pods += before_insert_pods
+	app.on_insert_data += before_insert_data
+	
+	app.on_post_POST_pods += after_POST_pods_callback
+	app.on_post_POST += after_POST_callback
+
 # Start the application
 # if __name__ == 'api':
 # Adding data to the system:
-	app.on_insert_data += before_insert_data
 
 # Administering pods, gateways, and sensors:
 # Run the program:

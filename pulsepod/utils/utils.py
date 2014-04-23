@@ -2,6 +2,8 @@
 import struct
 import json
 import time
+import urllib
+import hashlib
 import datetime
 import struct
 from  pulsepod.utils import cfg
@@ -37,6 +39,14 @@ def pod_name():
 ##############################################
 # PARSING UTILITIES 						 #
 ##############################################
+def make_podId(name):
+	url = cfg.API_URL + '/pods' + '?projection={"podId":1}&max_results=1'
+	print url
+	h = requests.get(url).json()
+	print h
+	print h[cfg.ITEMS][0]['podId']
+
+	return int(requests.get(url).json()[cfg.ITEMS][0]['podId']) + 1
 
 def get_sensor(sid):
 	sensor = {}
@@ -110,6 +120,8 @@ def google_geolocate_api(tower):
 		location['lat'] = response['location']['lat']
 		location['lng'] = response['location']['lng']
 		location['accuracy'] = response['accuracy']
+	else:
+		location = cfg.LOCATION
 	return location
 
 def google_elevation_api(loc):
@@ -126,7 +138,7 @@ def google_elevation_api(loc):
 					'resolution':response['results'][0]['resolution']
 					}
 	else:
-		return { 'elevation':'unknown','resolution':'unknown'}
+		return cfg.ELEVATION
 
 
 def google_geocoding_api(loc):

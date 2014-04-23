@@ -1,4 +1,4 @@
-import os
+	import os
 
 # Get all the gateway settings, so we don't need to pass
 #  them around or hack updates
@@ -14,8 +14,19 @@ REDIS_URL = os.getenv('REDISTOGO_URL','redis://localhost:6379')
 
 # URLs for production on Heroku or local:
 API_URL = os.getenv('API_URL','http://0.0.0.0:5000') 
+APP_URL = os.getenv('APP_URL','http://0.0.0.0:3000')
 
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
+
+# Bitly connection information for QR code links:
+BITLY_API_TOKEN=os.getenv('BITLY_API_TOKEN')
+BITLY_API_KEY=os.getenv('BITLY_API_KEY')
+BITLY_USERNAME=os.getenv('BITLY_USERNAME')
+
+# AWS connection information for QR file uploads
+AWS_ACCESS_KEY_ID=os.getenv('AWS_ACCESS_KEY')
+AWS_SECRET_ACCESS_KEY=os.getenv('AWS_SECRET_ACCESS_KEY')
+AWS_BUCKET=os.getenv('AWS_BUCKET')
 
 # EVE API status ERR response (who knows if this will 
 # ever change):
@@ -25,7 +36,7 @@ STATUS='_status'
 ISSUES='_issues'
 ETAG='_etag'
 ID='_id'
-
+ITEMS='_items'
 
 # POD DATA FRAMES 
 # Dict of possible message frame IDs and corresponding types
@@ -48,7 +59,8 @@ FRAMES={
 # Content-type Headers:
 FORM='application/x-www-form-urlencoded; charset=UTF-8'
 JSON='application/json'
-ETAG='etag' # Will change to _etag sometime soon.
 CREATED=201 # Eve returns 200 when a POST is valid 
 
+LOCATION = {'lat':40.3501479,'lng':-74.6516628,'accuracy':100}
+ELEVATION = {'elevation':30,'resolution':1}
 
