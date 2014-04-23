@@ -122,16 +122,17 @@ class SMS(object):
 
 	# Update function for pods (updates voltage, last)
 	def patch_status(self):
-		v = next((item for item in self.data if item["sensor"] == "525ebfa0f84a085391000495"), None)
-		# But we need to extract the vbatt_tellit out of the data blob. 
-		# Use the Sensor Id, which should be relatively constant. HACKY! 
 		stat_update={}
-		if v:
-			stat_update['last'] = v['t']
-			stat_update['voltage'] = v['v']
-			stat_update['status'] = 'active'
-		if not self.number == self.pod()['number']:
-			stat_update['number'] = self.number 
+		if not self.status == 'invalid':
+			v = next((item for item in self.data if item["sensor"] == "525ebfa0f84a085391000495"), None)
+			# But we need to extract the vbatt_tellit out of the data blob. 
+			# Use the Sensor Id, which should be relatively constant. HACKY! 
+			if v:
+				stat_update['last'] = v['t']
+				stat_update['voltage'] = v['v']
+				stat_update['status'] = 'active'
+			if not self.number == self.pod()['number']:
+				stat_update['number'] = self.number 
 
 		if stat_update:
 			# Don't forget to set the content type, because it defaults to html			
@@ -143,6 +144,7 @@ class SMS(object):
 			return None	
 
 	def parse_message(self,i=2):
+		self.status = 'parsed'
 		self.data=[]
 		total_obs=0 # Initialize observation counter
 		"""
@@ -159,18 +161,26 @@ class SMS(object):
 			try:
 				sid = int(self.content[i:i+2], 16)
 			except:
-				raise InvalidMessage('Error reading sid',status_code=400)
-
-			sensor = get_sensor(sid) # Retrieve sensor information from API
+				self.status='invalid'
+			try:
+				sensor = get_sensor(sid) # Retrieve sensor information from API
+			except:
+				raise InvalidMessage('Error contacting API for sensor information', status_code=400, payload=self.pod())
 			i += 2
-			nobs = int(self.content[i:i+2], 16) # Read nObs from message content
+			try:
+				nobs = int(self.content[i:i+2], 16) # Read nObs from message content
+			except:
+				self.status='invalid'
 			i += 2
 			total_obs = total_obs + nobs
-			if sensor['context'] == '':
-				sensor_string = str(sensor['variable'])
-			else:
-				sensor_string = str(sensor['context']) + ' ' + str(sensor['variable'])
-			
+			try:
+				if sensor['context'] == '':
+					sensor_string = str(sensor['variable'])
+				else:
+					sensor_string = str(sensor['context']) + ' ' + str(sensor['variable'])
+			except:
+				self.status='invalid'
+
 			# add entry for each observation (nObs) by the same sensor
 			entry = {}
 			while nobs > 0:
@@ -183,12 +193,20 @@ class SMS(object):
 							  'notebook': self.pod()['_current_notebook']
 							}
 				except:
+					self.status='invalid'
 					raise InvalidMessage('Error creating data record', status_code=400, payload=self.pod())
-			
-				entry['t'] = get_time(self.content,i) # Get the timestamp 
+				
+				try:
+					entry['t'] = get_time(self.content,i) # Get the timestamp 
+				except:
+					self.status='invalid'
 				i += 8
+				
+				try:
+					entry['v'] = get_value(self.content,i,sensor) # Read the value			
+				except: 
+					self.status='invalid'
 
-				entry['v'] = get_value(self.content,i,sensor) # Read the value			
 				i += 2*sensor['value_length']
 							
 				# add to big ole json thing
@@ -196,8 +214,7 @@ class SMS(object):
 				
 				nobs -= 1
 		self.nobs = total_obs
-		self.status = 'parsed'
-
+		
 	# Pod and Notebook Identity Functions:
 	def pod(self): # Get the pod document for this message
 		if self.pod_data == None or not self.pod_data[cfg.ETAG] == requests.head(self.podurl()).headers['Etag']:
@@ -244,7 +261,8 @@ class number(SMS):
 		return self.podIdvalue
 
 	def post(self):
-		self.post_data()
+		if not self.status == 'invalid':
+			self.post_data()
 
 	def parse(self):
 		self.parse_message(i=2)
@@ -252,7 +270,8 @@ class number(SMS):
 class podId(SMS):
 	
 	def post(self):
-		self.post_data()
+		if not self.status == 'invalid':
+			self.post_data()
 
 	def parse(self):
 		self.parse_message(i=2+self.pod_serial_number_length())
@@ -334,10 +353,14 @@ class deploy(SMS):
 	def parse(self):
 		# Start by copying pod data to self.data, since PUT is document complete 
 		self.data = {}
-		self.data['name'] = self.pod()['name'] 
-		self.data['imei'] = self.pod()['imei'] 
-		self.data['radio'] = self.pod()['radio']
-		self.data['podId'] = self.pod()['podId']
+		self.status='parsed'
+		try:
+			self.data['name'] = self.pod()['name'] 
+			self.data['imei'] = self.pod()['imei'] 
+			self.data['radio'] = self.pod()['radio']
+			self.data['podId'] = self.pod()['podId']
+		except:
+			self.status='invalid'
 
 		payload = {'_id':self._id,'type':self.type(),'content':self.content}
 		
@@ -345,47 +368,59 @@ class deploy(SMS):
 		i=28
 		
 		if len(self.content) != (i + 2*self.n_sensors()):
+			self.status='invalid'
 			raise InvalidMessage('Status message improperly formatted', status_code=400, payload=payload)
 		# sIDs is list of sensor objectIds
 		self.data['sids'] = []
 		self.data['sensors'] = []
-		for j in range(self.n_sensors()):
-			sensor_url = cfg.API_URL + '/sensors/' + str(int(self.content[i:i+2], 16))
-			s = requests.get(sensor_url).json()
-			self.data['sids'].append(s['sid'])
-			self.data['sensors'].append(s[cfg.ID])
-			i += 2
-
-		self.data['cellTowers'] = {
-			'locationAreaCode': self.lac(), 
-			'cellId': self.cell_id(), 
-			'mobileNetworkCode': self.mnc(),
-			'mobileCountryCode': self.mcc()
-		}
-		self.data['number'] = self.number
-		# Transfer ownership of pod to notebook:
-		self.data['owner'] = self.pod()['owner']	# Owner is always a single user
-		self.data['shared'] = [self.pod()['owner']] # Shared is a list of users
-		self.data['last'] = get_now()
-		self.data['voltage'] = self.voltage()
-		self.data['location'] = google_geolocate_api(self.data['cellTowers'])
-		self.data['elevation'] = google_elevation_api(self.data['location'])
-		self.data['address'] = google_geocoding_api(self.data['location'])		
-		self.data['nbk_name'] = self.pod()['name'] + ' data from ' + \
+		try:
+			for j in range(self.n_sensors()):
+				sensor_url = cfg.API_URL + '/sensors/' + str(int(self.content[i:i+2], 16))
+				s = requests.get(sensor_url).json()
+				self.data['sids'].append(s['sid'])
+				self.data['sensors'].append(s[cfg.ID])
+				i += 2
+		except:
+			self.status='invalid'
+		try:
+			self.data['cellTowers'] = {
+				'locationAreaCode': self.lac(), 
+				'cellId': self.cell_id(), 
+				'mobileNetworkCode': self.mnc(),
+				'mobileCountryCode': self.mcc()
+			}
+		except:
+			self.status='invalid'
+		try:
+			self.data['number'] = self.number
+			# Transfer ownership of pod to notebook:
+			self.data['owner'] = self.pod()['owner']	# Owner is always a single user
+			self.data['shared'] = [self.pod()['owner']] # Shared is a list of users
+			self.data['last'] = get_now()
+			self.data['voltage'] = self.voltage()
+			self.data['location'] = google_geolocate_api(self.data['cellTowers'])
+			self.data['elevation'] = google_elevation_api(self.data['location'])
+			self.data['address'] = google_geocoding_api(self.data['location'])		
+			self.data['nbk_name'] = self.pod()['name'] + ' data from ' + \
 							self.data['address']['locality']['short'] + ', ' + \
 							self.data['address']['administrative_area_level_1']['short'] + \
 						    ' in ' + self.data['address']['country']['short']
+		except:
+			self.status='invalid'
 
 	def post(self):
-		print "posting deploy message"
-		# Note, use podurl_objid for PUT requets (podId is read-only!) and send Etag
-		headers = {'If-Match':str(self.pod()[cfg.ETAG]),'content-type':'application/json'}
-		d = requests.put(url=self.podurl_objid(), data=json.dumps(self.data), headers=headers)
-		if d.status_code == cfg.CREATED:
-			print "New deployment created"
+		if not self.status == 'invalid':
+			print "posting deploy message"
+			# Note, use podurl_objid for PUT requets (podId is read-only!) and send Etag
+			headers = {'If-Match':str(self.pod()[cfg.ETAG]),'content-type':'application/json'}
+			d = requests.put(url=self.podurl_objid(), data=json.dumps(self.data), headers=headers)
+			if d.status_code == cfg.CREATED:
+				print "New deployment created"
+			else:
+				print d.status_code
+				print d.text
 		else:
-			print d.status_code
-			print d.text
+			print "Warning: message format is invalid."
 
 	def patch(self):
 		patched={}
@@ -402,7 +437,7 @@ class invalid(SMS):
 	def patch(self):
 		patched={}
 		patched['type'] = self.type()	# Update the gateway message type
-		patched['status'] = self.status
+		patched['status'] = 'invalid'
 		self.patch_message(patched)
 
 
