@@ -121,7 +121,7 @@ def after_POST_callback(res,request,r):
 		sys.stdout.flush()
 		resp = json.loads(r.get_data())
 		if not (resp[cfg.STATUS] == cfg.ERR):
-			post_job = post_q.enqueue(post_data_to_API,str(resp[cfg.ID]))
+			post_job = post_q.enqueue(post_data_to_API,str(resp[cfg.ID]),res)
 		else:
 			raise InvalidMessage('Data not sent to API',status_code=400,payload=resp)
 
