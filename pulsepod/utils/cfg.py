@@ -16,6 +16,7 @@ REDIS_URL = os.getenv('REDISTOGO_URL','redis://localhost:6379')
 API_URL = os.getenv('API_URL','http://0.0.0.0:5000') 
 APP_URL = os.getenv('APP_URL','http://0.0.0.0:3000')
 
+API_AUTH_TOKEN = os.getenv('API_AUTH_TOKEN','None')
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 
 # Bitly connection information for QR code links:

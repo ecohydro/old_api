@@ -14,7 +14,6 @@ import werkzeug.exceptions
 from random import choice, randint
 from names import firstnames, lastnames
 
-
 # Definie a exception class to report errors (handy for debugging)
 class InvalidMessage(Exception):
 	"""Raised when pdu2json cannot properly format the PDU submitted

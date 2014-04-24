@@ -1,7 +1,9 @@
 import requests
+from requests.auth import HTTPBasicAuth
 import hashlib
 import json
 import datetime
+from HMACAuth import HMACAuth
 
 from pulsepod.utils import cfg
 from pulsepod.utils.utils import InvalidMessage
@@ -73,9 +75,11 @@ class SMS(object):
 		print "posting data"
 		nposted = 0
 		dataids = []
-		dataurl = cfg.API_URL + '/data'
+		url = cfg.API_URL + '/data'
 		headers = {'content-type':'application/json'}
-		d = requests.post(url=dataurl, data=json.dumps(self.data), headers=headers)
+		data = json.dumps(self.data)
+		auth = HTTPBasicAuth('api',HMACAuth().compute_signature(url,data))
+		d = requests.post(url=url, data=data, headers=headers, auth=auth)
 		if d.status_code == cfg.CREATED:
 			items = d.json()
 		 	for item in items:
@@ -107,8 +111,11 @@ class SMS(object):
 	def patch_message(self,patched):
 		# Patch the message
 		response = {}
+		data = json.dumps(patched)
+		url = self.url
 		headers = {'If-Match':str(self.msgEtag()),'content-type':'application/json'}
-		p = requests.patch(self.url,data=json.dumps(patched),headers=headers)
+		auth = HTTPBasicAuth('api',HMACAuth().compute_signature(url,data))
+		p = requests.patch(url=url,data=data,headers=headers,auth=auth)
 		if p.status_code == requests.codes.ok:
 			response['status'] = patched['status'] 	# RQ reporting
 			response['patch code'] = p.status_code 	# RQ reporting
@@ -117,27 +124,30 @@ class SMS(object):
 			else:		   
 				print 'PATCH:[' + str(response['patch code']) + ']:' + p.json()[cfg.STATUS] + ':' + str(self.url) + ':status:' + str(self.status)
 		else:
-			print "That shit didn't work"
+			print 'PATCH: [' + p.status_code + ']:' + 'request failed'
 		return response
 
 	# Update function for pods (updates voltage, last)
 	def patch_status(self):
-		stat_update={}
+		patch={}
 		if not self.status == 'invalid':
 			v = next((item for item in self.data if item["sensor"] == "525ebfa0f84a085391000495"), None)
 			# But we need to extract the vbatt_tellit out of the data blob. 
 			# Use the Sensor Id, which should be relatively constant. HACKY! 
 			if v:
-				stat_update['last'] = v['t']
-				stat_update['voltage'] = v['v']
-				stat_update['status'] = 'active'
+				patch['last'] = v['t']
+				patch['voltage'] = v['v']
+				patch['status'] = 'active'
 			if not self.number == self.pod()['number']:
-				stat_update['number'] = self.number 
+				patch['number'] = self.number 
 
-		if stat_update:
+		if patch:
 			# Don't forget to set the content type, because it defaults to html			
 			headers= {'If-Match':str(self.statEtag()),'content-type':'application/json'}
-			u = requests.patch(self.staturl(),data=json.dumps(stat_update),headers=headers)
+			url = self.staturl()
+			data = json.dumps(patch)
+			auth = HTTPBasicAuth('api',HMACAuth().compute_signature(url,data))
+			u = requests.patch(url=url,data=data,headers=headers,auth=auth)
 			# Need to have some graceful failures here... Response Code? HACKY!
 			return u.status_code
 		else: 
@@ -234,7 +244,7 @@ class SMS(object):
 
 	# Pod and Notebook Ids:
 	def podId(self):
-		podId =  str(hashlib.sha224(str(int(self.content[2:2+self.pod_serial_number_length()], 16))).hexdigest()[:10])	
+		podId =  str(int(self.content[2:2+self.pod_serial_number_length()], 16))	
 		return podId
 
 	# Return Message Etag:
@@ -413,7 +423,10 @@ class deploy(SMS):
 			print "posting deploy message"
 			# Note, use podurl_objid for PUT requets (podId is read-only!) and send Etag
 			headers = {'If-Match':str(self.pod()[cfg.ETAG]),'content-type':'application/json'}
-			d = requests.put(url=self.podurl_objid(), data=json.dumps(self.data), headers=headers)
+			data = json.dumps(self.data)
+			url = self.podurl_objid()
+			auth = HTTPBasicAuth('api',HMACAuth().compute_signature(url,data))
+			d = requests.put(url=url, data=data, headers=headers, auth=auth)
 			if d.status_code == cfg.CREATED:
 				print "New deployment created"
 			else:
