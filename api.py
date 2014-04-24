@@ -119,7 +119,7 @@ def after_POST_callback(res,request,r):
 	# Check to make sure we're not dealing with form data from twilio or nexmo:
 	# If it's JSON, then we're ready to parse this message
 	if (res in ['twilio','smssync','nexmo']):
-		sys.stdout.flush()
+		print r.get_data()
 		resp = json.loads(r.get_data())
 		if not (resp[cfg.STATUS] == cfg.ERR):
 			post_job = post_q.enqueue(post_data_to_API,str(resp[cfg.ID]),res)
