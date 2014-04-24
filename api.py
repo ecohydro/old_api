@@ -12,6 +12,7 @@ import qrcode, qrcode.image.svg
 from pulsepod.utils import cfg
 from pulsepod.methods.posts import post_data_to_API, post_pod_create_qr
 from pulsepod.utils.utils import *
+from HMACAuth import HMACAuth
 
 # Create an rq queue from rq and worker.py:
 import redis
