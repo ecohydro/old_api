@@ -12,7 +12,6 @@ import qrcode, qrcode.image.svg
 from pulsepod.utils import cfg
 from pulsepod.methods.posts import post_data_to_API, post_pod_create_qr
 from pulsepod.utils.utils import *
-from pulsepod.utils import RequestValidator
 
 # Create an rq queue from rq and worker.py:
 import redis
@@ -35,8 +34,6 @@ else:
 	settings = '../settings.py'
 
 app = Eve(settings=settings,auth=HMACAuth)
-
-api_validator = RequestValidator(cfg.API_AUTH_TOKEN)
 
 # Error handling with json output:
 @app.errorhandler(InvalidMessage)
