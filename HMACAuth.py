@@ -1,4 +1,5 @@
 from eve import Eve
+from flask import request
 from eve.auth import HMACAuth
 from hashlib import sha1
 import base64
