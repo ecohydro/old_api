@@ -116,10 +116,10 @@ def after_POST_pods_callback(request,r):
 
 # Do this one last...`
 def after_POST_callback(res,request,r):
+	print r.status_code
 	# Check to make sure we're not dealing with form data from twilio or nexmo:
 	# If it's JSON, then we're ready to parse this message
-	if (res in ['twilio','smssync','nexmo']):
-		print r.get_data()
+	if (res in ['twilio','smssync','nexmo']) and not r.status_code == 401:
 		resp = json.loads(r.get_data())
 		if not (resp[cfg.STATUS] == cfg.ERR):
 			post_job = post_q.enqueue(post_data_to_API,str(resp[cfg.ID]),res)

@@ -7,12 +7,13 @@ import hmac
 from hashlib import sha1
 from pulsepod.compat import izip
 from pulsepod.utils import cfg
+from pulsepod.utils.utils import InvalidMessage
 
 class HMACAuth(HMACAuth):
 
     def __init__(self):
         self.token = cfg.API_AUTH_TOKEN
-
+       
     def compute_signature(self, uri, data):
         """Compute the signature for a given request
 
@@ -48,7 +49,6 @@ class HMACAuth(HMACAuth):
         :returns: True if the request passes validation, False if not
         """
         return secure_compare(self.compute_signature(uri, data), signature)
-
 
     def authorized(self, allowed_roles, resource, method):
         """ Validates the the current request is allowed to pass through.
