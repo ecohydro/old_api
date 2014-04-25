@@ -245,7 +245,11 @@ class SMS(object):
 
 	# Pod and Notebook Ids:
 	def podId(self):
-		podId =  str(int(self.content[2:2+self.pod_serial_number_length()], 16))	
+		try:
+			podId =  str(int(self.content[2:2+self.pod_serial_number_length()], 16))	
+		except ValueError:
+			self.patch_message({'type':'invalid','status':'invalid'})
+			assert 0, "Invalid Message: " + self.content
 		return podId
 
 	# Return Message Etag:
