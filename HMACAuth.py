@@ -8,6 +8,7 @@ from hashlib import sha1
 from pulsepod.compat import izip
 from pulsepod.utils import cfg
 from pulsepod.utils.utils import InvalidMessage
+from collections import OrderedDict
 
 class HMACAuth(HMACAuth):
 
@@ -24,7 +25,7 @@ class HMACAuth(HMACAuth):
         """
         print uri
         print data
-
+        print type(data)
         s = uri
         if len(data) > 0:
             d = OrderedDict(sorted(data.items(), key=lambda x: x[1]))
