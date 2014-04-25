@@ -29,9 +29,9 @@ class HMACAuth(HMACAuth):
         print type(data)
         s = uri
         if len(data) > 0:
-            d = OrderedDict(sorted(data.items(), key=lambda x: x[1]))
-            for k in d:
-                s += k + d[k]
+            #d = OrderedDict(sorted(data.items(), key=lambda x: x[1]))
+            #for k in d:
+            s += data #k + d[k]
 
         # compute signature and compare signatures
         mac = hmac.new(self.token, s.encode("utf-8"), sha1)
