@@ -26,7 +26,7 @@ post_q = Queue(connection=conn)	 	# This is the queue for parse/post jobs
 if os.environ.get('ONHEROKU'):
 	host = '0.0.0.0'
 	port = int(os.environ.get('PORT'))
-	debug = True # Don't debug on Heroku.
+	debug = False # Don't debug on Heroku.
 	settings = '/app/settings.py'
 else:
 	host = '0.0.0.0'
@@ -122,6 +122,7 @@ def after_POST_callback(res,request,r):
 	if (res in ['twilio','smssync','nexmo']) and not r.status_code == 401:
 		resp = json.loads(r.get_data())
 		if not (resp[cfg.STATUS] == cfg.ERR):
+			print "Parsing message posted to " + res
 			post_job = post_q.enqueue(post_data_to_API,str(resp[cfg.ID]),res)
 		else:
 			raise InvalidMessage('Data not sent to API',status_code=400,payload=resp)

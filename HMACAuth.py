@@ -24,9 +24,6 @@ class HMACAuth(HMACAuth):
         
         :returns: The computed signature
         """
-        print uri
-        print data
-        print type(data)
         s = uri
         if len(data) > 0:
             #d = OrderedDict(sorted(data.items(), key=lambda x: x[1]))
@@ -36,7 +33,6 @@ class HMACAuth(HMACAuth):
         # compute signature and compare signatures
         mac = hmac.new(self.token, s.encode("utf-8"), sha1)
         computed = base64.b64encode(mac.digest())
-        print computed.strip()
         return computed.strip()
 
     def check_auth(self, userid, uri, data, hmac_hash, resource, method):
@@ -64,12 +60,14 @@ class HMACAuth(HMACAuth):
                               string or a list of roles.
         :param resource: resource being requested.
         """
-        auth = request.headers.get('Authorization')
+  
         try:
-            userid, hmac_hash = decode(auth)
+            userid, hmac_hash = decode(request.headers.get('Authorization'))
         except:
-            auth = None
-        return auth and self.check_auth(userid, request.url, request.get_data(), \
+            userid = None
+            hmac_hash = None
+
+        return self.check_auth(userid, request.url, request.get_data(), \
                             hmac_hash, resource, method )
 
 

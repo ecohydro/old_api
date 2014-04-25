@@ -47,6 +47,7 @@ class SMS(object):
 		if data == None and url == None:
 			assert 0, "Must provide a url or message data"
 		if not url == None:
+			print url
 			data = requests.get(url).json()
 		if data == None:
 			assert 0, "Must provide a url or message data"
@@ -122,9 +123,9 @@ class SMS(object):
 			if p.json()[cfg.STATUS] == cfg.ERR:
 				print 'PATCH:[' + str(response['patch code']) + ']:' + p.json()[cfg.STATUS] + ':' + json.dumps(p.json()[cfg.ISSUES])
 			else:		   
-				print 'PATCH:[' + str(response['patch code']) + ']:' + p.json()[cfg.STATUS] + ':' + str(self.url) + ':status:' + str(self.status)
+				print 'PATCH:[' + str(response['patch code']) + ']:' + p.json()[cfg.STATUS] + ':' + str(self.url) + ':status:' + patched['status']
 		else:
-			print 'PATCH: [' + p.status_code + ']:' + 'request failed'
+			print 'PATCH: [' + str(p.status_code) + ']:' + 'request failed'
 		return response
 
 	# Update function for pods (updates voltage, last)
