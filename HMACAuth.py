@@ -9,6 +9,7 @@ from pulsepod.compat import izip
 from pulsepod.utils import cfg
 from pulsepod.utils.utils import InvalidMessage
 from collections import OrderedDict
+from basicauth import decode
 
 class HMACAuth(HMACAuth):
 
@@ -64,9 +65,8 @@ class HMACAuth(HMACAuth):
         :param resource: resource being requested.
         """
         auth = request.headers.get('Authorization')
-        print auth
         try:
-            userid, hmac_hash = auth.split(':')
+            userid, hmac_hash = decode(auth)
         except:
             auth = None
         return auth and self.check_auth(userid, request.url, request.get_data(), \
