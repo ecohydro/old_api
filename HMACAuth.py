@@ -64,6 +64,7 @@ class HMACAuth(HMACAuth):
         :param resource: resource being requested.
         """
         auth = request.headers.get('Authorization')
+        print auth
         try:
             userid, hmac_hash = auth.split(':')
         except:

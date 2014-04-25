@@ -26,7 +26,7 @@ post_q = Queue(connection=conn)	 	# This is the queue for parse/post jobs
 if os.environ.get('ONHEROKU'):
 	host = '0.0.0.0'
 	port = int(os.environ.get('PORT'))
-	debug = False # Don't debug on Heroku.
+	debug = True # Don't debug on Heroku.
 	settings = '/app/settings.py'
 else:
 	host = '0.0.0.0'
