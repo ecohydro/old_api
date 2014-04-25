@@ -36,9 +36,11 @@ class HMACAuth(HMACAuth):
         return computed.strip()
 
     def check_auth(self, userid, uri, data, hmac_hash, resource, method):
-        if method in ['GET','HEAD','OPTIONS']:
+        if method in ['HEAD','OPTIONS']: # Let it rain.
             return True
-        else:
+        elif method in ['GET']: #Stub for user-level auth methods
+            return True
+        else: # Everything else requires API-ninja access
             return self.validate(uri, data, hmac_hash)
 
     def validate(self, uri, data, signature):
