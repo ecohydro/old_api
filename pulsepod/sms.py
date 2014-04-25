@@ -63,7 +63,7 @@ class SMS(object):
 		except KeyError:
 			type = cfg.FRAMES[99]
 		if type == "number": 	return number(data)
-		if type == "imei": 		return podId(data)
+		if type == "podId": 	return podId(data)
 		if type == "status": 	return status(data)
 		if type == "invalid":	return invalid(data)
 		if type == "deploy":	return deploy(data)
