@@ -32,6 +32,7 @@ class HMACAuth(HMACAuth):
             s += data #k + d[k]
 
         # compute signature and compare signatures
+        print s
         mac = hmac.new(self.token, s.encode("utf-8"), sha1)
         computed = base64.b64encode(mac.digest())
         print computed.strip()
