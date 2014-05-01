@@ -25,6 +25,7 @@ class HMACAuth(HMACAuth):
         :returns: The computed signature
         """
         s = uri
+        print data
         if len(data) > 0:
             #d = OrderedDict(sorted(data.items(), key=lambda x: x[1]))
             #for k in d:
