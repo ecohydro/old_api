@@ -24,7 +24,7 @@ post_q = Queue(connection=conn)	 	# This is the queue for parse/post jobs
 if os.getenv('ONHEROKU'):
 	settings = 'settings.py'
 elif os.getenv('ONCODESHIP'):
-	settings = '../settings.py'
+	settings = '/home/rof/clone/settings.py'
 else:
 	settings = 'settings.py'
 
