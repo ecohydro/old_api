@@ -11,6 +11,7 @@ import qrcode, qrcode.image.svg
 from posts import post_data_to_API, post_pod_create_qr
 from HMACAuth import HMACAuth
 from utils import InvalidMessage
+from waitress import serve
 
 # Create an rq queue from rq and worker.py:
 import redis
@@ -20,9 +21,8 @@ from worker import conn
 # Set up the worker queues:
 post_q = Queue(connection=conn)	 	# This is the queue for parse/post jobs
 
-settings = 'settings.py'
 
-app = Eve(settings=settings,auth=HMACAuth)
+app = Eve(auth=HMACAuth)
 
 # Error handling with json output:
 @app.errorhandler(InvalidMessage)
@@ -116,7 +116,7 @@ def after_POST_callback(res,request,r):
 			raise InvalidMessage('Data not sent to API',status_code=400,payload=resp)
 
 # We're running inside of gunicorn now, so we have to change the module name:
-if __name__ == 'api':
+if __name__ == '__main__':
 
 	app.on_pre_POST += before_post
 	app.on_pre_POST_pods += before_post_pods
@@ -126,3 +126,6 @@ if __name__ == 'api':
 	
 	app.on_post_POST_pods += after_POST_pods_callback
 	app.on_post_POST += after_POST_callback
+
+
+	serve(app,port=os.getenv('PORT',8080))
