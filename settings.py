@@ -25,6 +25,7 @@ if os.getenv('ONHEROKU'):
 		MONGO_PORT = os.getenv('MONGO_PORT')
 		MONGO_USERNAME = os.getenv('MONGO_USERNAME')
 		MONGO_PASSWORD = os.getenv('MONGO_PASSWORD')
+		MONGO_DBNAME = os.getenv('MONGO_DBNAME')
 else:
 	API_URL = 'http://0.0.0.0:5000'
 	SERVER_NAME = '0.0.0.0:5000'
