@@ -16,6 +16,7 @@ settings['MONGO_HOST'] = os.getenv('MONGO_TESTING_HOST')
 settings['MONGO_PORT'] = os.getenv('MONGO_TESTING_PORT')
 settings['MONGO_USERNAME'] = os.getenv('MONGO_TESTING_USERNAME')
 settings['MONGO_PASSWORD'] = os.getenv('MONGO_TESTING_PASSWORD')
+settings['MONGO_DBNAME'] = os.getenv('MONGO_TESTING_DBNAME')
 
 if not os.getenv('ONHEROKU'):
 	settings['API_URL'] = 'http://0.0.0.0:5000'
@@ -23,13 +24,14 @@ else:
 	if os.getenv('TESTING'):
 		settings['API_URL'] = 'http://pulse-api-test.pulsepod.io'
 		settings['SERVER_NAME'] = 'pulse-api-test.pulsepod.io'
-	else:
+	elif os.getenv('PRODUCTION'):
 		settings['API_URL'] = 'https://api.pulsepod.io'
 		settings['SERVER_NAME'] = 'api.pulsepod.io'
 		settings['MONGO_HOST'] = os.getenv('MONGO_HOST')
 		settings['MONGO_PORT'] = os.getenv('MONGO_PORT')
 		settings['MONGO_USERNAME'] = os.getenv('MONGO_USERNAME')
 		settings['MONGO_PASSWORD'] = os.getenv('MONGO_PASSWORD')
+		settings['MONGO_DBNAME'] = os.getenv('MONGO_DBNAME')
 
 # SET THE API TOKEN FOR VALIDATING POST/PUT/PATCH REQUESTS
 # NOTE: PRODUCTION AND TESTING WILL ALWAYS HAVE DIFFERENT TOKENS:
