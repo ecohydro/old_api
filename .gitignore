@@ -32,6 +32,8 @@ var/
 include/
 tests/
 cover/
+share/
+
 
 
 *.egg-info/
