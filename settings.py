@@ -13,10 +13,11 @@ if os.getenv('ONHEROKU'):
 	if os.getenv('TESTING'):
 		API_URL = 'http://pulse-api-test.pulsepod.io'
 		SERVER_NAME = 'pulse-api-test.pulsepod.io'
-		MONGO_TESTING_HOST = os.getenv('MONGO_HOST')
-		MONGO_TESTING_PORT = os.getenv('MONGO_PORT')
-		MONGO_TESTING_USERNAME = os.getenv('MONGO_USERNAME')
-		MONGO_TESTING_PASSWORD = os.getenv('MONGO_PASSWORD')
+		MONGO_HOST = os.getenv('MONGO_HOST')
+		MONGO_PORT = os.getenv('MONGO_PORT')
+		MONGO_USERNAME = os.getenv('MONGO_USERNAME')
+		MONGO_PASSWORD = os.getenv('MONGO_PASSWORD')
+		MONGO_DBNAME = os.getenv('MONGO_DBNAME')
 	elif os.getenv('PRODUCTION'):
 		API_URL = 'https://api.pulsepod.io'
 		SERVER_NAME = 'api.pulsepod.io'
@@ -27,6 +28,11 @@ if os.getenv('ONHEROKU'):
 else:
 	API_URL = 'http://0.0.0.0:5000'
 	SERVER_NAME = '0.0.0.0:5000'
+	MONGO_HOST = os.getenv('MONGO_HOST')
+	MONGO_PORT = os.getenv('MONGO_PORT')
+	MONGO_USERNAME = os.getenv('MONGO_USERNAME')
+	MONGO_PASSWORD = os.getenv('MONGO_PASSWORD')
+	MONGO_DBNAME = os.getenv('MONGO_DBNAME')
 
 # SET THE API TOKEN FOR VALIDATING POST/PUT/PATCH REQUESTS
 # NOTE: PRODUCTION AND TESTING WILL ALWAYS HAVE DIFFERENT TOKENS:
