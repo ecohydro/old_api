@@ -11,8 +11,8 @@ import os
 # URLs for production on Heroku or local:
 if os.getenv('ONHEROKU'):
 	if os.getenv('TESTING'):
-		API_URL = 'http://pulse-api-test.pulsepod.io'
-		SERVER_NAME = 'pulse-api-test.pulsepod.io'
+		API_URL = 'http://pulse-api-test.herokuapp.com'
+		SERVER_NAME = 'pulse-api-test.herokuapp.com'
 		MONGO_HOST = os.getenv('MONGO_TESTING_HOST')
 		MONGO_PORT = os.getenv('MONGO_TESTING_PORT')
 		MONGO_USERNAME = os.getenv('MONGO_TESTING_USERNAME')
