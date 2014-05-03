@@ -21,7 +21,14 @@ from worker import conn
 # Set up the worker queues:
 post_q = Queue(connection=conn)	 	# This is the queue for parse/post jobs
 
-app = Eve(settings='settings.py',auth=HMACAuth)
+if os.getenv('ONHEROKU'):
+	settings = 'app/settings.py'
+elif os.getenv('ONCODESHIP'):
+	settings = '../settings.py'
+else:
+	settings = 'settings.py'
+	
+app = Eve(settings=settings,auth=HMACAuth)
 
 # Error handling with json output:
 @app.errorhandler(InvalidMessage)
