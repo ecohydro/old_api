@@ -8,53 +8,48 @@
 #------------------------------------------------------------------------------
 import os
 
-settings = {}
-
 # URLs for production on Heroku or local:
-settings['SERVER_NAME'] = 'pulse-api-test.pulsepod.io'
-settings['MONGO_HOST'] = os.getenv('MONGO_TESTING_HOST')
-settings['MONGO_PORT'] = os.getenv('MONGO_TESTING_PORT')
-settings['MONGO_USERNAME'] = os.getenv('MONGO_TESTING_USERNAME')
-settings['MONGO_PASSWORD'] = os.getenv('MONGO_TESTING_PASSWORD')
-settings['MONGO_DBNAME'] = os.getenv('MONGO_TESTING_DBNAME')
-
-if not os.getenv('ONHEROKU'):
-	settings['API_URL'] = 'http://0.0.0.0:5000'
-else:
+if os.getenv('ONHEROKU'):
 	if os.getenv('TESTING'):
-		settings['API_URL'] = 'http://pulse-api-test.pulsepod.io'
-		settings['SERVER_NAME'] = 'pulse-api-test.pulsepod.io'
+		API_URL = 'http://pulse-api-test.pulsepod.io'
+		SERVER_NAME = 'pulse-api-test.pulsepod.io'
+		MONGO_TESTING_HOST = os.getenv('MONGO_HOST')
+		MONGO_TESTING_PORT = os.getenv('MONGO_PORT')
+		MONGO_TESTING_USERNAME = os.getenv('MONGO_USERNAME')
+		MONGO_TESTING_PASSWORD = os.getenv('MONGO_PASSWORD')
 	elif os.getenv('PRODUCTION'):
-		settings['API_URL'] = 'https://api.pulsepod.io'
-		settings['SERVER_NAME'] = 'api.pulsepod.io'
-		settings['MONGO_HOST'] = os.getenv('MONGO_HOST')
-		settings['MONGO_PORT'] = os.getenv('MONGO_PORT')
-		settings['MONGO_USERNAME'] = os.getenv('MONGO_USERNAME')
-		settings['MONGO_PASSWORD'] = os.getenv('MONGO_PASSWORD')
-		settings['MONGO_DBNAME'] = os.getenv('MONGO_DBNAME')
+		API_URL = 'https://api.pulsepod.io'
+		SERVER_NAME = 'api.pulsepod.io'
+		MONGO_HOST = os.getenv('MONGO_HOST')
+		MONGO_PORT = os.getenv('MONGO_PORT')
+		MONGO_USERNAME = os.getenv('MONGO_USERNAME')
+		MONGO_PASSWORD = os.getenv('MONGO_PASSWORD')
+else:
+	API_URL = 'http://0.0.0.0:5000'
+	SERVER_NAME = '0.0.0.0:5000'
 
 # SET THE API TOKEN FOR VALIDATING POST/PUT/PATCH REQUESTS
 # NOTE: PRODUCTION AND TESTING WILL ALWAYS HAVE DIFFERENT TOKENS:
-settings['API_AUTH_TOKEN'] = os.getenv('API_AUTH_TOKEN')
+API_AUTH_TOKEN = os.getenv('API_AUTH_TOKEN')
 
 # SETTINGS THAT ARE THE SAME NO MATTER WHAT:
 # RQ/Worker stuff:
 # REDISTOGO_URL must be set by heroku config:set.
-settings['REDIS_URL'] = str(os.getenv('REDISTOGO_URL','redis://localhost:6379')).replace("'","")
-settings['GOOGLE_API_KEY'] = str(os.getenv('GOOGLE_API_KEY')).replace("'","")
+REDIS_URL = os.getenv('REDISTOGO_URL','redis://localhost:6379')
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 
 # Bitly connection information for QR code links:
-settings['BITLY_API_TOKEN'] = str(os.getenv('BITLY_API_TOKEN')).replace("'","")
-settings['BITLY_API_KEY'] = str(os.getenv('BITLY_API_KEY')).replace("'","")
-settings['BITLY_USERNAME'] = str(os.getenv('BITLY_USERNAME')).replace("'","")
+BITLY_API_TOKEN = os.getenv('BITLY_API_TOKEN')
+BITLY_API_KEY = os.getenv('BITLY_API_KEY')
+BITLY_USERNAME = os.getenv('BITLY_USERNAME')
 
 # AWS connection information for QR file uploads
-settings['AWS_ACCESS_KEY_ID'] = str(os.getenv('AWS_ACCESS_KEY')).replace("'","")
-settings['AWS_SECRET_ACCESS_KEY'] = str(os.getenv('AWS_SECRET_ACCESS_KEY')).replace("'","")
-settings['AWS_BUCKET'] = str(os.getenv('AWS_BUCKET')).replace("'","")
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+AWS_BUCKET = os.getenv('AWS_BUCKET')
 
 # THIS IS ALWAYS THE SAME, WE ONLY USE IT IN PRODUCTION ENVIRONMENTS:	 
-settings['APP_URL'] = os.getenv('http://app.pulsepod.io')
+APP_URL = os.getenv('http://app.pulsepod.io')
 
 # SETTINGS I NEED TO DEPRECATE:
 # # EVE API status ERR response (who knows if this will 
@@ -76,7 +71,7 @@ settings['APP_URL'] = os.getenv('http://app.pulsepod.io')
 # pod_imei: Is a data message that includes the pod IMEI
 # Any other id will be assigned invalid
 
-settings['FRAMES'] = {
+FRAMES = {
 	0:'number',
 	1:'status',
 	2:'podId',
@@ -85,28 +80,28 @@ settings['FRAMES'] = {
 }
 
 # Content-type Headers:
-settings['FORM']='application/x-www-form-urlencoded; charset=UTF-8'
-settings['JSON']='application/json'
+FORM='application/x-www-form-urlencoded; charset=UTF-8'
+JSON='application/json'
 
 # SOME DEFAULT GEOGRAPHY. WELCOME TO NEW JERSEY!
-settings['LOCATION'] = {'lat':40.3501479,'lng':-74.6516628,'accuracy':100}
-settings['ELEVATION'] = {'elevation':30,'resolution':1}
+LOCATION = {'lat':40.3501479,'lng':-74.6516628,'accuracy':100}
+ELEVATION = {'elevation':30,'resolution':1}
 
 # SET UP VERSIONING FOR THE PODS:
-settings['VERSIONS'] = '_notebooks'
-settings['VERSION_PARAM'] = 'notebook'
-settings['VERSION'] = '_notebook'
-settings['LATEST_VERSION'] = '_current_notebook'
-settings['VERSION_ID_SUFFIX'] = '_pod'
+VERSIONS = '_notebooks'
+VERSION_PARAM = 'notebook'
+VERSION = '_notebook'
+LATEST_VERSION = '_current_notebook'
+VERSION_ID_SUFFIX = '_pod'
 
 # Enable reads (GET), inserts (POST) and DELETE for resources/collections
 # (if you omit this line, the API will default to ['GET'] and provide
 # read-only access to the endpoint).
-settings['RESOURCE_METHODS'] = ['GET', 'POST']
+RESOURCE_METHODS = ['GET', 'POST']
 
 # Enable reads (GET), edits (PATCH) and deletes of individual items
 # (defaults to read-only item access).
-settings['ITEM_METHODS'] = ['GET', 'PATCH']
+ITEM_METHODS = ['GET', 'PATCH']
 
 # Set the public methods for the read-only API. 
 # Only authorized users can write, edit and delete
@@ -766,13 +761,12 @@ nexmo = {
 #
 #------------------------------------------------------------------------------
 
-settings['DOMAIN'] = {
+DOMAIN = {
 		'status':status,
     	'pods': pods,
 		'users':users,
 		'sensors':sensors,
 		'data':data,
-#		'notebooks':notebooks,
 		'smssync':smssync,
 		'twilio':twilio,
 		'nexmo':nexmo,

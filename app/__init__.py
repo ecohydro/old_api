@@ -7,12 +7,10 @@ import hashlib
 from datetime import datetime
 from eve import Eve
 from flask import jsonify, request
-from eve.utils import config
 import qrcode, qrcode.image.svg
 from posts import post_data_to_API, post_pod_create_qr
 from HMACAuth import HMACAuth
 from utils import InvalidMessage
-from settings import settings as config
 
 # Create an rq queue from rq and worker.py:
 import redis
@@ -22,7 +20,9 @@ from worker import conn
 # Set up the worker queues:
 post_q = Queue(connection=conn)	 	# This is the queue for parse/post jobs
 
-app = Eve(settings=config,auth=HMACAuth)
+settings = 'settings.py'
+
+app = Eve(settings=settings,auth=HMACAuth)
 
 # Error handling with json output:
 @app.errorhandler(InvalidMessage)
