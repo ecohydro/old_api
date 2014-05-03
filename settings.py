@@ -691,7 +691,7 @@ users = {
 	# 'allowed_roles': ['superuser', 'admin'],
 
 	# most global settings can be overridden at resource level
-	'resource_methods': ['GET', 'POST', 'DELETE'],	
+	'resource_methods': ['GET', 'POST'],	
 	'schema': user_schema
 }
 
