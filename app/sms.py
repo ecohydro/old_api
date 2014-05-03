@@ -4,11 +4,10 @@ import hashlib
 import json
 import datetime
 from HMACAuth import HMACAuth
-
-from pulsepod.utils import cfg
-from pulsepod.utils.utils import InvalidMessage
-from pulsepod.utils.utils import get_sensor, get_time, get_value, get_now
-from pulsepod.utils.utils import google_geolocate_api, google_elevation_api, google_geocoding_api
+from flask import current_app as app
+from utils import InvalidMessage
+from utils import get_sensor, get_time, get_value, get_now
+from utils import google_geolocate_api, google_elevation_api, google_geocoding_api
 
 class SMS(object):
 	
@@ -59,9 +58,9 @@ class SMS(object):
 		except ValueError:
 			frame_number = 99
 		try: # Catch undefined Frame IDs.
-			type = cfg.FRAMES[frame_number]
+			type = app.config['FRAMES'][frame_number]
 		except KeyError:
-			type = cfg.FRAMES[99]
+			type = app.config['FRAMES'][99]
 		if type == "number": 	return number(data)
 		if type == "podId": 	return podId(data)
 		if type == "status": 	return status(data)
@@ -76,21 +75,21 @@ class SMS(object):
 		print "posting data"
 		nposted = 0
 		dataids = []
-		url = cfg.API_URL + '/data'
+		url = app.config['API_URL'] + '/data'
 		headers = {'content-type':'application/json'}
 		data = json.dumps(self.data)
 		auth = HTTPBasicAuth('api',HMACAuth().compute_signature(url,data))
 		d = requests.post(url=url, data=data, headers=headers, auth=auth)
-		if d.status_code == cfg.CREATED:
+		if d.status_code == 201:
 			items = d.json()
 		 	for item in items:
-		 		print 'Item status: ' + item[cfg.STATUS]
-		 		if not item[cfg.STATUS] == cfg.ERR:
+		 		print 'Item status: ' + item[app.config['STATUS']]
+		 		if not item[app.config['STATUS']] == app.config['ERR']:
 		 			nposted = nposted + 1
 		 			self.data_ids.append(item[u'_id'])
 		else:
 			print json.dumps(d.json())
-			# print 'POST:[' + str(d.status_code) + ']:' + d.json()[cfg.STATUS] + ':' + json.dumps(d.json()['_issues'])
+			# print 'POST:[' + str(d.status_code) + ']:' + d.json()[app.config['STATUS']] + ':' + json.dumps(d.json()['_issues'])
 		self.nposted = nposted
 
 	def patch(self): 
@@ -120,10 +119,10 @@ class SMS(object):
 		if p.status_code == requests.codes.ok:
 			response['status'] = patched['status'] 	# RQ reporting
 			response['patch code'] = p.status_code 	# RQ reporting
-			if p.json()[cfg.STATUS] == cfg.ERR:
-				print 'PATCH:[' + str(response['patch code']) + ']:' + p.json()[cfg.STATUS] + ':' + json.dumps(p.json()[cfg.ISSUES])
+			if p.json()[app.config['STATUS']] == app.config['ERR']:
+				print 'PATCH:[' + str(response['patch code']) + ']:' + p.json()[app.config['STATUS']] + ':' + json.dumps(p.json()[app.config['ISSUES']])
 			else:		   
-				print 'PATCH:[' + str(response['patch code']) + ']:' + p.json()[cfg.STATUS] + ':' + str(self.url) + ':status:' + patched['status']
+				print 'PATCH:[' + str(response['patch code']) + ']:' + p.json()[app.config['STATUS']] + ':' + str(self.url) + ':status:' + patched['status']
 		else:
 			print 'PATCH: [' + str(p.status_code) + ']:' + 'request failed'
 		return response
@@ -228,20 +227,20 @@ class SMS(object):
 		
 	# Pod and Notebook Identity Functions:
 	def pod(self): # Get the pod document for this message
-		if self.pod_data == None or not self.pod_data[cfg.ETAG] == requests.head(self.podurl()).headers['Etag']:
+		if self.pod_data == None or not self.pod_data[app.config['ETAG']] == requests.head(self.podurl()).headers['Etag']:
 			print "Updating pod information for concurrency...."
 			self.pod_data = requests.get(self.podurl()).json()
 		return self.pod_data
 
 	# Pod and Notebook URLs:
 	def podurl(self): # Get the pod url for this message
-		return str(cfg.API_URL + '/pods/' + self.podId())
+		return str(app.config['API_URL'] + '/pods/' + self.podId())
 
 	def podurl_objid(self):
-		return str(cfg.API_URL + '/pods/' + self.pod()[cfg.ID])
+		return str(app.config['API_URL'] + '/pods/' + self.pod()[app.config['ITEM_LOOKUP_FIELD']])
 
 	def staturl(self):
-		return str(cfg.API_URL + '/pods/status/' + str(self.pod()['name']))
+		return str(app.config['API_URL'] + '/pods/status/' + str(self.pod()['name']))
 
 	# Pod and Notebook Ids:
 	def podId(self):
@@ -271,7 +270,7 @@ class number(SMS):
 
 	def podId(self):
 		if self.podIdvalue == None:
-			podurl = cfg.API_URL + '/pods/?where={"' + 'number' + '":"' + self.number + '"}'
+			podurl = app.config['API_URL'] + '/pods/?where={"' + 'number' + '":"' + self.number + '"}'
 			self.podIdvalue = str(requests.get(podurl).json()['_items'][0]['podId'])
 		return self.podIdvalue
 
@@ -390,10 +389,10 @@ class deploy(SMS):
 		self.data['sensors'] = []
 		try:
 			for j in range(self.n_sensors()):
-				sensor_url = cfg.API_URL + '/sensors/' + str(int(self.content[i:i+2], 16))
+				sensor_url = app.config['API_URL'] + '/sensors/' + str(int(self.content[i:i+2], 16))
 				s = requests.get(sensor_url).json()
 				self.data['sids'].append(s['sid'])
-				self.data['sensors'].append(s[cfg.ID])
+				self.data['sensors'].append(s[app.config['ITEM_LOOKUP_FIELD']])
 				i += 2
 		except:
 			self.status='invalid'
@@ -427,12 +426,12 @@ class deploy(SMS):
 		if not self.status == 'invalid':
 			print "posting deploy message"
 			# Note, use podurl_objid for PUT requets (podId is read-only!) and send Etag
-			headers = {'If-Match':str(self.pod()[cfg.ETAG]),'content-type':'application/json'}
+			headers = {'If-Match':str(self.pod()[app.config['ETAG']]),'content-type':'application/json'}
 			data = json.dumps(self.data)
 			url = self.podurl_objid()
 			auth = HTTPBasicAuth('api',HMACAuth().compute_signature(url,data))
 			d = requests.put(url=url, data=data, headers=headers, auth=auth)
-			if d.status_code == cfg.CREATED:
+			if d.status_code == 201:
 				print "New deployment created"
 			else:
 				print d.status_code

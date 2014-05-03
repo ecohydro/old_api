@@ -4,17 +4,21 @@ from eve.auth import HMACAuth
 from hashlib import sha1
 import base64
 import hmac
+import os
 from hashlib import sha1
-from pulsepod.compat import izip
-from pulsepod.utils import cfg
-from pulsepod.utils.utils import InvalidMessage
+from compat import izip
+from utils import InvalidMessage
 from collections import OrderedDict
 from basicauth import decode
+from flask import current_app as app
 
 class HMACAuth(HMACAuth):
 
-    def __init__(self):
-        self.token = cfg.API_AUTH_TOKEN
+    def __init__(self,token=None):
+        if token:
+            self.token = token
+        else:
+            self.token = os.getenv('API_AUTH_TOKEN')
        
     def compute_signature(self, uri, data):
         """Compute the signature for a given request

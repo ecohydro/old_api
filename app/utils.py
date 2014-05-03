@@ -6,7 +6,6 @@ import urllib
 import hashlib
 import datetime
 import struct
-from  pulsepod.utils import cfg
 from flask import current_app as app
 from flask import jsonify
 import requests
@@ -39,17 +38,17 @@ def pod_name():
 # PARSING UTILITIES 						 #
 ##############################################
 def make_podId(name):
-	url = cfg.API_URL + '/pods' + '?projection={"podId":1}&max_results=1'
+	url = app.config['API_URL'] + '/pods' + '?projection={"podId":1}&max_results=1'
 	print url
 	h = requests.get(url).json()
 	print h
-	print h[cfg.ITEMS][0]['podId']
+	print h[app.config['ITEMS']][0]['podId']
 
-	return int(requests.get(url).json()[cfg.ITEMS][0]['podId']) + 1
+	return int(requests.get(url).json()[app.config['ITEMS']][0]['podId']) + 1
 
 def get_sensor(sid):
 	sensor = {}
-	sensor_url = cfg.API_URL + '/sensors/' + str(sid)
+	sensor_url = app.config['API_URL'] + '/sensors/' + str(sid)
 	try:
 		s = requests.get(sensor_url)
 	except:
@@ -104,7 +103,7 @@ def google_geolocate_api(tower):
 	location['lng'] = 'unknown'
 	location['accuracy'] = 'unknown'
 
-	api_key = cfg.GOOGLE_API_KEY
+	api_key = app.config['GOOGLE_API_KEY']
 	url = 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + api_key
 	headers = {'content-type':'application/json'}
 	data = {'cellTowers':[{
@@ -120,13 +119,13 @@ def google_geolocate_api(tower):
 		location['lng'] = response['location']['lng']
 		location['accuracy'] = response['accuracy']
 	else:
-		location = cfg.LOCATION
+		location = app.config['LOCATION']
 	return location
 
 def google_elevation_api(loc):
 	if not 'unknown' in loc.values():
 		print loc
-		api_key = cfg.GOOGLE_API_KEY
+		api_key = app.config['GOOGLE_API_KEY']
 		baseurl = 'https://maps.googleapis.com/maps/api/elevation/json?locations='
 		tailurl = '&sensor=false&key=' + api_key
 		url = baseurl + str(loc['lat']) + ',' + str(loc['lng']) + tailurl
@@ -137,7 +136,7 @@ def google_elevation_api(loc):
 					'resolution':response['results'][0]['resolution']
 					}
 	else:
-		return cfg.ELEVATION
+		return app.config['ELEVATION']
 
 
 def google_geocoding_api(loc):
@@ -153,7 +152,7 @@ def google_geocoding_api(loc):
 	if not 'unknown' in loc.values():
 		# must pre-seed this with all the data we want shorted:
 		print loc
-		api_key = cfg.GOOGLE_API_KEY
+		api_key = app.config['GOOGLE_API_KEY']
 		baseurl = 'https://maps.googleapis.com/maps/api/geocode/json?latlng='
 		tailurl = '&sensor=false&key=' + api_key
 		url = baseurl + str(loc['lat']) + ',' + str(loc['lng']) + tailurl

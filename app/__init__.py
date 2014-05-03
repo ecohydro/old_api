@@ -9,10 +9,9 @@ from eve import Eve
 from flask import jsonify, request
 from eve.utils import config
 import qrcode, qrcode.image.svg
-from pulsepod.utils import cfg
-from pulsepod.methods.posts import post_data_to_API, post_pod_create_qr
-from pulsepod.utils.utils import *
+from posts import post_data_to_API, post_pod_create_qr
 from HMACAuth import HMACAuth
+from utils import InvalidMessage
 
 # Create an rq queue from rq and worker.py:
 import redis
@@ -24,15 +23,11 @@ post_q = Queue(connection=conn)	 	# This is the queue for parse/post jobs
 
 # We've defined a ONHEROKU variable to determine if we are, well, on Heroku. 
 if os.environ.get('ONHEROKU'):
-	host = '0.0.0.0'
-	port = int(os.environ.get('PORT'))
 	debug = False # Don't debug on Heroku.
-	settings = '/app/settings.py'
+	settings = '/app/app_settings.py'
 else:
-	host = '0.0.0.0'
-	port = 5000 
 	debug = True
-	settings = '../settings.py'
+	settings = '../app_settings.py'
 
 app = Eve(settings=settings,auth=HMACAuth)
 
@@ -85,10 +80,10 @@ def before_post_nexmo(request):
 #### BEFORE INSERT METHODS
 def before_insert_pods(documents):
 	for d in documents:
-		print "Adding " + d["name"] + " to the database"
+		print 'Adding ' + d['name'] + ' to the database'
 		d['nbk_name'] = str(d['name']) + "'s Default Notebook"
 		d['podId'] = make_podId(d['name'])
-		d['qr'] = 'https://s3.amazonaws.com/' + cfg.AWS_BUCKET \
+		d['qr'] = 'https://s3.amazonaws.com/' + app.config['AWS_BUCKET'] \
 				  + '/' + str(d['name']) + '.svg'
 
 def before_insert_data(documents):
@@ -109,8 +104,8 @@ def before_insert_nexmo(documents):
 # These functions prepare gateway-specific responses to the client 
 def after_POST_pods_callback(request,r):
 	resp = json.loads(r.get_data())
-	if not (resp[cfg.STATUS] == cfg.ERR):
-	 	qr_job = post_q.enqueue(post_pod_create_qr,str(resp[cfg.ID]))
+	if not (resp[app.config['STATUS']] == app.config['STATUS_ERR']):
+	 	qr_job = post_q.enqueue(post_pod_create_qr,str(resp[app.config['ITEM_LOOKUP_FIELD']]))
 	else:
 	 	raise InvalidMessage('Pod not posted to API',status_code=400,payload=resp)
 
@@ -121,9 +116,9 @@ def after_POST_callback(res,request,r):
 	# If it's JSON, then we're ready to parse this message
 	if (res in ['twilio','smssync','nexmo']) and not r.status_code == 401:
 		resp = json.loads(r.get_data())
-		if not (resp[cfg.STATUS] == cfg.ERR):
+		if not (resp[app.config['STATUS']] == app.config['STATUS_ERR']):
 			print "Parsing message posted to " + res
-			post_job = post_q.enqueue(post_data_to_API,str(resp[cfg.ID]),res)
+			post_job = post_q.enqueue(post_data_to_API,str(resp[app.config['ITEM_LOOKUP_FIELD']]),res)
 		else:
 			raise InvalidMessage('Data not sent to API',status_code=400,payload=resp)
 
@@ -138,11 +133,3 @@ if __name__ == 'api':
 	
 	app.on_post_POST_pods += after_POST_pods_callback
 	app.on_post_POST += after_POST_callback
-
-# Start the application
-# if __name__ == 'api':
-# Adding data to the system:
-
-# Administering pods, gateways, and sensors:
-# Run the program:
-#	app.run(host=host, port=port, debug=debug)

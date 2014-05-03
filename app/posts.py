@@ -9,12 +9,12 @@ import qrcode.image.svg
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key
 
-from pulsepod.utils import cfg
-from pulsepod.sms import SMS
+from flask import current_app as app
+from sms import SMS
 
 def post_data_to_API(objId,res):
 	# Setup the URLs:
-	url = cfg.API_URL + '/messages/' + res + '/' + objId
+	url = app.config['API_URL'] + '/messages/' + res + '/' + objId
 	message = SMS.create(url=url)
 	# Init dicts for message updates and RQ responses:
 	response={}
@@ -28,7 +28,7 @@ def post_data_to_API(objId,res):
 
 def post_pod_create_qr(objId):
 	# First we need to get the pod
-	url = cfg.API_URL + '/pods/' + objId
+	url = app.config['API_URL'] + '/pods/' + objId
 	pod = requests.get(url).json()
 
 	# Set up the file names
@@ -36,9 +36,9 @@ def post_pod_create_qr(objId):
 	pod_qr_file = str(pod['name']) + '.svg'
 	
 	try:
-		bitly_url = cfg.APP_URL + '/pods/' + urllib.quote_plus(str(pod['name']))
+		bitly_url = app.config['APP_URL'] + '/pods/' + urllib.quote_plus(str(pod['name']))
 		# Now we can generate the bitly url:
-		c = bitly_api.Connection(access_token=cfg.BITLY_API_TOKEN)
+		c = bitly_api.Connection(access_token=app.config['BITLY_API_TOKEN'])
 		bitly_link=c.shorten(url)['url']
 		
 		# Update the link title to this pod name:
@@ -61,7 +61,7 @@ def post_pod_create_qr(objId):
 
 	try:
 		# UPLOAD THE QRFILE TO S3:
-		conn = S3Connection(cfg.AWS_ACCESS_KEY_ID,cfg.AWS_SECRET_ACCESS_KEY)
+		conn = S3Connection(app.config['AWS_ACCESS_KEY_ID'],app.config['AWS_SECRET_ACCESS_KEY'])
 		bucket = conn.get_bucket('pulsepodqrsvgs')
 		k = Key(bucket)
 		k.key = pod_qr_file
