@@ -12,6 +12,7 @@ import qrcode, qrcode.image.svg
 from posts import post_data_to_API, post_pod_create_qr
 from HMACAuth import HMACAuth
 from utils import InvalidMessage
+from settings import settings as config
 
 # Create an rq queue from rq and worker.py:
 import redis
@@ -21,15 +22,7 @@ from worker import conn
 # Set up the worker queues:
 post_q = Queue(connection=conn)	 	# This is the queue for parse/post jobs
 
-# We've defined a ONHEROKU variable to determine if we are, well, on Heroku. 
-if os.environ.get('ONHEROKU'):
-	debug = False # Don't debug on Heroku.
-	settings = '/app/app_settings.py'
-else:
-	debug = True
-	settings = '../app_settings.py'
-
-app = Eve(settings=settings,auth=HMACAuth)
+app = Eve(settings=config,auth=HMACAuth)
 
 # Error handling with json output:
 @app.errorhandler(InvalidMessage)
