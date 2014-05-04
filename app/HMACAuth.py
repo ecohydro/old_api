@@ -7,7 +7,6 @@ import hmac
 import os
 from hashlib import sha1
 from compat import izip
-from utils import InvalidMessage
 from collections import OrderedDict
 from basicauth import decode
 from flask import current_app as app

@@ -14,7 +14,7 @@ from random import choice, randint
 from names import firstnames, lastnames
 
 # Definie a exception class to report errors (handy for debugging)
-class InvalidMessage(Exception):
+class InvalidMessageException(Exception):
 	"""Raised when pdu2json cannot properly format the PDU submitted
     :param pdu_exception: the original exception raised by pdu2json
 	"""
@@ -38,38 +38,15 @@ def pod_name():
 # PARSING UTILITIES 						 #
 ##############################################
 def make_podId(name):
-	url = app.config['API_URL'] + '/pods' + '?projection={"podId":1}&max_results=1'
-	print url
-	h = requests.get(url).json()
-	print h
-	print h[app.config['ITEMS']][0]['podId']
+	pods = app.extensions['pymongo']['MONGO'][1]['pods']
+	return (pods.find().sort('podId',-1)[0]['podId'] + 1)
+	#url = app.config['API_URL'] + '/pods' + '?projection={"podId":1}&max_results=1'
+	#print url
+	#h = requests.get(url).json()
+	#print h
+	#print h[app.config['ITEMS']][0]['podId']
 
 	return int(requests.get(url).json()[app.config['ITEMS']][0]['podId']) + 1
-
-def get_sensor(sid):
-	sensor = {}
-	sensor_url = app.config['API_URL'] + '/sensors/' + str(sid)
-	try:
-		s = requests.get(sensor_url)
-	except:
-		raise InvalidMessage('Unable to contact the API [sensors]',status_code=503) 
-	if not s.status_code == requests.codes.ok:
-		raise InvalidMessage('API unable to determine sensor information',\
-			 				status_code=400,payload={'status_code':r.status_code})
-	
-	# sensor data is packed as a dict, but through a couple of layers
-	try:
-		sensor = s.json()
-	except:
-		raise InvalidMessage('Error getting sensor json from API',status_code=400)
-			
-	try:
-		sensor['value_length'] = sensor['nbytes']
-		sensor['fmt'] = sensor['byteorder'] + sensor['fmt'] 
-	except:
-		raise InvalidMessage('Error creating sensor variables',status_code=400)
-
-	return sensor
 
 def get_now():
 	return time.strftime("%a, %d %b %Y %H:%M:%S GMT",time.gmtime())
@@ -79,7 +56,7 @@ def get_time(content,i):
 	try:
 		unixtime = struct.unpack('<L', content[i:i+8].decode('hex'))[0]
 	except:
-		raise InvalidMessage('Error decoding timestamp',status_code=400)
+		raise InvalidMessageException('Error decoding timestamp',status_code=400)
 	t = time.gmtime(unixtime)
 	#dbtime is (e.g.) "Tue, 17 Sep 2013 01:33:56 GMT"
 	dbtime = time.strftime("%a, %d %b %Y %H:%M:%S GMT", t)
@@ -88,22 +65,29 @@ def get_time(content,i):
 def get_value(content,i,sensor):
 	# parse value based on format string
 	try:
-		value = struct.unpack(str(sensor['fmt']), content[i:i+(2*int(sensor['value_length']))].decode('hex'))[0]
+		value = struct.unpack(str(sensor['byteorder'] + sensor['fmt']), content[i:i+(2*int(sensor['nbytes']))].decode('hex'))[0]
 	except:
-		raise InvalidMessage('Error parsing format string',status_code=400)
-				
+		raise InvalidMessageException('Error parsing format string',status_code=400)
+
 	# Right here we would do some initial QA/QC based on whatever 
-	# QA/QC limits we eventually add to the sensor specifications.
+	# QA/QC limits we eventually add to the sensor specifications.	
+	# Not returning the flag yet.
+	qa_qc_flag = qa_qc(sensor,value)
 	return float(value)
 
-def google_geolocate_api(tower):
+def qa_qc(sensor,value):
+	pass
+
+def google_geolocate_api(tower,api_key):
+	if not api_key:
+		assert 0, "Must provide config"
+
 	location={}
 	# Assume this doesn't work:
 	location['lat'] = 'unknown'
 	location['lng'] = 'unknown'
 	location['accuracy'] = 'unknown'
 
-	api_key = app.config['GOOGLE_API_KEY']
 	url = 'https://www.googleapis.com/geolocation/v1/geolocate?key=' + api_key
 	headers = {'content-type':'application/json'}
 	data = {'cellTowers':[{
@@ -113,19 +97,18 @@ def google_geolocate_api(tower):
 		'mobileNetworkCode':tower['mobileNetworkCode']
 		}]}
 	response =  requests.post(url,data=json.dumps(data),headers=headers).json()
-	print response
 	if not 'error' in response:
 		location['lat'] = response['location']['lat']
 		location['lng'] = response['location']['lng']
 		location['accuracy'] = response['accuracy']
+		return location
 	else:
-		location = app.config['LOCATION']
-	return location
+		return 0
 
-def google_elevation_api(loc):
+def google_elevation_api(loc,api_key=None):
+	if not api_key:
+		assert 0, "Must provide api_key"
 	if not 'unknown' in loc.values():
-		print loc
-		api_key = app.config['GOOGLE_API_KEY']
 		baseurl = 'https://maps.googleapis.com/maps/api/elevation/json?locations='
 		tailurl = '&sensor=false&key=' + api_key
 		url = baseurl + str(loc['lat']) + ',' + str(loc['lng']) + tailurl
@@ -135,8 +118,10 @@ def google_elevation_api(loc):
 					'elevation':response['results'][0]['elevation'],
 					'resolution':response['results'][0]['resolution']
 					}
+		else:
+			return 0	
 	else:
-		return app.config['ELEVATION']
+		return 0
 
 
 def google_geocoding_api(loc):

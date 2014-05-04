@@ -58,30 +58,10 @@ AWS_BUCKET = os.getenv('AWS_BUCKET')
 # THIS IS ALWAYS THE SAME, WE ONLY USE IT IN PRODUCTION ENVIRONMENTS:	 
 APP_URL = os.getenv('http://app.pulsepod.io')
 
-# SETTINGS I NEED TO DEPRECATE:
-# # EVE API status ERR response (who knows if this will 
-# # ever change):
-# ERR='ERR'
-# OK='OK'
-# STATUS='_status'
-# ISSUES='_issues'
-# ETAG='_etag'
-# ID='_id'
-
-# POD DATA FRAMES 
-# Dict of possible message frame IDs and corresponding types
-# Used by Message class to determine message subclass
-# pod_number: Is a data message sent without any ID 
-#			   info other than phone number
-# pod_status: Is a message sent containing pod cell id
-#			   and sensor information
-# pod_imei: Is a data message that includes the pod IMEI
-# Any other id will be assigned invalid
-
 FRAMES = {
 	0:'number',
 	1:'status',
-	2:'podId',
+	2:'pod_id',
 	3:'deploy',
 	99:'invalid',
 }
@@ -562,7 +542,7 @@ messages_schema = {
 	'type':{
 		'type':'string',
 		'required':False,
-		'allowed':['unknown','status','deploy','invalid','number','imei'],
+		'allowed':['unknown','status','deploy','invalid','number','pod_id'],
 		'default':'unknown'
 	},
 	'data':{
