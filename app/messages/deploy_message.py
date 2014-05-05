@@ -3,7 +3,7 @@ from app.messages import Message
 class DeployMessage(Message):
 
 	def __init__(self,data=None,config=None,db=None):
-		super(DeployMessage,self).__init__(data=None,config=None,db=None)
+		super(DeployMessage,self).__init__(data=data,config=config,db=db)
 		self.type = 'deploy'
 	# Deployment message format (numbers are str length, so 2 x nBytes)
 	# 		2 + 4 + 3 + 3 + 4 + 8 + 3 + 1 = 28		   |
@@ -13,13 +13,34 @@ class DeployMessage(Message):
 	##############################################################
 	# Hard-coded based on Deployment message format:
 	def mcc(self):
-		return int(self.content[6:9],16)
+		if self.content:
+			try:
+				return int(self.content[6:9],16)
+			except ValueError as e:
+				e.args += ('message content invalid','DeployMessage','mcc()')
+				raise
+		else:
+			assert 0, "Uh-oh. No message content. You've done something very bad"
 
 	def mnc(self):
-		return int(self.content[9:12],16)
-
+		if self.content:
+			try:
+				return int(self.content[9:12],16)
+			except ValueError as e:
+				e.args += ('message content invalid','DeployMessage','mnc()')
+				raise
+		else:
+			assert 0, "Uh-oh. No message content. You've done something very bad"
+	
 	def lac(self):
-		return int(self.content[12:16],16)
+		if self.content:
+			try:		
+				return int(self.content[12:16],16)
+			except ValueError as e:
+				e.args += ('message content invalid','DeployMessage','lac()')
+				raise
+		else:
+			assert 0, "Uh-oh. No message content. You've done something very bad"
 
 	def cell_id(self):
 		return int(self.content[16:24],16)

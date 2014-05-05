@@ -20,7 +20,7 @@ class Message(object):
 			self._id = data['_id'] if '_id' in data else None
 			self.source = data['source'] if 'source' in data else None
 			self.status = data['status'] if 'status' in data else  None
-			self.content = data['message'] if 'message' in data else None
+			self.content = str(data['message']) if 'message' in data else None
 			self.number = data['number'] if 'number' in data else None
 			self.pod_name = data['p'] if 'p' in data else None
 			self.href = data['_links']['self']['href'] 
@@ -43,38 +43,6 @@ class Message(object):
 			self.nposted = 0
 			self.data_ids = []
 			self.data = None
-	
-	# @staticmethod
-	# def create(data=None, url=None, config=None, db=None):
-	# 	if not config:
-	# 		assert 0, "Must provide app.config"
-	# 	if not db:
-	# 		assert 0, "Must provide PyMongo db object"
-
-	# 	if data == None and url == None:
-	# 		assert 0, "Must provide a url or message data"
-	# 	if not url == None:
-	# 		data = requests.get(url).json()
-	# 	if data == None:
-	# 		assert 0, "Must provide a url or message data"
-
-	# 	try: # Catch invalid messages
-	# 		frame_number = int(data['message'][0:2],16)
-	# 	except ValueError:
-	# 		frame_number = 99
-	# 	except TypeError as e:
-	# 		e.args += ('data["message"] does not contain frame number','SMS.create()')
-	# 		raise
-	# 	try: # Catch undefined Frame IDs.
-	# 		type = config['FRAMES'][frame_number]
-	# 	except KeyError:
-	# 		type = config['FRAMES'][99]
-	# 	if type == "number": 	return NumberMessage(data,config,db)
-	# 	if type == "pod_id": 	return PodIdMessage(data,config,db)
-	# 	if type == "status": 	return StatusMessage(data,config,db)
-	# 	if type == "invalid":	return InvalidMessage(data,config,db)
-	# 	if type == "deploy":	return DeployMessage(data,config,db)
-	# 	assert 0, "Bad SMS creation: " + type
 
 	def pod_serial_number_length(self):
 		return 4

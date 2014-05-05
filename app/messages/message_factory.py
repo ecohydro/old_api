@@ -28,12 +28,9 @@ class MessageFactory(object):
 				raise
 
 		try: # Catch invalid messages
-			frame_number = int(data['message'][0:2],16)
+			frame_number = int(str(data['message'][0:2]),16)
 		except ValueError:
 			frame_number = 99
-		except TypeError as e:
-			e.args += ('data["message"] does not contain frame number','SMS.create()')
-			raise
 		try: # Catch undefined Frame IDs.
 			type = config['FRAMES'][frame_number]
 		except KeyError:
