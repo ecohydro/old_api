@@ -5,10 +5,11 @@ class StatusMessage(Message):
 	def __init__(self,data=None,config=None,db=None):
 		super(StatusMessage,self).__init__(data=data,config=config,db=db)
 		self.type = 'status'
+		self.frame = self.__class__.__name__
 
 	def parse(self):
 		json = []
-		i=2+self.pod_serial_number_length() 
+		i=2+self.pod_serial_number_length 
 		##################################################################
 		# |   LAC  |   CI   | nSensors |  sID1  |  sID1  | ... |  sIDn  |
 		# | 2 byte | 8 byte |  1 byte  | 1 byte | 1 byte | ... | 1 byte |

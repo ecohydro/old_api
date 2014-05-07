@@ -27,7 +27,7 @@ if os.getenv('ONHEROKU'):
 		MONGO_PASSWORD = os.getenv('MONGO_PASSWORD')
 		MONGO_DBNAME = os.getenv('MONGO_DBNAME')
 else:
-	API_URL = 'http://0.0.0.0:5000'
+	API_URL = 'http://pulse-api-test.herokuapp.com'
 	SERVER_NAME = '0.0.0.0:5000'
 	MONGO_HOST = os.getenv('MONGO_TESTING_HOST')
 	MONGO_PORT = os.getenv('MONGO_TESTING_PORT')
@@ -163,13 +163,6 @@ pod_schema = {
 		'unique': True,
 		'versioned':False,
 	},
-	'qr' : {
-		'type': 'string',
-		'required':False,
-		'unique' : True,
-		'versioned': False,
-		'default':'https://s3.amazonaws.com/pulsepodqrsvgs/default.svg',
-	},
 	'owner' : {
 		'type':'string',
 		'required':True,
@@ -177,9 +170,17 @@ pod_schema = {
 		'minlength':4,
 		'versioned':False,
 	},
-	'podId' : { # Pod ID for use in SMS messages.
+	'qr' : {
+		'type': 'string',
+		'required':False,
+		'unique' : True,
+		'versioned': False,
+		'default':'https://s3.amazonaws.com/pulsepodqrsvgs/default.svg',
+	},
+
+	'pod_id' : { # Pod ID for use in SMS messages.
 		'type':'number',
-		'max':65535,
+		'max': 65535,
 		'min':0,
 		'required':False,
 		'versioned':False,
@@ -187,7 +188,7 @@ pod_schema = {
 	},
 	'imei':{ # IMEI address of cellular radio, acts as Serial Number for the Pod
 		'type':'string', # Need to define an IMEI address type
-		'unique':False,
+		'unique':True,
 		'required':False,
 		'minlength':15,
 		'maxlength':20,
@@ -602,8 +603,8 @@ pods = {
 	# additional read-only entry point. This way consumers can also perform
 	# GET requests at '/<item_title>/<urlname>/'.
 	'additional_lookup': {
-		'url' : 'regex("[\w]+")',
-		'field': 'podId'
+		'url' : 'regex("[\d]+")',
+		'field': 'pod_id'
 	},
 
 	# We choose to override global cache-control directives for this resource.
@@ -637,7 +638,7 @@ data = {
 status = {
 	'url':'pods/status',
 	'item_lookup_field':'name',
-	'item_url':'regex("([\w]+\-){1,3}[0-9]{4}")',
+	'item_url':'regex("([\w]+\-){1,3}[0-9]{2,4}")',
 	'resource_methods': ['GET'],
 	'item_methods': ['GET','PATCH'],
 	'schema' : status_schema,

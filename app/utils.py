@@ -37,16 +37,15 @@ def pod_name():
 ##############################################
 # PARSING UTILITIES 						 #
 ##############################################
-def make_podId(name):
+def make_pod_id(name):
 	pods = app.extensions['pymongo']['MONGO'][1]['pods']
-	return (pods.find().sort('podId',-1)[0]['podId'] + 1)
+	return (pods.find().sort('pod_id',-1)[0]['pod_id'] + 1)
 	#url = app.config['API_URL'] + '/pods' + '?projection={"podId":1}&max_results=1'
 	#print url
 	#h = requests.get(url).json()
 	#print h
 	#print h[app.config['ITEMS']][0]['podId']
-
-	return int(requests.get(url).json()[app.config['ITEMS']][0]['podId']) + 1
+	# return int(requests.get(url).json()[app.config['ITEMS']][0]['pod_id']) + 1
 
 def get_now():
 	return time.strftime("%a, %d %b %Y %H:%M:%S GMT",time.gmtime())
@@ -80,7 +79,7 @@ def qa_qc(sensor,value):
 
 def google_geolocate_api(tower,api_key):
 	if not api_key:
-		assert 0, "Must provide config"
+		assert 0, "Must provide api_key"
 
 	location={}
 	# Assume this doesn't work:
@@ -103,6 +102,7 @@ def google_geolocate_api(tower,api_key):
 		location['accuracy'] = response['accuracy']
 		return location
 	else:
+		print response
 		return 0
 
 def google_elevation_api(loc,api_key=None):
@@ -124,7 +124,10 @@ def google_elevation_api(loc,api_key=None):
 		return 0
 
 
-def google_geocoding_api(loc):
+def google_geocoding_api(loc,api_key=None):
+	if not api_key:
+		assert 0, "Must provide api_key"
+
 	address={
 		'country':{'short':'unknown','full':'unknown'},
 		'locality':{'short':'unknown','full':'unknown'},
@@ -137,7 +140,6 @@ def google_geocoding_api(loc):
 	if not 'unknown' in loc.values():
 		# must pre-seed this with all the data we want shorted:
 		print loc
-		api_key = app.config['GOOGLE_API_KEY']
 		baseurl = 'https://maps.googleapis.com/maps/api/geocode/json?latlng='
 		tailurl = '&sensor=false&key=' + api_key
 		url = baseurl + str(loc['lat']) + ',' + str(loc['lng']) + tailurl

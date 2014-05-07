@@ -50,19 +50,20 @@ def before_insert_pods(documents):
 	for d in documents:
 		print 'Adding ' + d['name'] + ' to the database'
 		d['nbk_name'] = str(d['name']) + "'s Default Notebook"
-		# podId should just be next available podId. So findone in pods sorted by podId desecending + 1.
-		d['podId'] = make_podId(d['name'])
+		# pod_id should just be next available pod_id. So findone in pods sorted by pod_id desecending + 1.
+		d['pod_id'] = make_pod_id(d['name'])
 		d['qr'] = 'https://s3.amazonaws.com/' + app.config['AWS_BUCKET'] \
 				  + '/' + str(d['name']) + '.svg'
 
 # app.on_post_POST functions:	
 # These functions prepare gateway-specific responses to the client 
 def after_POST_pods_callback(request,r):
-	resp = json.loads(r.get_data())
-	if not (resp[app.config['STATUS']] == app.config['STATUS_ERR']):
-	 	qr_job = post_q.enqueue(post_pod_create_qr,str(resp[app.config['ITEM_LOOKUP_FIELD']]),config=app.config)
-	else:
-	 	raise InvalidMessageException('Pod not posted to API',status_code=400,payload=resp)
+	if r.status_code is 201:
+		resp = json.loads(r.get_data())
+		if not (resp[app.config['STATUS']] == app.config['STATUS_ERR']):
+	 		qr_job = post_q.enqueue(post_pod_create_qr,str(resp[app.config['ITEM_LOOKUP_FIELD']]),config=app.config)
+		else:
+	 		raise InvalidMessageException('Pod not posted to API',status_code=400,payload=resp)
 
 # Do this one last...`
 def after_POST_callback(res,request,r):

@@ -6,6 +6,7 @@ class InvalidMessage(Message):
 		super(InvalidMessage,self).__init__(data=data,config=config,db=db)
 		self.status = 'invalid'
 		self.type = 'invalid'
+		self.frame = self.__class__.__name__
 
 	def parse(self):
 		pass
