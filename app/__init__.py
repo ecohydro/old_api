@@ -10,7 +10,7 @@ from flask import jsonify, request
 import qrcode, qrcode.image.svg
 from posts import post_data_to_API, post_pod_create_qr
 from HMACAuth import HMACAuth
-from utils import InvalidMessageException
+from utils import InvalidMessageException, make_pod_id
 from waitress import serve
 
 # Create an rq queue from rq and worker.py:
@@ -51,7 +51,6 @@ def before_insert_pods(documents):
 		print 'Adding ' + d['name'] + ' to the database'
 		d['nbk_name'] = str(d['name']) + "'s Default Notebook"
 		# pod_id should just be next available pod_id. So findone in pods sorted by pod_id desecending + 1.
-		d['pod_id'] = make_pod_id(d['name'])
 		d['qr'] = 'https://s3.amazonaws.com/' + app.config['AWS_BUCKET'] \
 				  + '/' + str(d['name']) + '.svg'
 

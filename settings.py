@@ -92,8 +92,8 @@ ITEM_METHODS = ['GET', 'PATCH']
 
 # Set the public methods for the read-only API. 
 # Only authorized users can write, edit and delete
-# PUBLIC_METHODS = ['GET'] 
-# PUBLIC_ITEM_METHODS = ['GET']
+PUBLIC_METHODS = ['GET'] 
+PUBLIC_ITEM_METHODS = ['GET']
 
 #------------------------------------------------------------------------------
 #
@@ -159,8 +159,8 @@ pod_schema = {
 		'type': 'string',
 		'minlength': 10,
 		'maxlength': 40,
-		'required': True,
-		'unique': True,
+		'required':True,
+		'unique':True,
 		'versioned':False,
 	},
 	'owner' : {
@@ -177,12 +177,13 @@ pod_schema = {
 		'versioned': False,
 		'default':'https://s3.amazonaws.com/pulsepodqrsvgs/default.svg',
 	},
-
-	'pod_id' : { # Pod ID for use in SMS messages.
+	# use 
+	'pod_id' : { # Pod ID for use in SMS messages. 
 		'type':'number',
 		'max': 65535,
 		'min':0,
-		'required':False,
+		'required':True,
+		'unique':True,
 		'versioned':False,
 		'default':0
 	},
@@ -613,11 +614,7 @@ pods = {
 
 	# most global settings can be overridden at resource level
 	'resource_methods': ['GET','POST'],
-	'item_methods': ['GET','PUT','PATCH'],
-
-	# Public read-only access:
-#	'public_methods': ['GET'],
-#    'public_item_methods': ['GET'],
+	'item_methods': ['GET','PUT','PATCH','DELETE'],
 
 	'schema': pod_schema,
 	'datasource':{
@@ -663,11 +660,6 @@ users = {
 	'cache_control': '',
 	'cache_expires': 0,
 		
-	# Resource security:
-	# No public methods on users
-#	 #'public_methods': [],
-#    'public_item_methods': [],
-
 	# Only allow superusers and admin
 	# 'allowed_roles': ['superuser', 'admin'],
 

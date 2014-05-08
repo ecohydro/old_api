@@ -105,7 +105,7 @@ class DeployMessage(Message):
 			self.data['radio'] = self.pod()['radio']
 			self.data['pod_id'] = self.pod()['pod_id']
 		except KeyError as e:
-			e.args += ('pod data missing fields')
+			e.args += ('pod data missing fields','parse()')
 			raise
 
 		# now make sure length is actually correct

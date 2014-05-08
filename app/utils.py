@@ -37,16 +37,10 @@ def pod_name():
 ##############################################
 # PARSING UTILITIES 						 #
 ##############################################
-def make_pod_id(name):
+def make_pod_id():
 	pods = app.extensions['pymongo']['MONGO'][1]['pods']
 	return (pods.find().sort('pod_id',-1)[0]['pod_id'] + 1)
-	#url = app.config['API_URL'] + '/pods' + '?projection={"podId":1}&max_results=1'
-	#print url
-	#h = requests.get(url).json()
-	#print h
-	#print h[app.config['ITEMS']][0]['podId']
-	# return int(requests.get(url).json()[app.config['ITEMS']][0]['pod_id']) + 1
-
+	
 def get_now():
 	return time.strftime("%a, %d %b %Y %H:%M:%S GMT",time.gmtime())
 

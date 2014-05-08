@@ -28,17 +28,12 @@ class HMACAuth(HMACAuth):
         :returns: The computed signature
         """
         s = uri
-        print data
-        if len(data) > 0:
-            #d = OrderedDict(sorted(data.items(), key=lambda x: x[1]))
-            #for k in d:
-            s += data #k + d[k]
+        if data:
+            s += str(data) 
 
         # compute signature and compare signatures
-        print s
         mac = hmac.new(self.token, s.encode("utf-8"), sha1)
         computed = base64.b64encode(mac.digest())
-        print computed.strip()
         return computed.strip()
 
     def check_auth(self, userid, uri, data, hmac_hash, resource, method):
@@ -50,7 +45,7 @@ class HMACAuth(HMACAuth):
             return self.validate(uri, data, hmac_hash)
 
     def validate(self, uri, data, signature):
-        """Validate a request from Twilio
+        """Validate a request to the API
 
         :param uri: full URI that was requested on your server
         :param params: post vars that were sent with the request
@@ -59,7 +54,7 @@ class HMACAuth(HMACAuth):
 
         :returns: True if the request passes validation, False if not
         """
-        return secure_compare(self.compute_signature(uri, data), signature)
+        return secure_compare(str(self.compute_signature(uri, data)), str(signature))
 
     def authorized(self, allowed_roles, resource, method):
         """ Validates the the current request is allowed to pass through.
@@ -68,13 +63,12 @@ class HMACAuth(HMACAuth):
                               string or a list of roles.
         :param resource: resource being requested.
         """
-  
         try:
             userid, hmac_hash = decode(request.headers.get('Authorization'))
         except:
             userid = None
             hmac_hash = None
-
+        
         return self.check_auth(userid, request.url, request.get_data(), \
                             hmac_hash, resource, method )
 
