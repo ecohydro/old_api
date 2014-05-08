@@ -55,6 +55,9 @@ AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY')
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
 AWS_BUCKET = os.getenv('AWS_BUCKET')
 
+# Hirefire.io dyno management
+HIREFIRE_TOKEN = os.getenv('HIREFIRE_TOKEN')
+
 # THIS IS ALWAYS THE SAME, WE ONLY USE IT IN PRODUCTION ENVIRONMENTS:	 
 APP_URL = os.getenv('http://app.pulsepod.io')
 
@@ -112,6 +115,14 @@ data_schema = {
 	'v':{'type':'float','required':False,'default':'1'}, # value
 	'p':{'type':'string','required':True},     # pod
 	's':{'type':'string','required':True},     # sensor name
+	'loc':{
+		'type':'dict',
+		'schema':{
+			'type':{'type':'string','default':'Point'},
+			'coordinates':{'type':'list','items':[{'type':'number'},{'type':'number'}]}
+		},
+		'required':True
+	},
 	'notebook':{
 		'type':'objectid',
 		'data_relation': {

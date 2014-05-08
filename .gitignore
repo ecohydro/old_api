@@ -8,6 +8,7 @@ venv
 # Utility scripts for Kelly (and Gist):
 init_message.py
 example_deployment_message.py
+example_data_message.py
 create_pod.py
 	
 Procfile.local

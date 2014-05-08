@@ -38,6 +38,10 @@ app = Eve(settings=settings,auth=HMACAuth)
 pods = app.extensions['pymongo']['MONGO'][1]['pods']
 sensors = app.extensions['pymongo']['MONGO'][1]['sensors']
 
+
+from app.blueprints.hirefire_blueprint import hirefire_bp as hirefire_module
+app.register_blueprint(hirefire_module)
+
 # Error handling with json output:
 @app.errorhandler(InvalidMessageException)
 def handle_invalid_message(error):
@@ -82,7 +86,6 @@ def after_POST_callback(res,request,r):
 if __name__ == 'app':
 	
 	app.on_insert_pods += before_insert_pods
-	
 	app.on_post_POST_pods += after_POST_pods_callback
 	app.on_post_POST += after_POST_callback
 

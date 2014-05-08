@@ -129,10 +129,6 @@ class Message(object):
 			assert 'Error sending patch request to server'
 		
 	def parse(self):
-		i = 2 + self.pod_serial_number_length
-		self.status = 'parsed'
-		self.data=[]
-		total_obs=0 # Initialize observation counter
 		"""
     	go through the user data of the message
     	| sid | nObs | unixtime1 | value1 | unixtime2 | value2 | ... | valueN |
@@ -140,7 +136,11 @@ class Message(object):
     	nObs = 1byte
     	unixtime = 4 bytes LITTLE ENDIAN
     	value = look up length
-    	"""    
+    	"""  	
+		i = 2 + self.pod_serial_number_length
+		self.status = 'parsed'
+		self.data=[]
+		self.nobs=0 # Initialize observation counter
 		while i < len(self.content):
 			try:
 				sid = int(self.content[i:i+2], 16)
@@ -156,7 +156,7 @@ class Message(object):
 			except:
 				self.status='invalid'
 			i += 2
-			total_obs = total_obs + nobs
+			self.nobs += nobs
 			try:
 				if sensor['context'] == '':
 					sensor_string = str(sensor['variable'])
@@ -174,7 +174,11 @@ class Message(object):
 							  'p': str(self.pod()['name']),
 							  'sensor': sensor['_id'],
 							  'pod': self.pod()['_id'],
-							  'notebook': self.pod()['_current_notebook']
+							  'notebook': self.pod()['_current_notebook'],
+							  'loc':{
+							  		'type':'Point',
+							  		'coordinates':[self.lng(), self.lat()]
+							  },
 							}
 				except:
 					self.status='invalid'
@@ -197,14 +201,12 @@ class Message(object):
 				self.data.append(entry)
 				
 				nobs -= 1
-		self.nobs = total_obs
 		
 	# Pod and Notebook Identity Functions:
 			
 	def pod(self): # Get the pod document for this message
 		if not self.pod_data: # and self.etags['pod'] == self.pod_etag():
 			self.pod_data = self.db['pods'].find_one({'pod_id':self.pod_id()})
-
 		return self.pod_data 
 
 	def notebook(self):
@@ -235,8 +237,11 @@ class Message(object):
 	def pod_etag(self):
 		return str(requests.head(self.pod_url()).headers['Etag'])
 
+	def lat(self):
+		return self.notebook()['location']['lat']
 
-
+	def lng(self):
+		return self.notebook()['location']['lng']
 
 
 
