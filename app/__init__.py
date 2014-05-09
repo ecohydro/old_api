@@ -25,11 +25,9 @@ if os.getenv('ONHEROKU'):
 	settings = 'settings.py'
 elif os.getenv('ONCODESHIP'):
 	# Hating the filesystem, but nosetests gets lost otherwise
-	# /home/rof/clone/settings.py'
 	settings = os.getenv('SETTINGS_FILE','settings.py') 
 else:
 	# Hating the filesystem, but nosetests gets lost otherwise:
-	# '/Users/kcaylor/Virtualenvs/api/settings.py'
 	settings = os.getenv('SETTINGS_FILE','settings.py')
 
 app = Eve(settings=settings,auth=HMACAuth)
