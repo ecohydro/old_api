@@ -1,4 +1,4 @@
 #web: gunicorn --access-logfile - --error-logfile - --log-level debug api:app
-web:  python run.py
+web: newrelic-admin run-program python run.py
 worker: python app/worker.py
 

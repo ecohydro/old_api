@@ -227,7 +227,7 @@ pod_schema = {
 	},
 	'mode': {
 		'type': 'string',
-		'allowed': ['inactive','teen','asleep','normal'],
+		'allowed': ['inactive','teenager','asleep','normal'],
 		'default' : 'inactive',
 		'versioned':False
 	},
