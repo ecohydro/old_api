@@ -1,35 +1,31 @@
-from eve import Eve
 from flask import request
 from eve.auth import HMACAuth
 from hashlib import sha1
 import base64
 import hmac
 import os
-from hashlib import sha1
 from compat import izip
-from collections import OrderedDict
 from basicauth import decode
-from flask import current_app as app
+
 
 class HMACAuth(HMACAuth):
 
-    def __init__(self,token=None):
+    def __init__(self, token=None):
         if token:
             self.token = token
         else:
             self.token = os.getenv('API_AUTH_TOKEN')
-       
+
     def compute_signature(self, uri, data):
         """Compute the signature for a given request
 
         :param uri: full URI for request on API
         :param params: post vars sent with the request
-        
         :returns: The computed signature
         """
         s = uri
         if data:
-            s += str(data) 
+            s += str(data)
 
         # compute signature and compare signatures
         mac = hmac.new(self.token, s.encode("utf-8"), sha1)
@@ -37,11 +33,11 @@ class HMACAuth(HMACAuth):
         return computed.strip()
 
     def check_auth(self, userid, uri, data, hmac_hash, resource, method):
-        if method in ['HEAD','OPTIONS']: # Let it rain.
+        if method in ['HEAD', 'OPTIONS']:  # Let it rain.
             return True
-        elif method in ['GET']: #Stub for user-level auth methods
+        elif method in ['GET']:  # Stub for user-level auth methods
             return True
-        else: # Everything else requires API-ninja access
+        else:  # Everything else requires API-ninja access
             return self.validate(uri, data, hmac_hash)
 
     def validate(self, uri, data, signature):
@@ -54,7 +50,8 @@ class HMACAuth(HMACAuth):
 
         :returns: True if the request passes validation, False if not
         """
-        return secure_compare(str(self.compute_signature(uri, data)), str(signature))
+        return secure_compare(str(self.compute_signature(uri, data)),
+                              str(signature))
 
     def authorized(self, allowed_roles, resource, method):
         """ Validates the the current request is allowed to pass through.
@@ -68,9 +65,9 @@ class HMACAuth(HMACAuth):
         except:
             userid = None
             hmac_hash = None
-        
-        return self.check_auth(userid, request.url, request.get_data(), \
-                            hmac_hash, resource, method )
+
+        return self.check_auth(userid, request.url, request.get_data(),
+                               hmac_hash, resource, method)
 
 
 def secure_compare(string1, string2):
