@@ -64,6 +64,7 @@ def after_POST_pods_callback(request, r):
             config['AWS_ACCESS_KEY_ID'] = app.config['AWS_ACCESS_KEY_ID']
             config['AWS_SECRET_ACCESS_KEY'] = \
                 app.config['AWS_SECRET_ACCESS_KEY']
+            print "starting job..."
             job = post_q.enqueue(
                 post_pod_create_qr,
                 str(resp[app.config['ITEM_LOOKUP_FIELD']]),
