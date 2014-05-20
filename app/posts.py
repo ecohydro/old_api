@@ -1,13 +1,11 @@
 import requests
-import urllib
-
 import bitly_api
 import qrcode
 import qrcode.image.svg
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key
 
-from app.messages.message_factory import MessageFactory as NewMessage
+from message_factory import MessageFactory as NewMessage
 
 
 def post_data_to_API(objId, res, config=None, db=None):

@@ -1,8 +1,7 @@
 import requests
 from requests.auth import HTTPBasicAuth
 import json
-from app.HMACAuth import HMACAuth
-
+from app.utils import compute_signature
 from app.utils import InvalidMessageException
 from app.utils import get_time, get_value, get_now
 
@@ -52,8 +51,9 @@ class Message(object):
             url = self.config['API_URL'] + '/data'
             headers = {'content-type': 'application/json'}
             data = json.dumps(self.data)
+            token = self.config['API_AUTH_TOKEN']
             auth = HTTPBasicAuth('api',
-                                 HMACAuth().compute_signature(url, data))
+                                 compute_signature(token, url, data))
             d = requests.post(url=url, data=data, headers=headers, auth=auth)
             if d.status_code == 201:
                 items = d.json()
@@ -105,12 +105,13 @@ class Message(object):
                 if status:
                     url = ''
                     data = status
+                    token = self.config['API_AUTH_TOKEN']
                     # Don't forget to set the content type to json
                     headers = {'If-Match': str(self.stat_etag()),
                                'content-type': 'application/json'}
                     auth = HTTPBasicAuth(
                         'api',
-                        HMACAuth().compute_signature(url, data))
+                        compute_signature(token, url, data))
                     requests.patch(
                         url=self.stat_url(),
                         data=json.dumps(status),
@@ -124,9 +125,10 @@ class Message(object):
             url = self.url
             headers = {'If-Match': str(self.msg_etag()),
                        'content-type': 'application/json'}
+            token = self.config['API_AUTH_TOKEN']
             auth = HTTPBasicAuth(
                 'api',
-                HMACAuth().compute_signature(url, data))
+                compute_signature(token, url, data))
             p = requests.patch(url=url, data=data, headers=headers, auth=auth)
             response = {}
             if p.status_code == requests.codes.ok:

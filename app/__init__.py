@@ -2,9 +2,10 @@ import os
 import json
 from eve import Eve
 from flask import jsonify
-from posts import post_data_to_API,  post_pod_create_qr
+from posts import post_data_to_API, post_pod_create_qr
 from HMACAuth import HMACAuth
 from utils import InvalidMessageException
+
 
 # Create an rq queue from rq and worker.py:
 from rq import Queue
@@ -55,11 +56,19 @@ def before_insert_pods(documents):
 def after_POST_pods_callback(request, r):
     if r.status_code is 201:
         resp = json.loads(r.get_data())
+        print resp
         if not (resp[app.config['STATUS']] == app.config['STATUS_ERR']):
-            post_q.enqueue(
+            config = {}
+            config['API_URL'] = app.config['API_URL']
+            config['BITLY_API_TOKEN'] = app.config['BITLY_API_TOKEN']
+            config['AWS_ACCESS_KEY_ID'] = app.config['AWS_ACCESS_KEY_ID']
+            config['AWS_SECRET_ACCESS_KEY'] = \
+                app.config['AWS_SECRET_ACCESS_KEY']
+            job = post_q.enqueue(
                 post_pod_create_qr,
                 str(resp[app.config['ITEM_LOOKUP_FIELD']]),
-                config=app.config)
+                config=config)
+            print job
         else:
             raise InvalidMessageException(
                 'Pod not posted to API',
@@ -77,12 +86,13 @@ def after_POST_callback(res, request, r):
         if not (resp[app.config['STATUS']] == app.config['STATUS_ERR']):
             print "Parsing message posted to " + res
             db = app.extensions['pymongo']['MONGO'][1]
-            post_q.enqueue(
+            job = post_q.enqueue(
                 post_data_to_API,
                 str(resp[app.config['ITEM_LOOKUP_FIELD']]),
                 res,
                 config=app.config,
                 db=db)
+            print job
         else:
             raise InvalidMessageException(
                 'Data not sent to API',

@@ -1,9 +1,9 @@
 import requests
 import json
 from requests.auth import HTTPBasicAuth
-from app.HMACAuth import HMACAuth
 from app.messages import Message
 import hashlib
+from app.utils import compute_signature
 from app.utils import get_now
 from app.utils import google_geolocate_api, google_elevation_api,  \
     google_geocoding_api
@@ -193,8 +193,9 @@ class DeployMessage(Message):
                        'content-type': 'application/json'}
             data = json.dumps(self.data)
             url = self.pod_url
+            token = self.config['API_AUTH_TOKEN']
             auth = HTTPBasicAuth('api',
-                                 HMACAuth().compute_signature(url, data))
+                                 compute_signature(token, url, data))
             d = requests.put(url=url, data=data, headers=headers, auth=auth)
             if d.status_code == 201:
                 print "New deployment created"

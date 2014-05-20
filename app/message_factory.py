@@ -1,9 +1,9 @@
 import requests
-from app.messages.invalid_message import InvalidMessage
-from app.messages.status_message import StatusMessage
-from app.messages.podid_message import PodIdMessage
-from app.messages.number_message import NumberMessage
-from app.messages.deploy_message import DeployMessage
+from messages.invalid_message import InvalidMessage
+from messages.status_message import StatusMessage
+from messages.podid_message import PodIdMessage
+from messages.number_message import NumberMessage
+from messages.deploy_message import DeployMessage
 
 
 class MessageFactory(object):

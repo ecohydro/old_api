@@ -5,6 +5,9 @@ from flask import current_app as app
 import requests
 from random import choice, randint
 from names import firstnames, lastnames
+from hashlib import sha1
+import base64
+import hmac
 
 
 # Definie a exception class to report errors (handy for debugging)
@@ -30,6 +33,24 @@ class InvalidMessageException(Exception):
 def pod_name():
     return choice(firstnames) + '-' + choice(lastnames) + \
         '-' + str(randint(1000, 9999))
+
+
+def compute_signature(token, uri, data):
+        """Compute the signature for a given request
+
+        :param uri: full URI for request on API
+        :param params: post vars sent with the request
+        :returns: The computed signature
+        """
+        s = uri.split('://')[1]
+        if data:
+            s += str(data)
+
+        # compute signature and compare signatures
+        mac = hmac.new(token, s.encode("utf-8"), sha1)
+        computed = base64.b64encode(mac.digest())
+        # print computed.strip()
+        return computed.strip()
 
 
 ##############################################
