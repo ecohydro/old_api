@@ -168,7 +168,7 @@ pod_schema = {
     'name': {  # Pod URL name (use the pod name generator)
         'type': 'string',
         'minlength': 10,
-        'maxlength': 40,
+        'maxlength': 60,
         'required': True,
         'unique': True,
         'versioned': False,
