@@ -56,7 +56,7 @@ def before_insert_pods(documents):
 def after_POST_pods_callback(request, r):
     if r.status_code is 201:
         resp = json.loads(r.get_data())
-        print resp
+        # print resp
         if not (resp[app.config['STATUS']] == app.config['STATUS_ERR']):
             config = {}
             config['API_URL'] = app.config['API_URL']
@@ -64,12 +64,11 @@ def after_POST_pods_callback(request, r):
             config['AWS_ACCESS_KEY_ID'] = app.config['AWS_ACCESS_KEY_ID']
             config['AWS_SECRET_ACCESS_KEY'] = \
                 app.config['AWS_SECRET_ACCESS_KEY']
-            print "starting job..."
-            job = post_q.enqueue(
+            # print "starting job..."
+            post_q.enqueue(
                 post_pod_create_qr,
                 str(resp[app.config['ITEM_LOOKUP_FIELD']]),
                 config=config)
-            print job
         else:
             raise InvalidMessageException(
                 'Pod not posted to API',
@@ -87,13 +86,12 @@ def after_POST_callback(res, request, r):
         if not (resp[app.config['STATUS']] == app.config['STATUS_ERR']):
             print "Parsing message posted to " + res
             db = app.extensions['pymongo']['MONGO'][1]
-            job = post_q.enqueue(
+            post_q.enqueue(
                 post_data_to_API,
                 str(resp[app.config['ITEM_LOOKUP_FIELD']]),
                 res,
                 config=app.config,
                 db=db)
-            print job
         else:
             raise InvalidMessageException(
                 'Data not sent to API',
