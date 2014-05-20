@@ -23,7 +23,7 @@ class HMACAuth(HMACAuth):
         :param params: post vars sent with the request
         :returns: The computed signature
         """
-        s = uri
+        s = uri.split('://')[1]
         if data:
             s += str(data)
 
