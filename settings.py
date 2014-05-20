@@ -456,7 +456,6 @@ pod_schema = {
         'schema': {'type': 'string'},
         'versioned': True,
         'required': False,
-        'default': ['none']
     },
 }
 
