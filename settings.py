@@ -51,6 +51,7 @@ HIREFIRE_TOKEN = os.getenv('HIREFIRE_TOKEN')
 
 # THIS IS ALWAYS THE SAME, WE ONLY USE IT IN PRODUCTION ENVIRONMENTS:
 APP_URL = os.getenv('http://app.pulsepod.io')
+PULSE_ADMIN = os.getenv('PULSE_ADMIN')
 
 FRAMES = {
     0: 'number',
@@ -82,7 +83,7 @@ RESOURCE_METHODS = ['GET', 'POST']
 
 # Enable reads (GET), edits (PATCH) and deletes of individual items
 # (defaults to read-only item access).
-ITEM_METHODS = ['GET', 'PATCH']
+ITEM_METHODS = ['GET', 'PATCH', 'DELETE']
 
 # Set the public methods for the read-only API.
 # Only authorized users can write, edit and delete
@@ -112,24 +113,31 @@ data_schema = {
             'type': {'type': 'string', 'default': 'Point'},
             'coordinates': {
                 'type': 'list',
-                'items': [{'type': 'number'}, {'type': 'number'}]}
+                'items': [
+                    {
+                        'type': 'number',
+                        'default': 0
+                    },
+                    {
+                        'type': 'number',
+                        'default': 0
+                    }
+                ]
+            }
         },
         'required': True
     },
-    'notebook': {
-        'type': 'objectid',
-        'data_relation': {
-            'resource': 'notebooks',
-            'field': '_id',
-            'embeddable': True
-        },
-    },                   # nbkId
     'pod': {
-        'type': 'objectid',
+        'type': 'dict',
+        'schema': {
+            '_id': {'type': 'objectid'},
+            '_version': {'type': 'integer'}
+        },
         'data_relation': {
             'resource': 'pods',
             'field': '_id',
-            'embeddable': True
+            'embeddable': True,
+            'version': True
         },
     },
     'sensor': {
@@ -156,6 +164,7 @@ pod_schema = {
     # Original Pod schema:
     # Sensor text ID for use in URLs and in API data queries/submissions
     # Provisioning Properties (MUST BE SENT WITH POST):
+    # THESE SHOULD BE IN PODS:
     'name': {  # Pod URL name (use the pod name generator)
         'type': 'string',
         'minlength': 10,
@@ -171,14 +180,6 @@ pod_schema = {
         'minlength': 4,
         'versioned': False,
     },
-    'qr': {
-        'type': 'string',
-        'required': False,
-        'unique': True,
-        'versioned': False,
-        'default': 'https://s3.amazonaws.com/pulsepodqrsvgs/default.svg',
-    },
-    # use
     'pod_id': {  # Pod ID for use in SMS messages.
         'type': 'number',
         'max': 65535,
@@ -188,6 +189,13 @@ pod_schema = {
         'versioned': False,
         'default': 0
     },
+    'qr': {
+        'type': 'string',
+        'required': False,
+        'unique': True,
+        'versioned': False,
+        'default': 'https://s3.amazonaws.com/pulsepodqrsvgs/default.svg',
+    },
     'imei': {  # IMEI address of cellular radio,
         'type': 'string',  # Need to define an IMEI address type
         'unique': True,
@@ -196,13 +204,6 @@ pod_schema = {
         'maxlength': 20,
         'versioned': False,
         'default': '0000000000000000'
-    },
-    'nbk_name': {
-        'type': 'string',
-        'maxlength': 100,
-        'required': False,
-        'versioned': True,
-        'default': 'Default Notebook'
     },
     # Non-provisioning fields:
     # Let's just assume this is always GSM for now.
@@ -230,6 +231,17 @@ pod_schema = {
         'default': 'inactive',
         'versioned': False
     },
+    # THESE SHOULD BE IN PODS_NOTEBOOKS ('Versioned': True):
+    # Deployment specific data (versioned)
+    # Schema definition, based on Cerberus grammar. Check the Cerberus project
+    # (https://github.com/nicolaiarocci/cerberus) for details.
+    'nbk_name': {
+        'type': 'string',
+        'maxlength': 100,
+        'required': False,
+        'versioned': True,
+        'default': 'Default Notebook'
+    },
     'number': {  # Pod number (E.164 format)
         'type': 'string',
         'minlength': 10,
@@ -238,42 +250,6 @@ pod_schema = {
         'unique': False,
         'versioned': True,
         'default': '18005551212'
-    },
-    # Deployment specific data (versioned)
-    # Schema definition, based on Cerberus grammar. Check the Cerberus project
-    # (https://github.com/nicolaiarocci/cerberus) for details.
-
-    # Tags for location and user-supplied information about this notebook
-    # (not yet implemented)
-    'tags': {
-        'type': 'list',
-        'schema': {'type': 'string'},
-        'versioned': True,
-        'required': False,
-        'default': ['none']
-    },
-    'shared': {
-        'type': 'list',
-        'schema': {'type': 'string'},
-        'required': False,
-        'versioned': True,
-        'default': ['pulsepod'],
-    },
-    'firmware': {
-        'type': 'integer',
-        'minlength': 1,
-        'maxlength': 2,
-        'default': 0,
-        'required': False,
-        'versioned': True
-    },
-    'status': {
-        'type': 'string',
-        'allowed': ['born', 'dead', 'deployed',
-                    'provisioned', 'active', 'unknown'],
-        'required': False,
-        'default': 'born',
-        'versioned': True,
     },
     # Information about what sensors are included in this notebook:
     'sensors': {
@@ -474,9 +450,15 @@ pod_schema = {
         },
         'versioned': True,
     },
-    # need to add geocoding information to the notebook...
-    # need to add notes to notebook...
-    # a users list would allow sharing of notebooks...
+    # Tags for location and user-supplied information about this notebook
+    # (not yet implemented) [NOT SURE TAGS SHOULD BE IN API SCHEMA?]
+    'tags': {
+        'type': 'list',
+        'schema': {'type': 'string'},
+        'versioned': True,
+        'required': False,
+        'default': ['none']
+    },
 }
 
 status_schema = {
@@ -705,7 +687,8 @@ data = {
     'schema': data_schema,
     'datasource': {
         'default_sort': [('_created', -1)],
-    }
+    },
+    'embedded_fields': ['notebook', 'pod', 'sensor']
 }
 
 status = {

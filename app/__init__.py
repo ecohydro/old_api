@@ -46,8 +46,6 @@ def before_insert_pods(documents):
     for d in documents:
         print 'Adding ' + d['name'] + ' to the database'
         d['nbk_name'] = str(d['name']) + "'s Default Notebook"
-        # pod_id should just be next available pod_id. So findone in pods
-        # sorted by pod_id desecending + 1.
         d['qr'] = 'https://s3.amazonaws.com/' + app.config['AWS_BUCKET'] \
                   + '/' + str(d['name']) + '.svg'
 
@@ -90,7 +88,6 @@ def after_POST_callback(res, request, r):
                 'Data not sent to API',
                 status_code=400, payload=resp)
 
-# We're running inside of gunicorn now,  so we have to change the module name:
 if __name__ == 'app':
 
     app.on_insert_pods += before_insert_pods
