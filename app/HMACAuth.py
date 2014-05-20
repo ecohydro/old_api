@@ -67,7 +67,6 @@ class HMACAuth(HMACAuth):
             userid = None
             hmac_hash = None
         # print hmac_hash
-        print request.url
         return self.check_auth(userid, request.url, request.get_data(),
                                hmac_hash, resource, method)
 
