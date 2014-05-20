@@ -14,6 +14,7 @@ pod_migration_to_v2.0.py
 fixtures.py
 pod_functions.py
 pod_migration_to_v2.py
+old_pod_data.txt
 
 Procfile.local
 .DS_Store

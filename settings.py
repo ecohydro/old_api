@@ -131,7 +131,7 @@ data_schema = {
         'type': 'dict',
         'schema': {
             '_id': {'type': 'objectid'},
-            '_version': {'type': 'integer'}
+            '_notebook': {'type': 'integer'}
         },
         'data_relation': {
             'resource': 'pods',
@@ -681,12 +681,16 @@ pods = {
 
 data = {
     # most global settings can be overridden at resource level
+    'url': 'data',
     'resource_methods': ['GET', 'POST'],
+    'item_methods': ['GET', 'PATCH'],
     'schema': data_schema,
     'datasource': {
         'default_sort': [('_created', -1)],
     },
-    'embedded_fields': ['notebook', 'pod', 'sensor']
+    # 'embedded_fields': ['pod', 'sensor'],
+    'cache_control': 'max-age=10,must-revalidate',
+    'cache_expires': 10,
 }
 
 status = {
