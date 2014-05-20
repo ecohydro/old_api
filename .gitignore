@@ -11,6 +11,9 @@ example_deployment_message.py
 example_data_message.py
 create_pod.py
 pod_migration_to_v2.0.py
+fixtures.py
+pod_functions.py
+pod_migration_to_v2.py
 
 Procfile.local
 .DS_Store

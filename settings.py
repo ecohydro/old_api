@@ -181,7 +181,7 @@ pod_schema = {
         'versioned': False,
     },
     'pod_id': {  # Pod ID for use in SMS messages.
-        'type': 'number',
+        'type': 'integer',
         'max': 65535,
         'min': 0,
         'required': True,
@@ -231,6 +231,14 @@ pod_schema = {
         'default': 'inactive',
         'versioned': False
     },
+    'number': {  # Pod number (E.164 format)
+        'type': 'string',
+        'minlength': 10,
+        'maxlength': 15,
+        'required': False,
+        'versioned': False,
+        'default': '18005551212'
+    },
     # THESE SHOULD BE IN PODS_NOTEBOOKS ('Versioned': True):
     # Deployment specific data (versioned)
     # Schema definition, based on Cerberus grammar. Check the Cerberus project
@@ -241,15 +249,6 @@ pod_schema = {
         'required': False,
         'versioned': True,
         'default': 'Default Notebook'
-    },
-    'number': {  # Pod number (E.164 format)
-        'type': 'string',
-        'minlength': 10,
-        'maxlength': 15,
-        'required': False,
-        'unique': False,
-        'versioned': True,
-        'default': '18005551212'
     },
     # Information about what sensors are included in this notebook:
     'sensors': {
@@ -662,7 +661,6 @@ pods = {
     # additional read-only entry point. This way consumers can also perform
     # GET requests at '/<item_title>/<urlname>/'.
     'additional_lookup': {
-        'url': 'regex("[\d]+")',
         'field': 'pod_id'
     },
 
