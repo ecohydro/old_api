@@ -32,7 +32,7 @@ class HMACAuth(HMACAuth):
                     s += k + d[k]
             if type(data) is str:
                 s += data
-
+        print s
         # compute signature and compare signatures
         mac = hmac.new(self.token, s.encode("utf-8"), sha1)
         computed = base64.b64encode(mac.digest())
