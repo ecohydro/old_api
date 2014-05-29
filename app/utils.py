@@ -1,7 +1,6 @@
 import struct
 import json
 import time
-from collections import OrderedDict
 from flask import current_app as app
 import requests
 from random import choice, randint
@@ -46,7 +45,7 @@ def compute_signature(token, uri, data):
         s = uri.split('://')[1]
         if data:
             if type(data) is dict:
-                d = OrderedDict(sorted(data.items(), key=lambda x: x[1]))
+                d = sorted(data, key=data.get)
                 for k in d:
                     s += k + d[k]
             if type(data) is str:

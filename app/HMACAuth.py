@@ -1,7 +1,6 @@
 from flask import request
 from eve.auth import HMACAuth
 from hashlib import sha1
-from collections import OrderedDict
 import base64
 import hmac
 import os
@@ -27,7 +26,7 @@ class HMACAuth(HMACAuth):
         s = uri.split('://')[1]
         if data:
             if type(data) is dict:
-                d = OrderedDict(sorted(data.items(), key=lambda x: x[1]))
+                d = sorted(data, key=data.get)
                 for k in d:
                     s += k + d[k]
             if type(data) is str:
