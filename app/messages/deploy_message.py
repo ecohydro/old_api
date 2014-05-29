@@ -20,7 +20,7 @@ class DeployMessage(Message):
     #         2 + 4 + 3 + 3 + 4 + 8 + 3 + 1 = 28           |
     ##############################################################
     # Var:  |FrameId|PodId|MCC|MNC|LAC|CI| V | n_sensors|sID1| ... |sIDn|
-    # len:  |  2    | 4   | 3 | 3 | 4 | 8| 3 |    1     | 2  | ... | 2  |
+    # len:  |  2    | 4   | 3 | 3 | 4 | 8| 8 |    2     | 2  | ... | 2  |
     ##############################################################
     # Hard-coded based on Deployment message format:
     def mcc(self):
@@ -74,7 +74,7 @@ class DeployMessage(Message):
     def voltage(self):
         if self.content:
             try:
-                return int(self.content[24:27], 16)
+                return int(self.content[24:32], 16)
             except ValueError as e:
                 self.status = 'invalid'
                 e.args += ('message content invalid',
@@ -88,7 +88,7 @@ class DeployMessage(Message):
     def n_sensors(self):
         if self.content:
             try:
-                return int(self.content[27:28], 16)
+                return int(self.content[32:34], 16)
             except ValueError as e:
                 self.status = 'invalid'
                 e.args += ('message content invalid',

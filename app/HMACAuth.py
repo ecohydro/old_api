@@ -1,6 +1,7 @@
 from flask import request
 from eve.auth import HMACAuth
 from hashlib import sha1
+from collections import OrderedDict
 import base64
 import hmac
 import os
@@ -25,7 +26,12 @@ class HMACAuth(HMACAuth):
         """
         s = uri.split('://')[1]
         if data:
-            s += str(data)
+            if type(data) is dict:
+                d = OrderedDict(sorted(data.items(), key=lambda x: x[1]))
+                for k in d:
+                    s += k + d[k]
+            if type(data) is str:
+                s += data
 
         # compute signature and compare signatures
         mac = hmac.new(self.token, s.encode("utf-8"), sha1)

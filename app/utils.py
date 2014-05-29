@@ -1,6 +1,7 @@
 import struct
 import json
 import time
+from collections import OrderedDict
 from flask import current_app as app
 import requests
 from random import choice, randint
@@ -44,7 +45,12 @@ def compute_signature(token, uri, data):
         """
         s = uri.split('://')[1]
         if data:
-            s += str(data)
+            if type(data) is dict:
+                d = OrderedDict(sorted(data.items(), key=lambda x: x[1]))
+                for k in d:
+                    s += k + d[k]
+            if type(data) is str:
+                s += data
 
         # compute signature and compare signatures
         mac = hmac.new(token, s.encode("utf-8"), sha1)
