@@ -70,40 +70,7 @@ def get_now():
     return time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
 
 
-def get_time(content, i):
-    # parse unixtime to long int, then convert to database time
-    try:
-        unixtime = struct.unpack('<L', content[i:i+8].decode('hex'))[0]
-    except:
-        raise InvalidMessageException(
-            'Error decoding timestamp',
-            status_code=400)
-    t = time.gmtime(unixtime)
-    # dbtime is (e.g.) "Tue, 17 Sep 2013 01:33:56 GMT"
-    dbtime = time.strftime("%a, %d %b %Y %H:%M:%S GMT", t)
-    return dbtime
 
-
-def get_value(content, i, sensor):
-    # parse value based on format string
-    try:
-        value = struct.unpack(
-            str(sensor['byteorder'] + sensor['fmt']),
-            content[i:i+(2*int(sensor['nbytes']))].decode('hex'))[0]
-    except:
-        raise InvalidMessageException(
-            'Error parsing format string',
-            status_code=400)
-
-    # Right here we would do some initial QA/QC based on whatever
-    # QA/QC limits we eventually add to the sensor specifications.
-    # Not returning the flag yet.
-    qa_qc(sensor, value)
-    return float(value)
-
-
-def qa_qc(sensor, value):
-    pass
 
 
 def google_geolocate_api(tower, api_key):

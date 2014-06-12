@@ -46,6 +46,7 @@ include/
 tests/
 cover/
 share/
+scripts/
 
 *.egg-info/
 .installed.cfg

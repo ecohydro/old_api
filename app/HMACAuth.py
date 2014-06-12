@@ -16,28 +16,6 @@ class HMACAuth(HMACAuth):
         else:
             self.token = os.getenv('API_AUTH_TOKEN')
 
-    def compute_signature(self, uri, data):
-        """Compute the signature for a given request
-
-        :param uri: full URI for request on API
-        :param params: post vars sent with the request
-        :returns: The computed signature
-        """
-        s = uri.split('://')[1]
-        if data:
-            if type(data) is dict:
-                d = sorted(data, key=data.get)
-                for k in d:
-                    s += k + d[k]
-            if type(data) is str:
-                s += data
-        print s
-        # compute signature and compare signatures
-        mac = hmac.new(self.token, s.encode("utf-8"), sha1)
-        computed = base64.b64encode(mac.digest())
-        print computed.strip()
-        return computed.strip()
-
     def check_auth(self, userid, uri, data, hmac_hash, resource, method):
         if method in ['HEAD', 'OPTIONS']:  # Let it rain.
             return True
@@ -56,7 +34,7 @@ class HMACAuth(HMACAuth):
 
         :returns: True if the request passes validation, False if not
         """
-        return secure_compare(str(self.compute_signature(uri, data)),
+        return secure_compare(str(compute_signature(self.token, uri, data)),
                               str(signature))
 
     def authorized(self, allowed_roles, resource, method):
@@ -74,6 +52,29 @@ class HMACAuth(HMACAuth):
         print hmac_hash
         return self.check_auth(userid, request.url, request.get_data(),
                                hmac_hash, resource, method)
+
+
+def compute_signature(token, uri, data):
+        """Compute the signature for a given request
+
+        :param uri: full URI for request on API
+        :param params: post vars sent with the request
+        :returns: The computed signature
+        """
+        s = uri.split('://')[1]
+        if data:
+            if type(data) is dict:
+                d = sorted(data, key=data.get)
+                for k in d:
+                    s += k + d[k]
+            if type(data) is str:
+                s += data
+        print s
+        # compute signature and compare signatures
+        mac = hmac.new(token, s.encode("utf-8"), sha1)
+        computed = base64.b64encode(mac.digest())
+        print computed.strip()
+        return computed.strip()
 
 
 def secure_compare(string1, string2):

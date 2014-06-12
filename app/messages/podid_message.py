@@ -1,10 +1,10 @@
-from app.messages import Message
+from . import Message
 
 
 class PodIdMessage(Message):
 
-    def __init__(self, data=None, config=None, db=None):
-        super(PodIdMessage, self).__init__(data=data, config=config, db=db)
+    def __init__(self, data=None, db=None):
+        super(PodIdMessage, self).__init__(data=data, db=db)
         self.type = 'data'
         self.frame = self.__class__.__name__
 

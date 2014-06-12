@@ -200,10 +200,10 @@ pod_schema = {
         'type': 'string',  # Need to define an IMEI address type
         'unique': True,
         'required': False,
-        'minlength': 15,
-        'maxlength': 20,
+        'minlength': 14,
+        'maxlength': 16,
         'versioned': False,
-        'default': '0000000000000000'
+        'default': '000000000000000'
     },
     # Non-provisioning fields:
     # Let's just assume this is always GSM for now.

@@ -1,19 +1,29 @@
 import requests
 from requests.auth import HTTPBasicAuth
+import time
 import json
-from app.utils import compute_signature
-from app.utils import InvalidMessageException
-from app.utils import get_time, get_value, get_now
+import struct
+from random import choice, randint
+from ..names import firstnames, lastnames
+from ..HMACAuth import compute_signature
+from ..utils import InvalidMessageException
+from flask import current_app
 
 
 class Message(object):
 
-    def __init__(self, data=None, config=None, db=None):
-        self.config = config if config else None
+    def __init__(self, data=None, db=None):
         self.db = db if db else None
         self.pod_serial_number_length = 4
         self.type = 'unknown'
         self.frame = self.__class__.__name__
+        self.format = [
+            {'name': 'frame_id', 'length': 2},
+            {'name': 'pod_id', 'length': self.pod_serial_number_length}
+        ]
+        self.SID_LENGTH = 2
+        self.NOBS_LENGTH = 2
+        self.TIME_LENGTH = 8
         if data:
             # Stuff that every message should have:
             self.etags = {}
@@ -26,7 +36,7 @@ class Message(object):
             self.pod_name = data['p'] if 'p' in data else None
             self.href = data['_links']['self']['href']
             self._created = data['_created'] if '_created' in data \
-                else get_now()
+                else self.get_now()
             self.url = 'http://' + self.href
             self.json = data
             self.pod_data = None
@@ -44,23 +54,45 @@ class Message(object):
             self.data_ids = []
             self.data = None
 
+    def get_length(self, value):
+        seq = self.format
+        return (item for item in seq if item["name"] == value).next()['length']
+
+    def get_position(self, value):
+        seq = self.format
+        attr = 'name'
+        loc = next(index for (index, d) in enumerate(seq) if d[attr] == value)
+        start = 0
+        for i in range(0, loc):
+            start += self.format[i]['length']
+        length = self.get_length(value)
+        end = start + length
+        return (start, end)
+
+    def format_length(self):
+        length = 0
+        for item in self.format:
+            length += item['length']
+        return length
+
     def post(self):
         if not self.status == 'invalid':
             print "posting data"
             nposted = 0
-            url = self.config['API_URL'] + '/data'
+            url = current_app.config['API_URL'] + '/data'
             headers = {'content-type': 'application/json'}
             data = json.dumps(self.data)
-            token = self.config['API_AUTH_TOKEN']
-            auth = HTTPBasicAuth('api',
-                                 compute_signature(token, url, data))
+            token = current_app.config['API_AUTH_TOKEN']
+            auth = HTTPBasicAuth(
+                'api',
+                compute_signature(token, url, data))
             d = requests.post(url=url, data=data, headers=headers, auth=auth)
             if d.status_code == 201:
                 items = d.json()
                 for item in items:
-                    print 'Item status: ' + item[self.config['STATUS']]
-                    if not item[self.config['STATUS']] == \
-                            self.config['STATUS_ERR']:
+                    print 'Item status: ' + item[current_app.config['STATUS']]
+                    if not item[current_app.config['STATUS']] == \
+                            current_app.config['STATUS_ERR']:
                         nposted = nposted + 1
                         self.data_ids.append(item[u'_id'])
             else:
@@ -105,7 +137,7 @@ class Message(object):
                 if status:
                     url = ''
                     data = status
-                    token = self.config['API_AUTH_TOKEN']
+                    token = current_app.config['API_AUTH_TOKEN']
                     # Don't forget to set the content type to json
                     headers = {'If-Match': str(self.stat_etag()),
                                'content-type': 'application/json'}
@@ -125,7 +157,7 @@ class Message(object):
             url = self.url
             headers = {'If-Match': str(self.msg_etag()),
                        'content-type': 'application/json'}
-            token = self.config['API_AUTH_TOKEN']
+            token = current_app.config['API_AUTH_TOKEN']
             auth = HTTPBasicAuth(
                 'api',
                 compute_signature(token, url, data))
@@ -134,14 +166,14 @@ class Message(object):
             if p.status_code == requests.codes.ok:
                 response['status'] = patched['status']     # RQ reporting
                 response['patch code'] = p.status_code     # RQ reporting
-                if p.json()[self.config['STATUS']] == \
-                        self.config['STATUS_ERR']:
+                if p.json()[current_app.config['STATUS']] == \
+                        current_app.config['STATUS_ERR']:
                     print 'PATCH:[' + str(response['patch code']) + ']:' + \
-                        p.json()[self.config['STATUS']] + ':' + \
-                        json.dumps(p.json()[self.config['ISSUES']])
+                        p.json()[current_app.config['STATUS']] + ':' + \
+                        json.dumps(p.json()[current_app.config['ISSUES']])
                 else:
                     print 'PATCH:[' + str(response['patch code']) + \
-                        ']:' + p.json()[self.config['STATUS']] + ':' + \
+                        ']:' + p.json()[current_app.config['STATUS']] + ':' + \
                         str(self.url) + ':status:' + patched['status']
             else:
                 print 'PATCH: [' + str(p.status_code) + ']:' + 'request failed'
@@ -158,13 +190,13 @@ class Message(object):
         unixtime = 4 bytes LITTLE ENDIAN
         value = look up length
         """
-        i = 2 + self.pod_serial_number_length
+        i = self.get_length('frame_id') + self.get_length('pod_id')
         self.status = 'parsed'
         self.data = []
         self.nobs = 0  # Initialize observation counter
         while i < len(self.content):
             try:
-                sid = int(self.content[i:i+2], 16)
+                sid = int(self.content[i:i+self.SID_LENGTH], 16)
             except:
                 self.status = 'invalid'
             try:
@@ -176,7 +208,7 @@ class Message(object):
                     payload=self.pod())
             i += 2
             try:
-                nobs = int(self.content[i:i+2], 16)
+                nobs = int(self.content[i:self.NOBS_LENGTH], 16)
             except:
                 self.status = 'invalid'
             i += 2
@@ -212,12 +244,12 @@ class Message(object):
                         status_code=400,
                         payload=self.pod())
                 try:
-                    entry['t'] = get_time(self.content, i)  # Get timestamp
+                    entry['t'] = self.get_time(i)  # Get timestamp
                 except:
                     self.status = 'invalid'
                 i += 8
                 try:
-                    entry['v'] = get_value(self.content, i, sensor)
+                    entry['v'] = self.get_value(i, sensor)
                 except:
                     self.status = 'invalid'
 
@@ -239,22 +271,23 @@ class Message(object):
              '_notebook': self.pod()['_notebook']})
 
     def stat_url(self):
-        return str(self.config['API_URL'] + '/pods/status/' +
+        return str(current_app.config['API_URL'] + '/pods/status/' +
                    str(self.pod()['name']))
 
     def pod_url(self):
-        return self.config['API_URL'] + '/pods/' + str(self.pod()['_id'])
+        return current_app.config['API_URL'] + '/pods/' + \
+            str(self.pod()['_id'])
 
     # Pod and Notebook Ids:
     def pod_id(self):
+        (start, end) = self.get_position('pod_id')
         try:
-            pod_id = int(self.content[2:2+self.pod_serial_number_length], 16)
+            pod_id = int(self.content[start:end], 16)
         except ValueError:
             self.status = 'invalid'
             assert 0, "Invalid Message: " + self.content
         return pod_id
 
-    # Return Message Etag:
     def msg_etag(self):  # Return this message's etag
         return str(requests.head(self.url).headers['Etag'])
 
@@ -269,3 +302,49 @@ class Message(object):
 
     def lng(self):
         return self.notebook()['location']['lng']
+
+    def make_pod_id(self):
+        pass
+#        pods = app.extensions['pymongo']['MONGO'][1]['pods']
+#        return (pods.find().sort('pod_id', -1)[0]['pod_id'] + 1)
+
+    def get_now(self):
+        return time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
+
+    def pod_name(self):
+        return choice(firstnames) + '-' + choice(lastnames) + \
+            '-' + str(randint(1000, 9999))
+
+    def get_time(self, i):
+        # parse unixtime to long int, then convert to database time
+        try:
+            unixtime = struct.unpack(
+                '<L',
+                self.content[i:i+self.TIME_LENGTH].decode('hex'))[0]
+        except:
+            raise InvalidMessageException(
+                'Error decoding timestamp',
+                status_code=400)
+        t = time.gmtime(unixtime)
+        # dbtime is (e.g.) "Tue, 17 Sep 2013 01:33:56 GMT"
+        return time.strftime("%a, %d %b %Y %H:%M:%S GMT", t)
+
+    def get_value(self, i, sensor):
+        # parse value based on format string
+        try:
+            value = struct.unpack(
+                str(sensor['byteorder'] + sensor['fmt']),
+                self.content[i:i+(2*int(sensor['nbytes']))].decode('hex'))[0]
+        except:
+            raise InvalidMessageException(
+                'Error parsing format string',
+                status_code=400)
+
+        # Right here we would do some initial QA/QC based on whatever
+        # QA/QC limits we eventually add to the sensor specifications.
+        # Not returning the flag yet.
+        self.qa_qc(sensor, value)
+        return float(value)
+
+    def qa_qc(self, sensor, value):
+        pass

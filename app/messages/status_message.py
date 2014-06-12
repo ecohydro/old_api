@@ -1,11 +1,10 @@
-from app.messages import Message
-from app.utils import InvalidMessageException
+from . import Message
 
 
 class StatusMessage(Message):
 
-    def __init__(self, data=None, config=None, db=None):
-        super(StatusMessage, self).__init__(data=data, config=config, db=db)
+    def __init__(self, data=None, db=None):
+        super(StatusMessage, self).__init__(data=data, db=db)
         self.type = 'status'
         self.frame = self.__class__.__name__
 
@@ -17,15 +16,6 @@ class StatusMessage(Message):
         ##################################################################
         # make sure message is long enough to read everything
 
-        payload = {
-            '_id': self._id,
-            'type': self.type(),
-            'content': self.content}
-        if len(self.content) < 12:
-            raise InvalidMessageException(
-                'Status message too short',
-                status_code=400,
-                payload=payload)
         lac = int(self.content[i:i+4], 16)
         i += 4
         cell_id = int(self.content[i:i+4], 16)
@@ -33,11 +23,6 @@ class StatusMessage(Message):
         n_sensors = int(self.content[i:i+2], 16)
         i += 2
         # now make sure length is actually correct
-        if len(self.content) != 12 + 2*n_sensors:
-            raise InvalidMessageException(
-                'Status message improperly formatted',
-                status_code=400,
-                payload=payload)
 
         # sIDs is list of integer sIDs
         sids = []
