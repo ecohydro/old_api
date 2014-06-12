@@ -15,7 +15,7 @@ def post_data_to_API(objId, res, config=None, db=None):
     if not db:
         assert 0, "Must provide PyMongo database object"
     url = config['API_URL'] + '/messages/' + res + '/' + objId
-    message = NewMessage.create(url=url, config=config, db=db)
+    message = NewMessage.create(url=url, db=db)
     # Init dicts for message updates and RQ responses:
     response = {}
 
