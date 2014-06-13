@@ -8,13 +8,8 @@ from boto.s3.key import Key
 from message_factory import MessageFactory as NewMessage
 
 
-def post_data_to_API(objId, res, config=None, db=None):
-    # Setup the URLs:
-    if not config:
-        assert 0, "Must provide app.config"
-    if not db:
-        assert 0, "Must provide PyMongo database object"
-    url = config['API_URL'] + '/messages/' + res + '/' + objId
+def post_data_to_API(url=None, db=None):
+
     message = NewMessage.create(url=url, db=db)
     # Init dicts for message updates and RQ responses:
     response = {}

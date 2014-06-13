@@ -2,7 +2,6 @@ import requests
 import json
 from requests.auth import HTTPBasicAuth
 from . import Message
-import hashlib
 from ..HMACAuth import compute_signature
 from flask import current_app
 
@@ -150,7 +149,7 @@ class DeployMessage(Message):
                     {'sid': int(self.content[i:i+2], 16)})
                 self.data['sids'].append(s['sid'])  # $in queries
                 self.data['sensors'].append(
-                    s[current_app.config['ITEM_LOOKUP_FIELD']])
+                    str(s[current_app.config['ITEM_LOOKUP_FIELD']]))
                 i += 2
         except:
             self.status = 'invalid'
@@ -169,7 +168,7 @@ class DeployMessage(Message):
         self.data['number'] = self.number
         # Transfer ownership of pod to notebook:
         self.data['owner'] = self.pod()['owner']    # Owner is single user
-        self.data['shared'] = [self.pod()['owner']]  # Shared is a list
+        # self.data['shared'] = [self.pod()['owner']]  # Shared is a list
         self.data['last'] = self.get_now()
         self.data['voltage'] = self.voltage()
 
@@ -188,15 +187,17 @@ class DeployMessage(Message):
             ' in ' + self.data['address']['country']['short']
 
     def post(self):
+        from bson import json_util
         if not self.status == 'invalid':
             print "posting deploy message"
             headers = {'If-Match': str(self.pod_etag()),
                        'content-type': 'application/json'}
-            data = json.dumps(self.data)
-            url = self.pod_url
+            data = json.dumps(self.data, default=json_util.default)
+            url = self.pod_url()
             token = current_app.config['API_AUTH_TOKEN']
-            auth = HTTPBasicAuth('api',
-                                 compute_signature(token, url, data))
+            auth = HTTPBasicAuth(
+                'api',
+                compute_signature(token, url, data))
             d = requests.put(url=url, data=data, headers=headers, auth=auth)
             if d.status_code == 201:
                 print "New deployment created"
