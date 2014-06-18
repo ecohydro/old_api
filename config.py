@@ -34,6 +34,8 @@ class Config:
 class DevelopmentConfig(Config):
     ASSETS_DEBUG = True
     DEBUG = True
+    API_URL = 'http://0.0.0.0:5000/'
+    SERVER_NAME = '0.0.0.0:5000'
     MONGO_DBNAME = os.environ.get('MONGO_DEV_DBNAME')
     MONGO_HOST = os.environ.get('MONGO_DEV_HOST')
     MONGO_PASSWORD = os.environ.get('MONGO_DEV_PASSWORD')
@@ -55,6 +57,8 @@ class DevelopmentConfig(Config):
 
 class TestingConfig(Config):
     ASSETS_DEBUG = True
+    API_URL = 'http://0.0.0.0:5000/'
+    SERVER_NAME = '0.0.0.0:5000'
     TESTING = True
     MONGO_DBNAME = 'testing'
     MONGO_HOST = 'localhost'
@@ -76,6 +80,8 @@ class TestingConfig(Config):
 
 
 class ProductionConfig(Config):
+    API_URL = 'https://api.pulsepod.io'
+    SERVER_NAME = 'api.pulsepod.io'
     REDISTOGO_URL = os.environ.get('REDISTOGO_URL')
     NEW_RELIC_APP_NAME = 'pulse-api'
     NEW_RELIC_LOG = 'stdout'

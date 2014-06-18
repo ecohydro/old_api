@@ -198,7 +198,7 @@ pod_schema = {
     },
     'imei': {  # IMEI address of cellular radio,
         'type': 'string',  # Need to define an IMEI address type
-        'unique': True,
+        'unique': False,
         'required': False,
         'minlength': 14,
         'maxlength': 16,
