@@ -49,7 +49,7 @@ class HMACAuth(HMACAuth):
         except:
             userid = None
             hmac_hash = None
-        print hmac_hash
+        #print hmac_hash
         return self.check_auth(userid, request.url, request.get_data(),
                                hmac_hash, resource, method)
 
@@ -73,7 +73,7 @@ def compute_signature(token, uri, data):
         # compute signature and compare signatures
         mac = hmac.new(token, s.encode("utf-8"), sha1)
         computed = base64.b64encode(mac.digest())
-        print computed.strip()
+        #print computed.strip()
         return computed.strip()
 
 

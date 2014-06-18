@@ -37,7 +37,7 @@ class Message(object):
             self.href = data['_links']['self']['href']
             self._created = data['_created'] if '_created' in data \
                 else self.get_now()
-            self.url = 'http://' + self.href
+            self.url = 'https://' + self.href
             self.json = data
             self.pod_data = None
         else:
@@ -86,7 +86,7 @@ class Message(object):
             auth = HTTPBasicAuth(
                 'api',
                 compute_signature(token, url, data))
-            d = requests.post(url=url, data=data, headers=headers, auth=auth)
+            d = requests.patch(url=url, data=data, headers=headers, auth=auth)
             if d.status_code == 201:
                 items = d.json()
                 for item in items:
@@ -109,8 +109,9 @@ class Message(object):
         patched['status'] = self.status
         # IF WE PARSED SUCCESFULLY....
         if self.status is 'parsed':
-            patched['pod'] = self.pod()['_id']
+            patched['pod'] = str(self.pod()['_id'])
             patched['pod_name'] = self.pod()['name']
+            patched['status'] = 'posted'
         else:  # OR NOT
             patched['pod'] = None
             patched['pod_name'] = None
