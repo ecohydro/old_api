@@ -93,7 +93,7 @@ def create_app(config_name):
                 print "Parsing message posted to " + res
                 db = app.extensions['pymongo']['MONGO'][1]
                 objId = str(resp[app.config['ITEM_LOOKUP_FIELD']])
-                url = config['API_URL'] + '/messages/' + res + '/' + objId
+                url = app.config['API_URL'] + '/messages/' + res + '/' + objId
                 post_q.enqueue(post_data_to_API, url=url, db=db)
             else:
                 raise InvalidMessageException(
