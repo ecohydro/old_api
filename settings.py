@@ -672,7 +672,7 @@ status = {
     'item_methods': ['GET', 'PATCH'],
     'schema': status_schema,
     'datasource': {
-        'default_sort': [('_updated', -1)],
+        'default_sort': [('last', -1)],
         'source': 'pods',
         'projection': {'_id': 1, 'name': 1, 'voltage': 1,
                        '_updated': 1, 'last': 1,
