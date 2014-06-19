@@ -20,6 +20,7 @@ class DeployMessage(Message):
             {'name': 'voltage', 'length': 8},
             {'name': 'n_sensors', 'length': 2},
         ])
+        self.data = {}
 
     # Deployment message format (numbers are str length, so 2 x nBytes)
     #         2 + 4 + 4 + 4 + 4 + 8 + 8 + 2 = 34           |
@@ -115,7 +116,6 @@ class DeployMessage(Message):
 
     def parse(self):
         # Start by copying pod data to self.data, since PUT is doc complete
-        self.data = {}
         self.status = 'parsed'
         try:
             self.data['name'] = self.pod()['name']
@@ -154,16 +154,6 @@ class DeployMessage(Message):
         except:
             self.status = 'invalid'
             assert 0, 'error reading sensor information from database'
-        try:
-            self.data['cellTowers'] = {
-                'locationAreaCode': self.lac(),
-                'cellId': self.cell_id(),
-                'mobileNetworkCode': self.mnc(),
-                'mobileCountryCode': self.mcc()
-            }
-        except:
-            self.status = 'invalid'
-            assert 0, 'error extracting cell information from message content'
 
         self.data['number'] = self.number
         # Transfer ownership of pod to notebook:
@@ -208,6 +198,16 @@ class DeployMessage(Message):
             print "Warning: message format is invalid."
 
     def google_geolocate_api(self):
+        try:
+            self.data['cellTowers'] = {
+                'locationAreaCode': self.lac(),
+                'cellId': self.cell_id(),
+                'mobileNetworkCode': self.mnc(),
+                'mobileCountryCode': self.mcc()
+            }
+        except:
+            self.status = 'invalid'
+            assert 0, 'error extracting cell information from message content'
         api_key = current_app.config['GOOGLE_API_KEY']
         if not api_key:
             assert 0, "Must provide api_key"

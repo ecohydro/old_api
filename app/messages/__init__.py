@@ -86,7 +86,7 @@ class Message(object):
             auth = HTTPBasicAuth(
                 'api',
                 compute_signature(token, url, data))
-            d = requests.patch(url=url, data=data, headers=headers, auth=auth)
+            d = requests.post(url=url, data=data, headers=headers, auth=auth)
             if d.status_code == 201:
                 items = d.json()
                 for item in items:
@@ -122,10 +122,10 @@ class Message(object):
                 patched['status'] = 'posted'
                 patched['nposted'] = self.nposted
                 patched['data'] = self.data_ids
-                patched['notebook'] = self.pod()['notebook']
+                patched['notebook'] = self.pod()['_notebook']
                 status = {}
                 v = next((item for item in self.data
-                         if item["sensor"] == "525ebfa0f84a085391000495"),
+                         if item["sensor"] == "53a06d3f0299cf3e11caa88d"),
                          None)
                 # But we need to extract the vbatt_tellit out of the data.
                 # Use the Sensor Id. HACKY!
@@ -136,8 +136,8 @@ class Message(object):
                 if not self.number == self.pod()['number']:
                     status['number'] = self.number
                 if status:
-                    url = ''
-                    data = status
+                    url = self.stat_url()
+                    data = json.dumps(status)
                     token = current_app.config['API_AUTH_TOKEN']
                     # Don't forget to set the content type to json
                     headers = {'If-Match': str(self.stat_etag()),
@@ -197,21 +197,24 @@ class Message(object):
         self.nobs = 0  # Initialize observation counter
         while i < len(self.content):
             try:
-                sid = int(self.content[i:i+self.SID_LENGTH], 16)
+                sid = self.get_sid(i)
             except:
+                print 'error reading sid'
                 self.status = 'invalid'
+                return
             try:
-                sensor = self.db['sensors'].find_one({'sid': sid})
+                sensor = self.get_sensor(sid)
             except:
-                raise InvalidMessageException(
-                    'Error contacting API for sensor information',
-                    status_code=400,
-                    payload=self.pod())
+                print 'error reading sensor from database'
+                self.status = 'invalid'
+                return
             i += 2
             try:
-                nobs = int(self.content[i:self.NOBS_LENGTH], 16)
+                nobs = self.get_nobs(i)
             except:
                 self.status = 'invalid'
+                print 'error reading nobs'
+                return
             i += 2
             self.nobs += nobs
             try:
@@ -222,6 +225,8 @@ class Message(object):
                         str(sensor['variable'])
             except:
                 self.status = 'invalid'
+                print 'error reading sensor string'
+                return
 
             # add entry for each observation (nObs) by the same sensor
             entry = {}
@@ -230,9 +235,11 @@ class Message(object):
                     entry = {
                         's': sensor_string,
                         'p': str(self.pod()['name']),
-                        'sensor': sensor['_id'],
-                        'pod': self.pod()['_id'],
-                        'notebook': self.pod()['_current_notebook'],
+                        'sensor': str(sensor['_id']),
+                        'pod': {
+                            '_id': str(self.pod()['_id']),
+                            '_notebook': self.pod()['_notebook']
+                            },
                         'loc': {
                             'type': 'Point',
                             'coordinates': [self.lng(), self.lat()]
@@ -240,25 +247,36 @@ class Message(object):
                     }
                 except:
                     self.status = 'invalid'
-                    raise InvalidMessageException(
-                        'Error creating data record',
-                        status_code=400,
-                        payload=self.pod())
+                    print 'error creating entry'
+                    return
                 try:
                     entry['t'] = self.get_time(i)  # Get timestamp
                 except:
                     self.status = 'invalid'
+                    print 'error reading timestamp'
+                    return
                 i += 8
                 try:
                     entry['v'] = self.get_value(i, sensor)
                 except:
+                    print 'error reading value'
                     self.status = 'invalid'
+                    return
 
                 i += 2*sensor['nbytes']
 
                 # add to big ole json thing
                 self.data.append(entry)
                 nobs -= 1
+
+    def get_sensor(self, sid):
+        return self.db['sensors'].find_one({'sid': sid})
+
+    def get_sid(self, i):
+        return int(self.content[i:i+self.SID_LENGTH], 16)
+
+    def get_nobs(self, i):
+        return int(self.content[i:i+self.NOBS_LENGTH], 16)
 
     # Pod and Notebook Identity Functions:
     def pod(self):  # Get the pod document for this message

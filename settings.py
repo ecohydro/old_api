@@ -603,17 +603,6 @@ messages_schema = {
                     'invalid', 'number', 'pod_id'],
         'default': 'unknown'
     },
-    'data': {
-        'type': 'list',
-        'schema': {
-            'type': 'objectid',
-            'data_relation': {
-                'resource': 'data',
-                'field': '_id',
-                'embeddable': True
-            },
-        }
-    },
     'nobs': {
         'type': 'number',
         'required': False,
@@ -623,23 +612,6 @@ messages_schema = {
         'type': 'number',
         'required': 'False',
         'default': 0
-    },
-    # Can remove this with versions....
-    'notebook': {
-        'type': 'objectid',
-        'data_relation': {
-            'resource': 'notebooks',
-            'field': '_id',
-            'embeddable': True
-        },
-    },                   # nbkId
-    'pod': {
-        'type': 'objectid',
-        'data_relation': {
-            'resource': 'pods',
-            'field': '_id',
-            'embeddable': True
-        },
     },
 }
 
