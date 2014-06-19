@@ -600,7 +600,7 @@ messages_schema = {
         'type': 'string',
         'required': False,
         'allowed': ['unknown', 'status', 'deploy',
-                    'invalid', 'number', 'pod_id'],
+                    'invalid', 'data'],
         'default': 'unknown'
     },
     'nobs': {
