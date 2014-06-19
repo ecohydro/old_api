@@ -676,7 +676,7 @@ status = {
         'source': 'pods',
         'projection': {'_id': 1, 'name': 1, 'voltage': 1,
                        '_updated': 1, 'last': 1,
-                       '_latest_notebook': 1, 'mode': 1}
+                       '_latest_notebook': 1, 'mode': 1, 'pod_id': 1}
     },
     'item_title': 'Status',
 }
