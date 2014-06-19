@@ -89,12 +89,21 @@ class Message(object):
             d = requests.post(url=url, data=data, headers=headers, auth=auth)
             if d.status_code == 201:
                 items = d.json()
-                for item in items:
-                    print 'Item status: ' + item[current_app.config['STATUS']]
-                    if not item[current_app.config['STATUS']] == \
+                if self.nobs > 1:
+                    for item in items:
+                        print 'Item status: ' + \
+                            str(item[current_app.config['STATUS']])
+                        if not item[current_app.config['STATUS']] == \
+                                current_app.config['STATUS_ERR']:
+                            nposted = nposted + 1
+                            self.data_ids.append(item[u'_id'])
+                else:
+                    print 'Item status: ' + \
+                        str(items[current_app.config['STATUS']])
+                    if not items[current_app.config['STATUS']] == \
                             current_app.config['STATUS_ERR']:
                         nposted = nposted + 1
-                        self.data_ids.append(item[u'_id'])
+                        self.data_ids.append(items[u'_id'])
             else:
                 print json.dumps(d.json())
             self.nposted = nposted

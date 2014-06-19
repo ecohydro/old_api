@@ -657,7 +657,7 @@ data = {
     'item_methods': ['GET', 'PATCH'],
     'schema': data_schema,
     'datasource': {
-        'default_sort': [('_created', -1)],
+        'default_sort': [('t', -1)],
     },
     # 'embedded_fields': ['pod', 'sensor'],
     'cache_control': 'max-age=10,must-revalidate',
