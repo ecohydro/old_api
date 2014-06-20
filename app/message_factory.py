@@ -9,10 +9,11 @@ from flask import current_app
 
 class MessageFactory(object):
     @staticmethod
-    def create(data=None, url=None, db=None):
+    def create(data=None, url=None):
+        db = current_app.extensions['pymongo']['MONGO'][1]
         if not db:
             assert 0, "Must provide PyMongo db object"
-
+        print db
         if data is None and url is None:
             assert 0, "Must provide a url or message data"
         if url is not None:

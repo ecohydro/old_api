@@ -11,8 +11,8 @@ from message_factory import MessageFactory as NewMessage
 
 def post_data_to_API(url=None):
     print "Posting data from worker queue..."
-    db = current_app.extensions['pymongo']['MONGO'][1]
-    message = NewMessage.create(url=url, db=db)
+    # db = current_app.extensions['pymongo']['MONGO'][1]
+    message = NewMessage.create(url=url)
     # Init dicts for message updates and RQ responses:
     # response = {}
 
