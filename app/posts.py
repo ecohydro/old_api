@@ -12,14 +12,14 @@ def post_data_to_API(url=None, db=None):
 
     message = NewMessage.create(url=url, db=db)
     # Init dicts for message updates and RQ responses:
-    response = {}
+    # response = {}
 
     if message.status == 'queued':
         message.parse()
         message.post()
-        response = message.patch()
+        message.patch()
 
-    return response
+    # return response
 
 
 def post_pod_create_qr(objId, config=None):
