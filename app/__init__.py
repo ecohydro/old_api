@@ -91,10 +91,12 @@ def create_app(config_name):
             resp = json.loads(r.get_data())
             if not (resp[app.config['STATUS']] == app.config['STATUS_ERR']):
                 print "Parsing message posted to " + res
-                db = app.extensions['pymongo']['MONGO'][1]
+                # db = app.extensions['pymongo']['MONGO'][1]
                 objId = str(resp[app.config['ITEM_LOOKUP_FIELD']])
+                print "objectId: " + objId
                 url = app.config['API_URL'] + '/messages/' + res + '/' + objId
-                post_q.enqueue(post_data_to_API, url=url, db=db)
+                print "url: " + url
+                post_q.enqueue(post_data_to_API, url=url)
             else:
                 raise InvalidMessageException(
                     'Data not sent to API',

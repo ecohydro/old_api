@@ -4,12 +4,14 @@ import qrcode
 import qrcode.image.svg
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key
+from flask import current_app
 
 from message_factory import MessageFactory as NewMessage
 
 
-def post_data_to_API(url=None, db=None):
-
+def post_data_to_API(url=None):
+    print "Posting data from worker queue..."
+    db = current_app.extensions['pymongo']['MONGO'][1]
     message = NewMessage.create(url=url, db=db)
     # Init dicts for message updates and RQ responses:
     # response = {}
