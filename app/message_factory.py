@@ -10,6 +10,10 @@ from flask import current_app
 class MessageFactory(object):
     @staticmethod
     def create(data=None, url=None):
+        # Try to get our app context back:
+        app_context = current_app.app_context()
+        app_context.push()
+        # Now set up the database?
         db = current_app.extensions['pymongo']['MONGO'][1]
         if not db:
             assert 0, "Must provide PyMongo db object"
