@@ -141,8 +141,8 @@ class Message(object):
                 if v:
                     status['last'] = v['t']
                     status['voltage'] = v['v']
-                    status['status'] = 'active'
-                if not self.number == self.pod()['number']:
+                    status['mode'] = 'normal'
+                if self.number and not self.number == self.pod()['number']:
                     status['number'] = self.number
                 if status:
                     url = self.stat_url()
@@ -155,8 +155,8 @@ class Message(object):
                         'api',
                         compute_signature(token, url, data))
                     requests.patch(
-                        url=self.stat_url(),
-                        data=json.dumps(status),
+                        url=url,
+                        data=data,
                         headers=headers,
                         auth=auth)
                     # Need to have some graceful failures here...

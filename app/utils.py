@@ -70,9 +70,6 @@ def get_now():
     return time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime())
 
 
-
-
-
 def google_geolocate_api(tower, api_key):
     if not api_key:
         assert 0, "Must provide api_key"

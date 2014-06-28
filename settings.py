@@ -478,7 +478,7 @@ status_schema = {
         'type': 'string',
         'minlength': 10,
         'maxlength': 15,
-    },
+    }
 }
 
 sensor_schema = {
