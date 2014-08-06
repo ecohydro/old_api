@@ -6,16 +6,7 @@ venv
 .env_prod_heroku
 
 # Utility scripts for Kelly (and Gist):
-init_message.py
-example_deployment_message.py
-example_data_message.py
-create_pod.py
-pod_migration_to_v2.0.py
-fixtures.py
-pod_functions.py
-pod_migration_to_v2.py
-old_pod_data.txt
-tmp.svg
+migration*
 
 Procfile.local
 .DS_Store
@@ -47,10 +38,14 @@ tests/
 cover/
 share/
 scripts/
+migrations/
 
 *.egg-info/
 .installed.cfg
 *.egg
+
+# New Relic init files
+newrelic.ini
 
 # Installer logs
 pip-log.txt

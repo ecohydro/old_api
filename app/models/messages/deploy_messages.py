@@ -1,15 +1,11 @@
-import requests
-import json
-from requests.auth import HTTPBasicAuth
 from . import Message
-from ..HMACAuth import compute_signature
 from flask import current_app
 
 
 class DeployMessage(Message):
 
-    def __init__(self, data=None, db=None):
-        super(DeployMessage, self).__init__(data=data, db=db)
+    def __init__(self, message=None):
+        super(DeployMessage, self).__init__()
         self.type = 'deploy'
         self.frame = self.__class__.__name__
         self.format.extend([
@@ -20,15 +16,44 @@ class DeployMessage(Message):
             {'name': 'voltage', 'length': 8},
             {'name': 'n_sensors', 'length': 2},
         ])
-        self.data = {}
+        if message is not None:
+            self.init(message=message)
 
-    # Deployment message format (numbers are str length, so 2 x nBytes)
-    #         2 + 4 + 4 + 4 + 4 + 8 + 8 + 2 = 34           |
-    ##############################################################
-    # Var:  |FrameId|PodId|MCC|MNC|LAC|CI| V | n_sensors|sID1| ... |sIDn|
-    # len:  |  2    | 4   | 4 | 4 | 4 | 8| 8 |    2     | 2  | ... | 2  |
-    ##############################################################
-    # Hard-coded based on Deployment message format:
+    def create_fake_message(self, frame_id, notebook):
+        deploy_str = self.create_fake_header(frame_id, notebook)
+        import struct
+        from random import random, randint, sample
+        from ..sensor import Sensor
+        mcc = 310
+        mnc = 26
+        lac = 802
+        cell_id = 10693
+        n_sensors = 3
+        voltage = struct.pack(
+            '<f',
+            float(3.6+random()/2)).encode('hex').zfill(
+            self.get_length('voltage'))
+        sensors = [Sensor.objects()[i] for i in sorted(
+            sample(range(Sensor.objects().count()), n_sensors)
+        )]
+        deploy_str += ('%i' % int(mcc)).zfill(self.get_length('mcc'))
+        deploy_str += ('%i' % int(mnc)).zfill(self.get_length('mnc'))
+        deploy_str += ('%x' % int(lac)).zfill(self.get_length('lac'))
+        deploy_str += ('%x' % int(cell_id)).zfill(
+            self.get_length('cell_id'))
+        deploy_str += voltage
+        deploy_str += ('%x' % int(n_sensors)).zfill(
+            self.get_length('n_sensors'))
+        deploy_str += ''.join(
+            [('%x' % int(x)).zfill(self.SID_LENGTH) for x in
+                [str(sensor.sid) for sensor in sensors]])
+        return deploy_str
+
+    def new_nbk_id(self):
+        import uuid
+        # For deployment message, generate a random string:
+        return str(uuid.uuid4())
+
     def mcc(self):
         (start, end) = self.get_position('mcc')
         if self.content:
@@ -114,144 +139,100 @@ class DeployMessage(Message):
             self.status = 'invalid'
             assert 0, "Uh-oh. No message content."
 
-    def parse(self):
-        # Start by copying pod data to self.data, since PUT is doc complete
-        self.status = 'parsed'
-        try:
-            self.data['name'] = self.pod()['name']
-            self.data['imei'] = str(self.pod()['imei'])
-            self.data['radio'] = self.pod()['radio']
-            self.data['pod_id'] = self.pod()['pod_id']
-        except KeyError as e:
-            e.args += ('pod data missing fields', 'parse()')
-            raise
-
-        # now make sure length is actually correct
+    def get_sensors(self):
+        from ..sensor import Sensor
         i = self.format_length()
-
+        sensors = []
         if len(self.content) < i:
             self.status = 'invalid'
             assert 0, 'message content length=' + str(len(self.content)) + \
                       '. Must be >' + str(i)
             return
-        elif len(self.content) != (i + 2*self.n_sensors()):
+        elif len(self.content) != (i + self.SID_LENGTH*self.n_sensors()):
             self.status = 'invalid'
             assert 0, 'message content length=' + str(len(self.content)) + \
-                      '. Must equal ' + str(i + 2*self.n_sensors())
+                      '. Must equal ' + \
+                      str(i + self.SID_LENGTH*self.n_sensors())
             return
 
-        # sIDs is list of sensor objectIds
-        self.data['sids'] = []
-        self.data['sensors'] = []
         try:
             for j in range(self.n_sensors()):
-                s = self.db['sensors'].find_one(
-                    {'sid': int(self.content[i:i+2], 16)})
-                self.data['sids'].append(s['sid'])  # $in queries
-                self.data['sensors'].append(
-                    str(s[current_app.config['ITEM_LOOKUP_FIELD']]))
-                i += 2
+                sid = int(self.content[i:i+self.SID_LENGTH], 16)
+                sensor = Sensor.objects(sid=sid).first()
+                sensors.append(sensor)
+                i += self.SID_LENGTH
         except:
             self.status = 'invalid'
-            assert 0, 'error reading sensor information from database'
+            assert 0, 'error reading sensor from database'
+        return sensors
 
-        self.data['number'] = self.number
-        # Transfer ownership of pod to notebook:
-        self.data['owner'] = self.pod()['owner']    # Owner is single user
-        # self.data['shared'] = [self.pod()['owner']]  # Shared is a list
-        self.data['last'] = self.get_now()
-        self.data['voltage'] = self.voltage()
+    def default_name(self, address):
+        return str(self.pod['name']) + ' data from ' + \
+            address['locality']['short'] + ', ' + \
+            address['administrative_area_level_1']['short'] + \
+            ' in ' + address['country']['short']
 
-        # Do the GOOGLE Stuff:
-        location = self.google_geolocate_api()
-        self.data['location'] = location if location \
-            else current_app.config['LOCATION']
-        elevation = self.google_elevation_api()
-        self.data['elevation'] = elevation if elevation \
-            else current_app.config['ELEVATION']
-        self.data['address'] = self.google_geocoding_api()
-        # Make a default pod name based on the location
-        self.data['nbk_name'] = self.pod()['name'] + ' data from ' + \
-            self.data['address']['locality']['short'] + ', ' + \
-            self.data['address']['administrative_area_level_1']['short'] + \
-            ' in ' + self.data['address']['country']['short']
-
-    def post(self):
-        from bson import json_util
-        if not self.status == 'invalid':
-            print "posting deploy message"
-            headers = {'If-Match': str(self.pod_etag()),
-                       'content-type': 'application/json'}
-            data = json.dumps(self.data, default=json_util.default)
-            url = self.pod_url()
-            token = current_app.config['API_AUTH_TOKEN']
-            auth = HTTPBasicAuth(
-                'api',
-                compute_signature(token, url, data))
-            d = requests.put(url=url, data=data, headers=headers, auth=auth)
-            if d.status_code == 201:
-                print "New deployment created"
-            else:
-                print d.status_code
-                print d.text
-        else:
-            print "Warning: message format is invalid."
+    def make_tower(self):
+        return {
+            'locationAreaCode': self.lac(),
+            'cellId': self.cell_id(),
+            'mobileNetworkCode': self.mnc(),
+            'mobileCountryCode': self.mcc()
+        }
 
     def google_geolocate_api(self):
+        import json
+        import requests
+        towers = []
         try:
-            self.data['cellTowers'] = {
-                'locationAreaCode': self.lac(),
-                'cellId': self.cell_id(),
-                'mobileNetworkCode': self.mnc(),
-                'mobileCountryCode': self.mcc()
-            }
+            towers.append(self.make_tower())
         except:
             self.status = 'invalid'
             assert 0, 'error extracting cell information from message content'
         api_key = current_app.config['GOOGLE_API_KEY']
         if not api_key:
             assert 0, "Must provide api_key"
-        tower = self.data['cellTowers']
-        location = {}
-        # Assume this doesn't work:
-        location['lat'] = 'unknown'
-        location['lng'] = 'unknown'
-        location['accuracy'] = 'unknown'
-
         url = 'https://www.googleapis.com/geolocation/v1/geolocate?key=' \
             + api_key
         headers = {'content-type': 'application/json'}
-        data = {'cellTowers': [{
-            'cellId': tower['cellId'],
-            'locationAreaCode':tower['locationAreaCode'],
-            'mobileCountryCode':tower['mobileCountryCode'],
-            'mobileNetworkCode':tower['mobileNetworkCode']
-            }]}
+        data = {'cellTowers': towers}
         response = requests.post(
             url,
             data=json.dumps(data),
             headers=headers).json()
+        location = {
+            'type': 'Point',
+            'coordinates': [
+                -9999,
+                -9999
+            ]
+        }
         if 'error' not in response:
-            location['lat'] = response['location']['lat']
-            location['lng'] = response['location']['lng']
-            location['accuracy'] = response['accuracy']
+            location['coordinates'] = [
+                response['location']['lng'],
+                response['location']['lat']
+            ]
             return location
         else:
             print response
             return 0
 
-    def google_elevation_api(self):
-        loc = self.data['location']
+    def google_elevation_api(self, loc=None):
+        import requests
+        if loc is None:
+            assert 0, "Must provide a location value (GeoJSON point)." + \
+                      " Did you mean to call google_geolocate_api() first?"
         api_key = current_app.config['GOOGLE_API_KEY']
         if not api_key:
             assert 0, "Must provide api_key"
-        if 'unknown' not in loc.values():
+        if -9999 not in loc['coordinates']:
             baseurl = 'https://maps.googleapis.com/' + \
                       'maps/api/elevation/json?' + \
                       'locations='
             tailurl = '&sensor=false&key=' + api_key
-            url = baseurl + str(loc['lat']) + \
-                ',' + str(loc['lng']) + tailurl
+            lng = str(loc['coordinates'][0])
+            lat = str(loc['coordinates'][1])
+            url = baseurl + lat + ',' + lng + tailurl
             response = requests.get(url).json()
             if response['status'] == 'OK':
                 return {
@@ -263,9 +244,12 @@ class DeployMessage(Message):
         else:
             return 0
 
-    def google_geocoding_api(self):
+    def google_geocoding_api(self, loc):
+        import requests
+        if loc is None:
+            assert 0, "Must provide a location value (GeoJSON point)." + \
+                      " Did you mean to call google_geolocate_api() first?"
         api_key = current_app.config['GOOGLE_API_KEY']
-        loc = self.data['location']
         if not api_key:
             assert 0, "Must provide api_key"
         # must pre-seed this with all the data we want shorted:
@@ -284,11 +268,13 @@ class DeployMessage(Message):
             'route': {'short': 'unknown', 'full': 'unknown'},
             'street_address': {'short': 'unknown', 'full': 'unknown'},
         }
-        if 'unknown' not in loc.values():
+        if -9999 not in loc['coordinates']:
             baseurl = 'https://maps.googleapis.com/maps/' + \
                       'api/geocode/json?latlng='
             tailurl = '&sensor=false&key=' + api_key
-            url = baseurl + str(loc['lat']) + ',' + str(loc['lng']) + tailurl
+            lng = str(loc['coordinates'][0])
+            lat = str(loc['coordinates'][1])
+            url = baseurl + lat + ',' + lng + tailurl
             response = requests.get(url).json()
             if response['status'] == 'OK':
                 address['formatted_address'] = \
@@ -306,3 +292,72 @@ class DeployMessage(Message):
                             address[address_component['types'][0]] = \
                                 str(address_component['long_name'])
         return address
+
+    def parse(self):
+        from ..notebook import Notebook
+        from ..pod import Pod
+        from ..user import User
+        import datetime
+        if self.status not in ['parsed', 'posted']:
+            try:
+                location = self.google_geolocate_api()
+                elevation = self.google_elevation_api(location)
+                address = self.google_geocoding_api(location)
+            except:
+                self.status = 'invalid'
+                assert 0, 'MessageParse: Error in Google API functions'
+            try:
+                notebook = Notebook(
+                    pod_id=self.pod['pod_id'],
+                    pod=self.pod,
+                    sensors=self.get_sensors(),
+                    sids=[sensor.sid for sensor in self.get_sensors()],
+                    owner=self.pod['owner'],
+                    last=datetime.datetime.now(),
+                    voltage=self.voltage(),
+                    location=location,
+                    elevation=elevation,
+                    address=address,
+                    name=self.default_name(address),
+                    nbk_id=self.new_nbk_id()
+                )
+                self.status = 'parsed'
+            except:
+                assert 0, 'MessageParse: Error creating new notebook'
+                self.status = 'invalid'
+            try:
+                notebook.save()
+                Pod.objects(id=self.pod.id).update_one(
+                    inc__notebooks=1,
+                    set__current_notebook=notebook,
+                    set__number=self.number
+                    )
+                User.objects(id=self.pod.owner.id).update_one(
+                    inc__notebooks=1
+                )
+                self.status = 'posted'
+                print "Added notebook %s to the database" % notebook.__repr__()
+                print "Incremented notebooks for %s and %s" % \
+                    (self.pod.__repr__(), self.pod.owner.__repr__())
+                print "Changed current notebook on %s to %s" % \
+                    (self.pod.__repr__(), notebook.__repr__())
+            except:
+                assert 0, 'MessageParse: Error saving new notebook'
+        else:
+            return "message already parsed"
+
+    def post(self):
+        pass
+
+
+class DeployMessageLong(DeployMessage):
+
+    def __init__(self, message=None):
+        super(DeployMessageLong, self).__init__()
+        self.type = 'deploy_long'
+        self.frame = self.__class__.__name__
+        # Modify the format:
+        (item for item in self.format if item["name"] == 'cell_id').next(
+            )['length'] = 8
+        (item for item in self.format if item["name"] == 'lac').next(
+            )['length'] = 8
