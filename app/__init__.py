@@ -191,6 +191,7 @@ def create_app(config_name):
                 and not r.status_code == 401:
             resp = json.loads(r.get_data())
             if resp[app.config['STATUS']] is not app.config['STATUS_ERR']:
+                print json.dumps(resp)
                 objId = str(resp[app.config['ITEM_LOOKUP_FIELD']])
                 if res is 'twiliomessage':
                     message = TwilioMessage.objects(id=objId).first()

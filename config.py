@@ -19,6 +19,7 @@ class Config:
         }
     auth = HMACAuth
     API_NAME = 'PulsePod API, Version 1.0'
+    PREFERRED_URL_SCHEME = 'https'
     # Set Tokens and Auth:
     HIREFIRE_TOKEN = os.environ.get('HIREFIRE_TOKEN')
     API_AUTH_TOKEN = os.environ.get('API_AUTH_TOKEN')
