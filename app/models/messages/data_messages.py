@@ -134,7 +134,8 @@ class DataMessage(Message):
                         data_list.append(data)
                         nobs -= 1
                 Notebook.objects(id=self.notebook.id).update_one(
-                    inc__observations=self.total_nobs
+                    inc__observations=self.total_nobs,
+                    set__last=self.message.time_stamp
                 )
                 Pod.objects(id=self.pod.id).update_one(
                     inc__observations=self.total_nobs,
