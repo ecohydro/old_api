@@ -61,8 +61,8 @@ def create_app(config_name):
         cache_expires=10,
         datasource={
             'projection': {
-                'n': 0,
-                'p': 0,
+                'nbk': 0,
+                'pod': 0,
             }
         }
     )
