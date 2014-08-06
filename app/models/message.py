@@ -132,7 +132,10 @@ class Message(db.Document):
         return self.id
 
     def get_frame_id(self):
-        return int(self.message_content[0:2], 16)
+        try:
+            return int(self.message_content[0:2], 16)
+        except ValueError:
+            return 9999
 
     def get_type(self):
         try:
