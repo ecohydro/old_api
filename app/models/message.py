@@ -64,7 +64,7 @@ class Message(db.Document):
         required=True
     )
     message_type = db.StringField(
-        choices=FRAMES.values()+list(['unknown']),
+        choices=FRAMES.values()+list(['unknown', 'invalid']),
         db_field='type',
         default='unknown'
     )
@@ -145,6 +145,23 @@ class Message(db.Document):
 
     def get_id(self):
         return unicode(self.id)
+
+    def compute_signature(self):
+        from app.HMACAuth import compute_signature
+        from requests.auth import HTTPBasicAuth
+        import json
+        data = {}
+        data['message'] = self.message_content
+        data['time_stamp'] = self.Message.get_now()
+        data['source'] = self.source
+        data['number'] = self.number
+        data['mid'] = self.message_id
+        user = 'gateway'
+        url = current_app.config['API_URL'] + '/messages/' + self.source
+        return compute_signature(
+            current_app.config['API_AUTH_TOKEN'],
+            url,
+            json.dumps(data))
 
     def init(self):
         MessageObject = NewMessageObject.create(self.get_type())

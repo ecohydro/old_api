@@ -60,6 +60,7 @@ class DevelopmentConfig(Config):
 
     ASSETS_DEBUG = True
     DEBUG = True
+    API_URL = 'http://0.0.0.0:5000'
     # MONGO_DBNAME = os.environ.get('MONGO_DEV_DBNAME')
     # MONGO_HOST = os.environ.get('MONGO_DEV_HOST')
     # MONGO_PASSWORD = os.environ.get('MONGO_DEV_PASSWORD')

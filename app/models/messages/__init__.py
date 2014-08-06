@@ -37,13 +37,16 @@ class Message(object):
         # New things we will need to determine:
         if self.message.pod is None:
             from ..pod import Pod
-            self.message.pod = Pod.objects(
+            pod = Pod.objects(
                 pod_id=self.message.pod_id()).first()
-            try:
+            if pod:
+                self.message.pod = pod
                 self.message.save()
-            except:
-                return "Unable to update message pod"
-        if self.message.notebook is None:
+            else:
+                self.message.status = 'invalid'
+                self.status = 'invalid'
+                self.message.save()
+        if self.message.notebook is None and self.message.pod is not None:
             from ..notebook import Notebook
             self.message.notebook = Notebook.objects(
                 id=self.message.pod.current_notebook).first()
@@ -52,9 +55,10 @@ class Message(object):
             except:
                 return "Unable to update message notebook"
 
-        self.content = self.message.message_content
-        self.pod = self.message.pod
-        self.notebook = self.message.notebook
+        if self.status is not 'invalid':
+            self.content = self.message.message_content
+            self.pod = self.message.pod
+            self.notebook = self.message.notebook
 
     def create_fake_message(*args, **kwargs):
         raise NotImplementedError
@@ -124,7 +128,8 @@ class Message(object):
         try:
             pod_id = int(self.content[start:end], 16)
         except ValueError:
-            self.status = 'invalid'
+            self.message.status = 'invalid'
+            self.message.save()
             assert 0, "Invalid Message: " + self.content
         return pod_id
 

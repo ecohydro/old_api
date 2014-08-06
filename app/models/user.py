@@ -9,9 +9,6 @@ import datetime
 class User(UserMixin, db.Document):
 
     confirmed = db.BooleanField(default=False)
-    created_at = db.DateTimeField(
-        default=datetime.datetime.now,
-        required=True)
     username = db.StringField(max_length=64, unique=True)
     email = db.StringField(max_length=64, unique=True)
     password_hash = db.StringField(max_length=120)
@@ -94,11 +91,11 @@ class User(UserMixin, db.Document):
                 email=fake.safe_email(),
                 password=fake.md5()
             )
-            try:
-                user.save()
-                fake_users.append(user)
-            except:
-                print "Unable to save user"
+            #try:
+            user.save()
+            fake_users.append(user)
+            #except:
+            #    print "Unable to save user"
         return fake_users
 
 

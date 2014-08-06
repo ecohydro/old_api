@@ -63,7 +63,8 @@ class DeployMessage(Message):
                 e.args += ('message content invalid', 'DeployMessage', 'mcc()')
                 raise
         else:
-            self.status = 'invalid'
+            self.message.status = 'invalid'
+            self.message.save()
             assert 0, "Uh-oh. No message content."
 
     def mnc(self):
@@ -72,11 +73,13 @@ class DeployMessage(Message):
             try:
                 return int(self.content[start:end])
             except ValueError as e:
-                self.status = 'invalid'
+                self.message.status = 'invalid'
+                self.message.save()
                 e.args += ('message content invalid', 'DeployMessage', 'mnc()')
                 raise
         else:
-            self.status = 'invalid'
+            self.message.status = 'invalid'
+            self.message.save()
             assert 0, "Uh-oh. No message content."
 
     def lac(self):
@@ -88,7 +91,8 @@ class DeployMessage(Message):
                 e.args += ('message content invalid', 'DeployMessage', 'lac()')
                 raise
         else:
-            self.status = 'invalid'
+            self.message.status = 'invalid'
+            self.message.save()
             assert 0, "Uh-oh. No message content."
 
     def cell_id(self):
@@ -103,7 +107,8 @@ class DeployMessage(Message):
                            'cell_id()')
                 raise
         else:
-            self.status = 'invalid'
+            self.message.status = 'invalid'
+            self.message.save()
             assert 0, "Uh-oh. No message content."
 
     def voltage(self):
@@ -115,13 +120,15 @@ class DeployMessage(Message):
                     '<f',
                     self.content[start:end].decode('hex'))[0]
             except ValueError as e:
-                self.status = 'invalid'
+                self.message.status = 'invalid'
+                self.message.save()
                 e.args += ('message content invalid',
                            'DeployMessage',
                            'voltage()')
                 raise
         else:
-            self.status = 'invalid'
+            self.message.status = 'invalid'
+            self.message.save()
             assert 0, "Uh-oh. No message content."
 
     def n_sensors(self):
@@ -130,13 +137,15 @@ class DeployMessage(Message):
             try:
                 return int(self.content[start:end], 16)
             except ValueError as e:
-                self.status = 'invalid'
+                self.message.status = 'invalid'
+                self.message.save()
                 e.args += ('message content invalid',
                            'DeployMessage',
                            'n_sensors()')
                 raise
         else:
-            self.status = 'invalid'
+            self.message.status = 'invalid'
+            self.message.save()
             assert 0, "Uh-oh. No message content."
 
     def get_sensors(self):
@@ -144,12 +153,14 @@ class DeployMessage(Message):
         i = self.format_length()
         sensors = []
         if len(self.content) < i:
-            self.status = 'invalid'
+            self.message.status = 'invalid'
+            self.message.save()
             assert 0, 'message content length=' + str(len(self.content)) + \
                       '. Must be >' + str(i)
             return
         elif len(self.content) != (i + self.SID_LENGTH*self.n_sensors()):
-            self.status = 'invalid'
+            self.message.status = 'invalid'
+            self.message.save()
             assert 0, 'message content length=' + str(len(self.content)) + \
                       '. Must equal ' + \
                       str(i + self.SID_LENGTH*self.n_sensors())
@@ -162,7 +173,8 @@ class DeployMessage(Message):
                 sensors.append(sensor)
                 i += self.SID_LENGTH
         except:
-            self.status = 'invalid'
+            self.message.status = 'invalid'
+            self.message.save()
             assert 0, 'error reading sensor from database'
         return sensors
 
@@ -187,7 +199,8 @@ class DeployMessage(Message):
         try:
             towers.append(self.make_tower())
         except:
-            self.status = 'invalid'
+            self.message.status = 'invalid'
+            self.message.save()
             assert 0, 'error extracting cell information from message content'
         api_key = current_app.config['GOOGLE_API_KEY']
         if not api_key:
@@ -298,53 +311,59 @@ class DeployMessage(Message):
         from ..pod import Pod
         from ..user import User
         import datetime
-        if self.status not in ['parsed', 'posted']:
-            try:
-                location = self.google_geolocate_api()
-                elevation = self.google_elevation_api(location)
-                address = self.google_geocoding_api(location)
-            except:
-                self.status = 'invalid'
-                assert 0, 'MessageParse: Error in Google API functions'
-            try:
-                notebook = Notebook(
-                    pod_id=self.pod['pod_id'],
-                    pod=self.pod,
-                    sensors=self.get_sensors(),
-                    sids=[sensor.sid for sensor in self.get_sensors()],
-                    owner=self.pod['owner'],
-                    last=datetime.datetime.now(),
-                    voltage=self.voltage(),
-                    location=location,
-                    elevation=elevation,
-                    address=address,
-                    name=self.default_name(address),
-                    nbk_id=self.new_nbk_id()
-                )
-                self.status = 'parsed'
-            except:
-                assert 0, 'MessageParse: Error creating new notebook'
-                self.status = 'invalid'
-            try:
-                notebook.save()
-                Pod.objects(id=self.pod.id).update_one(
-                    inc__notebooks=1,
-                    set__current_notebook=notebook,
-                    set__number=self.number
+        if self.status is not 'invalid':
+            if self.status not in ['parsed', 'posted']:
+                try:
+                    location = self.google_geolocate_api()
+                    elevation = self.google_elevation_api(location)
+                    address = self.google_geocoding_api(location)
+                except:
+                    self.message.status = 'invalid'
+                    self.message.save()
+                    assert 0, 'MessageParse: Error in Google API functions'
+                try:
+                    notebook = Notebook(
+                        pod_id=self.pod['pod_id'],
+                        pod=self.pod,
+                        sensors=self.get_sensors(),
+                        sids=[sensor.sid for sensor in self.get_sensors()],
+                        owner=self.pod['owner'],
+                        last=datetime.datetime.now(),
+                        voltage=self.voltage(),
+                        location=location,
+                        elevation=elevation,
+                        address=address,
+                        name=self.default_name(address),
+                        nbk_id=self.new_nbk_id()
                     )
-                User.objects(id=self.pod.owner.id).update_one(
-                    inc__notebooks=1
-                )
-                self.status = 'posted'
-                print "Added notebook %s to the database" % notebook.__repr__()
-                print "Incremented notebooks for %s and %s" % \
-                    (self.pod.__repr__(), self.pod.owner.__repr__())
-                print "Changed current notebook on %s to %s" % \
-                    (self.pod.__repr__(), notebook.__repr__())
-            except:
-                assert 0, 'MessageParse: Error saving new notebook'
-        else:
-            return "message already parsed"
+                    self.message.status = 'parsed'
+                    self.message.save()
+                except:
+                    assert 0, 'MessageParse: Error creating new notebook'
+                    self.message.status = 'invalid'
+                    self.message.save()
+                try:
+                    notebook.save()
+                    Pod.objects(id=self.pod.id).update_one(
+                        inc__notebooks=1,
+                        set__current_notebook=notebook,
+                        set__number=self.number
+                        )
+                    User.objects(id=self.pod.owner.id).update_one(
+                        inc__notebooks=1
+                    )
+                    self.message.status = 'posted'
+                    self.message.save()
+                    print "Added notebook %s to the database" % \
+                        notebook.__repr__()
+                    print "Incremented notebooks for %s and %s" % \
+                        (self.pod.__repr__(), self.pod.owner.__repr__())
+                    print "Changed current notebook on %s to %s" % \
+                        (self.pod.__repr__(), notebook.__repr__())
+                except:
+                    assert 0, 'MessageParse: Error saving new notebook'
+            else:
+                return "message already parsed"
 
     def post(self):
         pass

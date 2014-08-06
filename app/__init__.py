@@ -51,6 +51,14 @@ def create_app(config_name):
     # Initialize EveMongoEngine (for setting up resources)
     eve_mongo.init_app(app)
 
+    from models.user import User
+    eve_mongo.add_model(
+        User,
+        url='user',
+        resource_methods=[],
+        item_methods=[]
+    )
+
     from models.data import Data
     eve_mongo.add_model(
         Data,
@@ -190,7 +198,7 @@ def create_app(config_name):
         if res in ['message', 'twiliomessage', 'pulsepimessage'] \
                 and not r.status_code == 401:
             resp = json.loads(r.get_data())
-            if resp[app.config['STATUS']] is not app.config['STATUS_ERR']:
+            if resp[app.config['STATUS']] != app.config['STATUS_ERR']:
                 print json.dumps(resp)
                 objId = str(resp[app.config['ITEM_LOOKUP_FIELD']])
                 if res is 'twiliomessage':

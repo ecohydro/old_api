@@ -8,12 +8,12 @@ from flask import current_app
 
 
 def post_process_message(message=None):
+    print "Message Log [REDIS]: Starting Job"
     if message is None:
         assert 0, "Must provide message"
     message.init()
     if message.status == 'queued':
         message.parse()
-        message.save()
 
 
 def post_pod_create_qr(pod):

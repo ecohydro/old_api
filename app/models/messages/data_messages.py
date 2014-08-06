@@ -36,13 +36,15 @@ class DataMessage(Message):
             sid = self.get_sid(i)
         except:
             print 'error reading sid'
-            self.status = 'invalid'
+            self.message.status = 'invalid'
+            self.message.save()
             return
         try:
             sensor = Sensor.objects(sid=sid).first()
         except:
             print 'error reading sensor from database'
-            self.status = 'invalid'
+            self.message.status = 'invalid'
+            self.message.save()
             return
         return sensor
 
@@ -60,94 +62,100 @@ class DataMessage(Message):
         unixtime = 4 bytes LITTLE ENDIAN
         value = look up length
         """
-        i = self.HEADER_LENGTH
-        if self.status not in ['parsed', 'posted']:
-            self.status = 'parsed'
-            data_list = []
-            self.total_nobs = 0  # Initialize observation counter
-            while i < len(self.content):
-                try:
-                    sensor = self.get_sensor(i)
-                except:
-                    self.status = 'invalid'
-                    print 'error reading sensor'
-                    return
-                i += self.SID_LENGTH
-                try:
-                    nobs = self.get_nobs(i)
-                except:
-                    self.status = 'invalid'
-                    print 'error reading nobs'
-                    return
-                i += self.NOBS_LENGTH
-                self.total_nobs += nobs
-                Sensor.objects(id=sensor.id).update_one(
-                    inc__observations=nobs
-                )
-                print "Added %d observations to %s" % \
-                    (nobs, sensor.__repr__())
-                try:
-                    if sensor['context'] == '':
-                        variable_name = str(sensor['variable'])
-                    else:
-                        variable_name = str(sensor['context']) + ' ' + \
-                            str(sensor['variable'])
-
-                except:
-                    self.status = 'invalid'
-                    print 'error reading variable name'
-                    return
-
-                while nobs > 0:
+        if self.status is not 'invalid':
+            i = self.HEADER_LENGTH
+            if self.status not in ['parsed', 'posted']:
+                self.status = 'parsed'
+                data_list = []
+                self.total_nobs = 0  # Initialize observation counter
+                while i < len(self.content):
                     try:
-                        time_stamp = self.get_time(i)  # Get timestamp
+                        sensor = self.get_sensor(i)
                     except:
-                        self.status = 'invalid'
-                        print 'error reading timestamp'
+                        self.message.status = 'invalid'
+                        self.message.save()
+                        print 'error reading sensor'
                         return
-                    i += self.TIME_LENGTH
+                    i += self.SID_LENGTH
                     try:
-                        value = self.get_value(i, sensor)
+                        nobs = self.get_nobs(i)
                     except:
-                        print 'error reading value'
-                        self.status = 'invalid'
+                        self.message.status = 'invalid'
+                        self.message.save()
+                        print 'error reading nobs'
                         return
-
-                    i += 2*sensor['nbytes']
-                    data = Data(
-                        pod=self.pod,
-                        notebook=self.notebook,
-                        sensor=sensor,
-                        value=value,
-                        time_stamp=time_stamp,
-                        location=self.notebook.location,
-                        variable=variable_name
+                    i += self.NOBS_LENGTH
+                    self.total_nobs += nobs
+                    Sensor.objects(id=sensor.id).update_one(
+                        inc__observations=nobs
                     )
-                    data_list.append(data)
-                    nobs -= 1
-            Notebook.objects(id=self.notebook.id).update_one(
-                inc__observations=self.total_nobs
-            )
-            Pod.objects(id=self.pod.id).update_one(
-                inc__observations=self.total_nobs,
-                set__number=self.number
-            )
-            User.objects(id=self.notebook.owner.id).update_one(
-                inc__observations=self.total_nobs
-            )
-            [data.save() for data in data_list]
-            for data in data_list:
-                print "Added %s from %s with %s" % \
-                    (data.__repr__(),
-                     data.sensor.__repr__(),
-                     self.notebook.__repr__())
-            print "Incremented %s, %s, and %s with %d observations" % \
-                (self.pod.__repr__(),
-                 self.notebook.__repr__(),
-                 self.notebook.owner.__repr__(),
-                 self.total_nobs)
-        else:
-            return "message already parsed"
+                    print "Added %d observations to %s" % \
+                        (nobs, sensor.__repr__())
+                    try:
+                        if sensor['context'] == '':
+                            variable_name = str(sensor['variable'])
+                        else:
+                            variable_name = str(sensor['context']) + ' ' + \
+                                str(sensor['variable'])
+
+                    except:
+                        self.message.status = 'invalid'
+                        self.message.save()
+                        print 'error reading variable name'
+                        return
+
+                    while nobs > 0:
+                        try:
+                            time_stamp = self.get_time(i)  # Get timestamp
+                        except:
+                            self.message.status = 'invalid'
+                            self.message.save()
+                            print 'error reading timestamp'
+                            return
+                        i += self.TIME_LENGTH
+                        try:
+                            value = self.get_value(i, sensor)
+                        except:
+                            print 'error reading value'
+                            self.message.status = 'invalid'
+                            self.message.save()
+                            return
+
+                        i += 2*sensor['nbytes']
+                        data = Data(
+                            pod=self.pod,
+                            notebook=self.notebook,
+                            sensor=sensor,
+                            value=value,
+                            time_stamp=time_stamp,
+                            location=self.notebook.location,
+                            variable=variable_name
+                        )
+                        data_list.append(data)
+                        nobs -= 1
+                Notebook.objects(id=self.notebook.id).update_one(
+                    inc__observations=self.total_nobs
+                )
+                Pod.objects(id=self.pod.id).update_one(
+                    inc__observations=self.total_nobs,
+                    set__number=self.number
+                )
+                User.objects(id=self.notebook.owner.id).update_one(
+                    inc__observations=self.total_nobs
+                )
+                [data.save() for data in data_list]
+                for data in data_list:
+                    print "Added %s from %s with %s" % \
+                        (data.__repr__(),
+                         data.sensor.__repr__(),
+                         self.notebook.__repr__())
+                print "Incremented %s, %s, and %s with %d observations" % \
+                    (self.pod.__repr__(),
+                     self.notebook.__repr__(),
+                     self.notebook.owner.__repr__(),
+                     self.total_nobs)
+            else:
+                return "message already parsed"
 
     def patch(self):
         # IF THIS IS A DATA MESSAGE.....
