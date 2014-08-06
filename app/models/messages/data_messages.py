@@ -143,6 +143,8 @@ class DataMessage(Message):
                 User.objects(id=self.notebook.owner.id).update_one(
                     inc__observations=self.total_nobs
                 )
+                self.message.status = 'posted'
+                self.message.save() 
                 [data.save() for data in data_list]
                 for data in data_list:
                     print "Added %s from %s with %s" % \

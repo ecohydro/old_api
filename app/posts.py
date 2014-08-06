@@ -13,7 +13,13 @@ def post_process_message(message=None):
         assert 0, "Must provide message"
     message.init()
     if message.status == 'queued':
-        message.parse()
+        try:
+            message.parse()
+            message.status = 'posted'
+            message.save()
+        except:
+            message.status = 'invalid'
+            message.save()
 
 
 def post_pod_create_qr(pod):

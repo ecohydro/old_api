@@ -50,7 +50,7 @@ class Message(object):
         if self.message.notebook is None and self.message.pod is not None:
             from ..notebook import Notebook
             self.message.notebook = Notebook.objects(
-                id=self.message.pod.current_notebook).first()
+                id=self.message.pod.current_notebook.id).first()
             try:
                 self.message.save()
             except:
