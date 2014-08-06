@@ -59,7 +59,7 @@ class Pod(db.Document):
         import phonenumbers
         nusers = User.objects().count()
         fake = Faker()
-        fake.seed(3123)
+        # fake.seed(3123)
         fake_pods = []
         for i in range(count):
             if nusers > 0:

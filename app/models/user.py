@@ -85,7 +85,7 @@ class User(UserMixin, db.Document):
         from random import choice, randint, sample
         from faker import Faker
         fake = Faker()
-        fake.seed(3123)
+        # fake.seed(3123)
         fake_users = []
         for i in range(count):
             user = User(

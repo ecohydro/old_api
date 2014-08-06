@@ -91,7 +91,7 @@ class Message(db.Document):
         from faker import Faker
         from .notebook import Notebook
         fake = Faker()
-        fake.seed(3123)
+        # fake.seed(3123)
         fake_messages = []
         nNotebooks = Notebook.objects().count()
         for i in range(count):

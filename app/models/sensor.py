@@ -54,7 +54,7 @@ class Sensor(db.Document):
         from faker import Faker
         import struct
         fake = Faker()
-        fake.seed(3123)
+        # fake.seed(3123)
         fake_sensors = []
         byteorder = '<'
         fmt = 'f'

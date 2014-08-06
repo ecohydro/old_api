@@ -49,7 +49,7 @@ class Data(db.Document):
         from .sensor import Sensor
 
         fake = Faker()
-        fake.seed(3123)
+        # fake.seed(3123)
         fake_data = []
         for i in range(count):
             try:

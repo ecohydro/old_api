@@ -59,7 +59,7 @@ class Notebook(db.Document):
         from .sensor import Sensor
         import uuid
         fake = Faker()
-        fake.seed(3123)
+        # fake.seed(3123)
         fake_notebooks = []
         nPods = Pod.objects().count()
         nSensors = Sensor.objects().count()
