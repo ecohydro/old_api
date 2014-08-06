@@ -37,11 +37,12 @@ class Message(object):
         # New things we will need to determine:
         if self.message.pod is None:
             from ..pod import Pod
-            pod = Pod.objects(
-                pod_id=self.message.pod_id()).first()
-            if pod:
-                self.message.pod = pod
-                self.message.save()
+            if self.message.pod_id():
+                pod = Pod.objects(
+                    pod_id=self.message.pod_id()).first()
+                if pod:
+                    self.message.pod = pod
+                    self.message.save()
             else:
                 self.message.status = 'invalid'
                 self.status = 'invalid'

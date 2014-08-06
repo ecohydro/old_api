@@ -144,10 +144,18 @@ class Message(db.Document):
             return 'invalid'
 
     def pod_id(self):
-        return int(self.message_content[2:6], 16)
+        try:
+            return int(self.message_content[2:6], 16)
+        except ValueError:
+            self.status = 'invalid'
+            self.save()
+            return None
 
     def get_id(self):
         return unicode(self.id)
+
+    def get_time(self):
+        return self.time_stamp.strftime("%a, %d %b %Y %H:%M:%S GMT")
 
     def compute_signature(self):
         from app.HMACAuth import compute_signature
@@ -155,16 +163,26 @@ class Message(db.Document):
         import json
         data = {}
         data['message'] = self.message_content
-        data['time_stamp'] = self.Message.get_now()
+        data['time_stamp'] = self.get_time()
         data['source'] = self.source
         data['number'] = self.number
         data['mid'] = self.message_id
         user = 'gateway'
         url = current_app.config['API_URL'] + '/messages/' + self.source
+        print url
         return compute_signature(
             current_app.config['API_AUTH_TOKEN'],
             url,
             json.dumps(data))
+
+    def get_data(self):
+        data = {}
+        data['message'] = self.message_content
+        data['time_stamp'] = self.get_time()
+        data['source'] = self.source
+        data['number'] = self.number
+        data['mid'] = self.message_id
+        return data
 
     def init(self):
         MessageObject = NewMessageObject.create(self.get_type())
