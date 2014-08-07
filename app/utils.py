@@ -4,7 +4,6 @@ import time
 from flask import current_app as app
 import requests
 from random import choice, randint
-from names import firstnames, lastnames
 from hashlib import sha1
 import base64
 import hmac
