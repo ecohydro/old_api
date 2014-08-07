@@ -44,6 +44,9 @@ class Pod(db.Document):
         'index_background': True,
         'ordering': ['-last'],
     }
+    about = db.StringField(
+        default=''
+    )
 
     def __repr__(self):
         return '<Pod %r>' % self.name
