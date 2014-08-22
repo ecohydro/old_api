@@ -8,16 +8,17 @@ if os.path.exists('.env'):
         if len(var) == 2:
             os.environ[var[0]] = var[1]
 
-from app import create_app, db, eve_mongo, pymongo
+from app import create_app, eve_mongo, pymongo
+from app.shared.models import db
 
 # Import Models for MongoEngine
-from app.models.user import User
-from app.models.pod import Pod
-from app.models.data import Data
-from app.models.sensor import Sensor
-from app.models.notebook import Notebook
-from app.models.message import Message
-from app.models.message import NewMessageObject as NewMessage
+from app.shared.models.user import User
+from app.shared.models.pod import Pod
+from app.shared.models.data import Data
+from app.shared.models.sensor import Sensor
+from app.shared.models.notebook import Notebook
+from app.shared.models.message import Message
+from app.shared.models.message import NewMessageObject as NewMessage
 from flask.ext.script import Manager, Shell
 
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')

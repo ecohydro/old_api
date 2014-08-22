@@ -1,11 +1,9 @@
 from flask import request
 from eve.auth import HMACAuth
-from hashlib import sha1
-import base64
-import hmac
 import os
 from compat import izip
 from basicauth import decode
+from shared.utils import compute_signature
 
 
 class HMACAuth(HMACAuth):
@@ -51,27 +49,6 @@ class HMACAuth(HMACAuth):
             hmac_hash = None
         return self.check_auth(userid, request.url, request.get_data(),
                                hmac_hash, resource, method)
-
-
-def compute_signature(token, uri, data):
-        """Compute the signature for a given request
-
-        :param uri: full URI for request on API
-        :param params: post vars sent with the request
-        :returns: The computed signature
-        """
-        s = uri.split('://')[1]
-        if data:
-            if type(data) is dict:
-                d = sorted(data, key=data.get)
-                for k in d:
-                    s += k + d[k]
-            if type(data) is str:
-                s += data
-        # compute signature and compare signatures
-        mac = hmac.new(token, s.encode("utf-8"), sha1)
-        computed = base64.b64encode(mac.digest())
-        return computed.strip()
 
 
 def secure_compare(string1, string2):

@@ -1,6 +1,6 @@
 Cerberus==0.7.2
 Eve==0.4
-#  Eve-Mongoengine==0.0.6-dev
+#   Eve-Mongoengine==0.0.6-dev
 git+https://github.com/hellerstanislav/eve-mongoengine#eve-mongoenginer=eve-mongoengine
 Events==0.2.1
 Flask==0.10.1
@@ -19,7 +19,8 @@ basicauth==0.3
 bitly-api==0.3
 boto==2.27.0
 coverage==3.7.1
-fake-factory==0.4.0
+# fake-factory==0.4.0
+git+https://github.com/kcaylor/faker.git
 flake8==2.1.0
 flask-mongoengine==0.7.0
 itsdangerous==0.24

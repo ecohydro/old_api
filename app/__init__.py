@@ -3,20 +3,17 @@ from eve import Eve
 from flask import jsonify
 from .posts import post_process_message, post_pod_create_qr
 from .HMACAuth import HMACAuth
-from .utils import InvalidMessageException
 from flask.ext.mailgun import Mailgun
 from flask.ext.pymongo import PyMongo
 from flask.ext.bootstrap import Bootstrap
-from flask.ext.login import LoginManager
-from flask.ext.mongoengine import MongoEngine
 from eve_mongoengine import EveMongoengine
+from shared.models import db, login_manager
+from shared.utils import InvalidMessageException
 
 mail = Mailgun()
 pymongo = PyMongo()
-db = MongoEngine()
 eve_mongo = EveMongoengine()
 bootstrap = Bootstrap()
-login_manager = LoginManager()
 
 # Create an rq queue from rq and worker.py:
 from rq import Queue
@@ -51,7 +48,7 @@ def create_app(config_name):
     # Initialize EveMongoEngine (for setting up resources)
     eve_mongo.init_app(app)
 
-    from models.user import User
+    from shared.models.user import User
     eve_mongo.add_model(
         User,
         url='user',
@@ -59,7 +56,7 @@ def create_app(config_name):
         item_methods=[]
     )
 
-    from models.data import Data
+    from shared.models.data import Data
     eve_mongo.add_model(
         Data,
         url='data',
@@ -75,7 +72,7 @@ def create_app(config_name):
         }
     )
 
-    from models.sensor import Sensor
+    from shared.models.sensor import Sensor
     eve_mongo.add_model(
         Sensor,
         url='sensors',
@@ -95,7 +92,7 @@ def create_app(config_name):
         }
     )
 
-    from models.pod import Pod
+    from shared.models.pod import Pod
     eve_mongo.add_model(
         Pod,
         url='pods',
@@ -114,7 +111,7 @@ def create_app(config_name):
         }
     )
 
-    from models.notebook import Notebook
+    from shared.models.notebook import Notebook
     eve_mongo.add_model(
         Notebook,
         url='notebooks',
@@ -129,7 +126,7 @@ def create_app(config_name):
         }
     )
 
-    from models.message import Message, TwilioMessage, PulsePiMessage
+    from shared.models.message import Message, TwilioMessage, PulsePiMessage
     eve_mongo.add_model(
         Message,
         url='messages',
