@@ -2,7 +2,6 @@ import json
 from eve import Eve
 from flask import jsonify
 from .posts import post_process_message, post_pod_create_qr
-from .HMACAuth import HMACAuth
 from flask.ext.mailgun import Mailgun
 from flask.ext.pymongo import PyMongo
 from flask.ext.bootstrap import Bootstrap
