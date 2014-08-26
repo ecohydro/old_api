@@ -125,7 +125,9 @@ def create_app(config_name):
         }
     )
 
-    from shared.models.message import Message, TwilioMessage, PulsePiMessage
+    from shared.models.message import Message
+    from shared.models.message import TwilioMessage
+    from shared.models.message import PulsePiMessage, SMSSyncMessage
     eve_mongo.add_model(
         Message,
         url='messages',
@@ -144,6 +146,13 @@ def create_app(config_name):
     eve_mongo.add_model(
         PulsePiMessage,
         url='messages/pulsepi',
+        resource_methods=['GET', 'POST'],
+        item_methods=['GET']
+    )
+
+    eve_mongo.add_model(
+        SMSSyncMessage,
+        url='messages/smssync',
         resource_methods=['GET', 'POST'],
         item_methods=['GET']
     )
