@@ -210,6 +210,8 @@ def create_app(config_name):
                     message = TwilioMessage.objects(id=objId).first()
                 elif res is 'pulsepimessage':
                     message = PulsePiMessage.objects(id=objId).first()
+                elif res is 'smssyncmessage':
+                    message = SMSSyncMessage.objects(id=objId).first()
                 else:
                     message = Message.objects(id=objId).first()
                 # Assign the message frame id:
