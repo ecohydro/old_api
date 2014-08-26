@@ -200,7 +200,8 @@ def create_app(config_name):
         # Check to make sure we're not dealing with
         # form data from twilio or nexmo:
         # If it's JSON,  then we're ready to parse this message
-        if res in ['message', 'twiliomessage', 'pulsepimessage'] \
+        if res in ['message', 'smssyncmessage',
+                   'twiliomessage', 'pulsepimessage'] \
                 and not r.status_code == 401:
             resp = json.loads(r.get_data())
             if resp[app.config['STATUS']] != app.config['STATUS_ERR']:
