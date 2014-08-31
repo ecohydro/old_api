@@ -43,6 +43,7 @@ class Config:
     JSON = 'application/json'
     LOCATION = {'lat': 40.3501479, 'lng': -74.6516628, 'accuracy': 100}
     ELEVATION = {'elevation': 30, 'resolution': 1}
+    XLSX_PATH = 'app/static/xlsx/'
 
     @staticmethod
     def init_app(app):
