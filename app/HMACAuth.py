@@ -28,28 +28,34 @@ class HMACAuth(HMACAuth):
         :param uri: full URI that was requested on the server
 
         """
-        print "Auth header: %s" % request.headers.get('Authorization')
-        try:
-            api_key, password = decode(request.headers.get('Authorization'))
-        except AttributeError:
-            print "Uh-oh"
+        api_key = None
+        if request.headers.get('Authorization'):
+            try:
+                api_key, password = decode(
+                    request.headers.get('Authorization')
+                )
+            except AttributeError:
+                return False
+        elif request.args.get('api_key'):
+            api_key = request.args.get('api_key')
+        if api_key:
+            print str(api_key)
+            user = current_app.data.models['user'].objects(
+                api_key=api_key
+            ).first()
+        else:
             return False
-        user = current_app.data.models['user'].objects(
-            api_key=api_key
-        ).first()
-        print "%s found with key %s!" % (user.username, api_key)
-        resource_config = current_app.config['DOMAIN'][resource]
-        if len(resource_config['allowed_roles']) > 0:
-            if user.role in resource_config['allowed_roles']:
-                return user
-            else:
-                return None
-        # All other resources are available to users.
-        # If we don't find a user, the key is invalid
         if user:
-            pass
-            # self.set_request_auth_value(user.id)
-        return user
+            print "%s found with key %s!" % (user.username, api_key)
+            resource_config = current_app.config['DOMAIN'][resource]
+            if len(resource_config['allowed_roles']) > 0:
+                if user.role in resource_config['allowed_roles']:
+                    return user
+                else:
+                    return False
+            return user
+        else:
+            return False
 
     def validate(self, uri, data, signature):
         """Validate a request to the API

@@ -212,6 +212,8 @@ def create_app(config_name):
         # and messages
         if request.headers.get('Authorization'):
             api_key, password = decode(request.headers.get('Authorization'))
+        elif request.args.get('api_key'):
+            api_key = request.args.get('api_key')
         user = app.data.models['user'].objects(
             api_key=api_key
         ).first()
