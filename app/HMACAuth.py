@@ -28,9 +28,11 @@ class HMACAuth(HMACAuth):
         :param uri: full URI that was requested on the server
 
         """
+        print "Auth header: %s" % request.headers.get('Authorization')
         try:
             api_key, password = decode(request.headers.get('Authorization'))
         except AttributeError:
+            print "Uh-oh"
             return False
         user = current_app.data.models['user'].objects(
             api_key=api_key
