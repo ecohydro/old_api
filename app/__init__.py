@@ -215,9 +215,11 @@ def create_app(config_name):
         user = app.data.models['user'].objects(
             api_key=api_key
         ).first()
-        # No need to alter anything for users and messages:
+        # No need to alter anything with admin-only access:
+        if len(app.config['DOMAIN'][resource]['allowed_roles']) > 0:
+            return
         # If querying pods, filter to owner only:
-        if resource in ['pod']:
+        elif resource in ['pod']:
             app.auth.set_request_auth_value(user.id)
         # For data and notebooks, filter to public or owned:
         else:
