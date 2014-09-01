@@ -61,12 +61,18 @@ def create_app(config_name):
         url='data',
         resource_methods=['GET'],
         item_methods=['GET'],
+        public_methods=[],
+        public_item_methods=[],
+        auth_field='owner',
+        shared_field='shared',
+        public_field='public',
         cache_control='max-age=10,must-revalidate',
         cache_expires=10,
         datasource={
             'projection': {
                 'nbk': 0,
                 'pod': 0,
+                'owner': 0,
             }
         }
     )
@@ -79,6 +85,8 @@ def create_app(config_name):
             'url': 'regex("[\w]+")',
             'field': 'sid'
         },
+        public_methods=[],
+        public_item_methods=[],
         resource_methods=['GET'],
         item_methods=['GET'],
         cache_control='max-age=20,must-revalidate',
@@ -99,6 +107,9 @@ def create_app(config_name):
             'url': 'regex("[\w]+")',
             'field': 'pod_id'
         },
+        public_methods=[],
+        public_item_methods=[],
+        auth_field='owner',
         cache_control='max-age=10,must-revalidate',
         cache_expires=10,
         resource_methods=['GET'],
@@ -114,6 +125,9 @@ def create_app(config_name):
     eve_mongo.add_model(
         Notebook,
         url='notebooks',
+        auth_field='owner',
+        public_methods=[],
+        public_item_methods=[],
         resource_methods=['GET'],
         item_methods=['GET', 'PATCH'],
         datasource={
@@ -131,6 +145,9 @@ def create_app(config_name):
     eve_mongo.add_model(
         Message,
         url='messages',
+        auth_field='owner',
+        public_item_methods=[],
+        public_methods=[],
         resource_methods=['GET', 'POST'],
         item_methods=['GET']
     )
@@ -139,6 +156,9 @@ def create_app(config_name):
     eve_mongo.add_model(
         TwilioMessage,
         url='messages/twilio',
+        auth_field='owner',
+        public_methods=[],
+        public_item_methods=[],
         resource_methods=['GET', 'POST'],
         item_methods=['GET']
     )
@@ -146,6 +166,9 @@ def create_app(config_name):
     eve_mongo.add_model(
         PulsePiMessage,
         url='messages/pulsepi',
+        auth_field='owner',
+        public_methods=[],
+        public_item_methods=[],
         resource_methods=['GET', 'POST'],
         item_methods=['GET']
     )
@@ -153,6 +176,9 @@ def create_app(config_name):
     eve_mongo.add_model(
         SMSSyncMessage,
         url='messages/smssync',
+        auth_field='owner',
+        public_methods=[],
+        public_item_methods=[],
         resource_methods=['GET', 'POST'],
         item_methods=['GET']
     )

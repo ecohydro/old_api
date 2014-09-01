@@ -87,7 +87,7 @@ class TestingConfig(Config):
         # self.eve_settings['MONGO_DBNAME'] = 'testing'
         # self.eve_settings['MONGO_HOST'] = 'localhost'
         # self.eve_settings['MONGO_PORT'] = 27107
-    auth = None
+    auth = HMACAuth
     ASSETS_DEBUG = True
     DEBUG = True
     API_URL = 'http://0.0.0.0:5000'

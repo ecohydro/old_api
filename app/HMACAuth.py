@@ -1,4 +1,4 @@
-from flask import request
+from flask import request, current_app
 from eve.auth import HMACAuth
 import os
 from compat import izip
@@ -18,9 +18,27 @@ class HMACAuth(HMACAuth):
         if method in ['HEAD', 'OPTIONS']:  # Let it rain.
             return True
         elif method in ['GET']:  # Stub for user-level auth methods
-            return True
+            return self.validate_api_access(uri, data, resource)
         else:  # Everything else requires API-ninja access
             return self.validate(uri, data, hmac_hash)
+
+    def validate_api_access(self, uri, data, resource):
+        """ Validate a GET request to the API
+
+        :param uri: full URI that was requested on the server
+
+        """
+        try:
+            api_key, password = decode(request.headers.get('Authorization'))
+        except AttributeError:
+            return False
+        user = current_app.data.models['user'].objects(
+            api_key=api_key
+        ).first()
+        # If we don't find a user, the key is invalid
+        if user:
+            self.set_request_auth_value(user.id)
+        return user
 
     def validate(self, uri, data, signature):
         """Validate a request to the API
