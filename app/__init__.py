@@ -1,4 +1,5 @@
 import json
+from basicauth import decode
 from eve import Eve
 from flask import jsonify
 from .posts import post_process_message, post_pod_create_qr
@@ -50,9 +51,14 @@ def create_app(config_name):
     from shared.models.user import User
     eve_mongo.add_model(
         User,
-        url='user',
-        resource_methods=[],
-        item_methods=[]
+        url='users',
+        resource_methods=['GET', 'POST'],
+        item_methods=['GET'],
+        public_methods=[],
+        public_item_methods=[],
+        allowed_roles=['admin'],
+        cache_control='max-age=10,must-revalidate',
+        cache_expires=10,
     )
 
     from shared.models.data import Data
@@ -66,8 +72,6 @@ def create_app(config_name):
         auth_field='owner',
         shared_field='shared',
         public_field='public',
-        cache_control='max-age=10,must-revalidate',
-        cache_expires=10,
         datasource={
             'projection': {
                 'nbk': 0,
@@ -149,7 +153,8 @@ def create_app(config_name):
         public_item_methods=[],
         public_methods=[],
         resource_methods=['GET', 'POST'],
-        item_methods=['GET']
+        item_methods=['GET'],
+        allowed_roles=['admin']
     )
 
     # Spoof messages at twilio and pulsepi (for now):
@@ -160,7 +165,8 @@ def create_app(config_name):
         public_methods=[],
         public_item_methods=[],
         resource_methods=['GET', 'POST'],
-        item_methods=['GET']
+        item_methods=['GET'],
+        allowed_roles=['admin']
     )
 
     eve_mongo.add_model(
@@ -170,7 +176,8 @@ def create_app(config_name):
         public_methods=[],
         public_item_methods=[],
         resource_methods=['GET', 'POST'],
-        item_methods=['GET']
+        item_methods=['GET'],
+        allowed_roles=['admin']
     )
 
     eve_mongo.add_model(
@@ -180,7 +187,8 @@ def create_app(config_name):
         public_methods=[],
         public_item_methods=[],
         resource_methods=['GET', 'POST'],
-        item_methods=['GET']
+        item_methods=['GET'],
+        allowed_roles=['admin']
     )
 
     # Add API blueprints:
@@ -196,6 +204,24 @@ def create_app(config_name):
         response = jsonify(error.to_dict())
         response.status_code = error.status_code
         return response
+
+    # ADD PUBLIC AND USER FILTER TO GET:
+    def pre_GET(resource, request, lookup):
+        # If we made it this far, then api_key will resolve.
+        # Note: auth has already filtered requests against users
+        # and messages
+        if request.headers.get('Authorization'):
+            api_key, password = decode(request.headers.get('Authorization'))
+        user = app.data.models['user'].objects(
+            api_key=api_key
+        ).first()
+        # No need to alter anything for users and messages:
+        # If querying pods, filter to owner only:
+        if resource in ['pod']:
+            app.auth.set_request_auth_value(user.id)
+        # For data and notebooks, filter to public or owned:
+        else:
+            lookup['$or'] = [{'public': True}, {'owner': user.id}]
 
     # BEFORE INSERT METHODS
     def before_insert_pods(documents):
@@ -261,5 +287,6 @@ def create_app(config_name):
     app.on_insert_pods += before_insert_pods
     app.on_post_POST_pods += after_POST_pods_callback
     app.on_post_POST += after_POST_callback
+    app.on_pre_GET += pre_GET
 
     return app

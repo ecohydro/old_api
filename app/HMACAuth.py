@@ -35,9 +35,17 @@ class HMACAuth(HMACAuth):
         user = current_app.data.models['user'].objects(
             api_key=api_key
         ).first()
+        resource_config = current_app.config['DOMAIN'][resource]
+        if len(resource_config['allowed_roles']) > 0:
+            if user.role in resource_config['allowed_roles']:
+                return user
+            else:
+                return None
+        # All other resources are available to users.
         # If we don't find a user, the key is invalid
         if user:
-            self.set_request_auth_value(user.id)
+            pass
+            # self.set_request_auth_value(user.id)
         return user
 
     def validate(self, uri, data, signature):
