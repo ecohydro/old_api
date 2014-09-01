@@ -35,6 +35,7 @@ class HMACAuth(HMACAuth):
         user = current_app.data.models['user'].objects(
             api_key=api_key
         ).first()
+        print "%s found with key %s!" % (user.username, api_key)
         resource_config = current_app.config['DOMAIN'][resource]
         if len(resource_config['allowed_roles']) > 0:
             if user.role in resource_config['allowed_roles']:
