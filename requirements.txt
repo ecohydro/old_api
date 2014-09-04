@@ -43,5 +43,6 @@ rq==0.3.11
 simplejson==3.5.2
 six==1.4.1
 times==0.6.2
+twilio==3.6.7
 waitress==0.8.8
 wsgiref==0.1.2

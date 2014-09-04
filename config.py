@@ -38,12 +38,15 @@ class Config:
     PULSEPOD_ADMIN = os.environ.get('PULSEPOD_ADMIN')
     REDIS_URL = os.getenv('REDISTOGO_URL', 'redis://localhost:6379')
     APP_URL = os.getenv('http://app.pulsepod.io')
+    TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
+    TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
     # Server config settings:
     FORM = 'application/x-www-form-urlencoded; charset=UTF-8'
     JSON = 'application/json'
     LOCATION = {'lat': 40.3501479, 'lng': -74.6516628, 'accuracy': 100}
     ELEVATION = {'elevation': 30, 'resolution': 1}
     XLSX_PATH = 'app/static/xlsx/'
+    TWILIO_NUMBER = '+13378573234'
 
     @staticmethod
     def init_app(app):
