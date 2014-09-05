@@ -69,7 +69,7 @@ def create_app(config_name):
         item_methods=['GET'],
         public_methods=[],
         public_item_methods=[],
-        auth_field='owner',
+        # auth_field='owner',
         shared_field='shared',
         public_field='public',
         datasource={
@@ -113,7 +113,7 @@ def create_app(config_name):
         },
         public_methods=[],
         public_item_methods=[],
-        auth_field='owner',
+        # auth_field='owner',
         cache_control='max-age=10,must-revalidate',
         cache_expires=10,
         resource_methods=['GET'],
@@ -129,7 +129,7 @@ def create_app(config_name):
     eve_mongo.add_model(
         Notebook,
         url='notebooks',
-        auth_field='owner',
+        # auth_field='owner',
         public_methods=[],
         public_item_methods=[],
         resource_methods=['GET'],
@@ -149,7 +149,7 @@ def create_app(config_name):
     eve_mongo.add_model(
         Message,
         url='messages',
-        auth_field='owner',
+        # auth_field='owner',
         public_item_methods=[],
         public_methods=[],
         resource_methods=['GET', 'POST'],
@@ -161,7 +161,7 @@ def create_app(config_name):
     eve_mongo.add_model(
         TwilioMessage,
         url='messages/twilio',
-        auth_field='owner',
+        # auth_field='owner',
         public_methods=[],
         public_item_methods=[],
         resource_methods=['GET', 'POST'],
@@ -172,7 +172,7 @@ def create_app(config_name):
     eve_mongo.add_model(
         PulsePiMessage,
         url='messages/pulsepi',
-        auth_field='owner',
+        # auth_field='owner',
         public_methods=[],
         public_item_methods=[],
         resource_methods=['GET', 'POST'],
@@ -183,7 +183,7 @@ def create_app(config_name):
     eve_mongo.add_model(
         SMSSyncMessage,
         url='messages/smssync',
-        auth_field='owner',
+        # auth_field='owner',
         public_methods=[],
         public_item_methods=[],
         resource_methods=['GET', 'POST'],
@@ -215,15 +215,24 @@ def create_app(config_name):
         user = app.data.models['user'].objects(
             api_key=api_key
         ).first()
-        # No need to alter anything with admin-only access:
-        if len(app.config['DOMAIN'][resource]['allowed_roles']) > 0:
-            return
-        # If querying pods, filter to owner only:
-        elif resource in ['pod']:
-            app.auth.set_request_auth_value(user.id)
-        # For data and notebooks, filter to public or owned:
-        else:
-            lookup['$or'] = [{'public': True}, {'owner': user.id}]
+        if user:
+            # No need to alter anything with admin-only access:
+            if len(app.config['DOMAIN'][resource]['allowed_roles']) > 0:
+                return
+            # If querying pods, filter to owner only:
+            elif resource in ['pod']:
+                if user.role == 'admin':
+                    print "do nothing"
+                    return
+                else:
+                    lookup['owner'] = user.id
+                # app.auth.set_request_auth_value(user.id)
+            # For data and notebooks, filter to public or owned:
+            else:
+                if user.role == 'admin':
+                    return
+                else:
+                    lookup['$or'] = [{'public': True}, {'owner': user.id}]
 
     # BEFORE INSERT METHODS
     def before_insert_pods(documents):

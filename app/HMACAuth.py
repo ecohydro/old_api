@@ -37,7 +37,6 @@ class HMACAuth(HMACAuth):
             except AttributeError:
                 return False
         if api_key:
-            print str(api_key)
             user = current_app.data.models['user'].objects(
                 api_key=api_key
             ).first()

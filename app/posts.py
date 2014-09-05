@@ -13,7 +13,7 @@ def post_process_message(message=None):
     if message.status == 'queued':
         try:
             message.parse()
-            message.status = 'posted'
+            message.post()
             message.save()
         except:
             message.status = 'invalid'
