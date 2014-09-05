@@ -17,6 +17,8 @@ class Config:
             'PUBLIC_ITEM_METHODS': ['GET'],
             'DOMAIN': {'stub': {}}
         }
+    PAGINATION_DEFAULT = 200
+    PAGINATION_LIMIT = 400
     auth = HMACAuth
     API_NAME = 'PulsePod API, Version 1.0'
     PREFERRED_URL_SCHEME = 'https'
