@@ -1,6 +1,7 @@
 Cerberus==0.7.2
-Eve==0.4
-git+https://github.com/PulsePod/eve-mongoengine#eve-mongoenginer=eve-mongoengine
+# Eve==0.4
+git+https://github.com/nicolaiarocci/eve#eve=eve
+git+https://github.com/PulsePod/eve-mongoengine#eve-mongoengine=eve-mongoengine
 Events==0.2.1
 Flask==0.10.1
 Flask-Bootstrap==3.1.1.2
