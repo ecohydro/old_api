@@ -71,9 +71,13 @@ def reset():
 
 @manager.command
 def test():
-    """Run the tests (using nose)"""
-    import nose
-    nose.main(argv=[''])
+    if app.testing:
+        """Run the tests (using nose)"""
+        import nose
+        nose.main(argv=[''])
+    else:
+        print "Cannot run this command under %s config" % \
+            app.config['FLASK_CONFIG']
 
 
 @manager.command

@@ -56,7 +56,8 @@ def create_app(config_name):
     login_manager.init_app(app)
 
     # Initialize pymongo connection for database migrations
-    # pymongo.init_app(app, config_prefix='PYMONGO')
+    if config_name is 'testing':
+        pymongo.init_app(app, config_prefix='PYMONGO')
 
     # Initialize bootstrap (for evedocs)
     bootstrap.init_app(app)
@@ -65,13 +66,12 @@ def create_app(config_name):
     # Initialize MongoEngine (for all the mongo goodness)
     from mongoengine import connect
     host = config[config_name]().MONGODB_SETTINGS['HOST']
-    # 'mongodb://tushivjek:cych2re7shu5quim@c74.candidate.36.mongolayer.com:10074,candidate.37.mongolayer.com:10074/pulsepod_restore?replicaSet=set-53f77604c8e0670a9a000231'
     connect(
         db='pulsepod-restore',
-        host=host,
-        replicaSet='set-53f77604c8e0670a9a000231'
+        host=host
     )
-    # db.init_app(app)
+    if config_name is 'testing':
+        db.init_app(app)
 
     # Initialize EveMongoEngine (for setting up resources)
     eve_mongo.init_app(app)

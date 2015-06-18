@@ -452,8 +452,6 @@ class DeployMessageLong(DeployMessage):
         deploy_str += ('%x' % int(lac)).zfill(self.get_length('lac'))
         deploy_str += ('%x' % int(cell_id)).zfill(
             self.get_length('cell_id'))
-        deploy_str += ('%x' % int(rx_level)).zfill(
-            self.get_length('rx_level'))
         deploy_str += ''.join(
             [('%x' % int(x)).zfill(self.SID_LENGTH) for x in
                 [str(sensor.sid) for sensor in sensors]])
