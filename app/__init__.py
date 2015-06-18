@@ -43,8 +43,6 @@ def create_app(config_name):
 
     from config import config
 
-    print config[config_name]().eve_settings
-
     app = Eve(
         auth=config[config_name]().auth,
         settings=config[config_name]().eve_settings)
