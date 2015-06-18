@@ -21,6 +21,7 @@ from app.shared.models.message import Message
 from app.shared.models.message import NewMessageObject as NewMessage
 from flask.ext.script import Manager, Shell
 
+print('Using CONFIG ' + os.getenv('FLASK_CONFIG'))
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
 manager = Manager(app)
 

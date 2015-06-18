@@ -27,6 +27,7 @@ bin/
 build/
 develop-eggs/
 dist/
+docs/
 src/
 eggs/
 lib/

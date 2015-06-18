@@ -22,7 +22,6 @@ class Notebook(db.Document):
         default=[]
     )
     public = db.BooleanField(default=True)
-    confirmed = db.BooleanField(default=False)
     owner = db.ReferenceField('User')
     sids = db.ListField(db.IntField())
     location = db.PointField()
@@ -30,7 +29,7 @@ class Notebook(db.Document):
     address = db.DictField()
     last = db.DateTimeField()
     voltage = db.FloatField(default=3.8)
-    confirmed = db.BooleanField(default=False),
+    confirmed = db.BooleanField(default=False)
     created_at = db.DateTimeField(
         default=datetime.datetime.utcnow()
     )
@@ -143,7 +142,7 @@ class Notebook(db.Document):
         data_worksheet = {}
         for sensor in self.sensors:
             if data(sensor=sensor).count() > 0:
-                thisSensor = sensor.context + sensor.variable
+                this_sensor = sensor.context + sensor.variable
                 worksheet_name = sensor.context + ' ' + sensor.variable
                 if len(worksheet_name) > 30:
                     try:
@@ -151,32 +150,32 @@ class Notebook(db.Document):
                             ' ' + sensor.variable_short
                     except AttributeError:
                         worksheet_name = worksheet_name[0:30]
-                data_worksheet[thisSensor] = \
+                data_worksheet[this_sensor] = \
                     workbook.add_worksheet(worksheet_name)
                 header = '&C&"Arial Bold"%s, %s' % (self.name, worksheet_name)
-                data_worksheet[thisSensor].set_header(header)
-                data_worksheet[thisSensor].set_portrait()
-                data_worksheet[thisSensor].repeat_rows(0, 1)
+                data_worksheet[this_sensor].set_header(header)
+                data_worksheet[this_sensor].set_portrait()
+                data_worksheet[this_sensor].repeat_rows(0, 1)
                 # Add a header row to this data:
-                data_worksheet[thisSensor].set_column('A:A', 25)
-                data_worksheet[thisSensor].set_column('B:B', 12)
-                data_worksheet[thisSensor].set_column('C:C', 12)
-                data_worksheet[thisSensor].set_column('D:D', 12)
+                data_worksheet[this_sensor].set_column('A:A', 25)
+                data_worksheet[this_sensor].set_column('B:B', 12)
+                data_worksheet[this_sensor].set_column('C:C', 12)
+                data_worksheet[this_sensor].set_column('D:D', 12)
                 data_header = "%s, [%s]" % (worksheet_name, sensor.unit)
-                data_worksheet[thisSensor].write(
+                data_worksheet[this_sensor].write(
                     0, 0, data_header, header_format
                 )
-                data_worksheet[thisSensor].write(
+                data_worksheet[this_sensor].write(
                     1, 0, 'Time Stamp', header_format
                 )
-                data_worksheet[thisSensor].write(
+                data_worksheet[this_sensor].write(
                     1, 1, 'Latitude', header_format
                 )
-                data_worksheet[thisSensor].write(
+                data_worksheet[this_sensor].write(
                     1, 2, 'Longitude', header_format
                 )
                 value_header = 'Value (%s)' % sensor.unit
-                data_worksheet[thisSensor].write(
+                data_worksheet[this_sensor].write(
                     1, 3, value_header, header_format
                 )
                 row = 2
@@ -184,36 +183,36 @@ class Notebook(db.Document):
                 # Write the data for this variable:
                 for time, variable, value in \
                         [item.display() for item in data(sensor=sensor)]:
-                    data_worksheet[thisSensor].write(
+                    data_worksheet[this_sensor].write(
                         row, col, time, date_format
                     )
-                    data_worksheet[thisSensor].write(
+                    data_worksheet[this_sensor].write(
                         row, col + 1, self.lat(), location_format
                     )
-                    data_worksheet[thisSensor].write(
+                    data_worksheet[this_sensor].write(
                         row, col + 2, self.lng(), location_format
                     )
                     if type(value) is int or type(value) is float:
-                        data_worksheet[thisSensor].write(
+                        data_worksheet[this_sensor].write(
                             row, col + 3, value, value_format
                         )
                     row += 1
-                data_worksheet[thisSensor].write(
+                data_worksheet[this_sensor].write(
                     row, 2, 'Average:', average_format
                 )
-                data_worksheet[thisSensor].write(
+                data_worksheet[this_sensor].write(
                     row, 3, "=AVERAGE(D1:D%d)" % int(row), value_format
                 )
-                data_worksheet[thisSensor].write(
+                data_worksheet[this_sensor].write(
                     row + 1, 2, 'Maximum:', average_format
                 )
-                data_worksheet[thisSensor].write(
+                data_worksheet[this_sensor].write(
                     row + 1, 3, "=MAX(D1:D%d)" % int(row), value_format
                 )
-                data_worksheet[thisSensor].write(
+                data_worksheet[this_sensor].write(
                     row + 2, 2, 'Minimum:', average_format
                 )
-                data_worksheet[thisSensor].write(
+                data_worksheet[this_sensor].write(
                     row + 2, 3, "=MIN(D1:D%d)" % int(row), value_format
                 )
 
@@ -233,11 +232,11 @@ class Notebook(db.Document):
         fake = Faker()
         # fake.seed(3123)
         fake_notebooks = []
-        nPods = Pod.objects().count()
+        n_pods = Pod.objects().count()
         for i in range(count):
             try:
-                if nPods > 0:
-                    pod = Pod.objects()[randint(0, nPods - 1)]
+                if n_pods > 0:
+                    pod = Pod.objects()[randint(0, n_pods - 1)]
                 else:
                     pod = Pod.generate_fake(1)[0]
             except:

@@ -114,12 +114,12 @@ class Message(db.Document):
         fake = Faker()
         # fake.seed(3123)
         fake_messages = []
-        nNotebooks = Notebook.objects().count()
+        n_notebooks = Notebook.objects().count()
         for i in range(count):
             try:
-                if nNotebooks > 0:
+                if n_notebooks > 0:
                     notebook = Notebook.objects()[randint(
-                        0, nNotebooks - 1)]
+                        0, n_notebooks - 1)]
                 else:
                     notebook = Notebook.generate_fake(1)[0]
             except:
@@ -128,13 +128,13 @@ class Message(db.Document):
                 frame = choice(Message.FRAMES.keys())
             else:
                 frame = frame_id
-            Obj = NewMessageObject.create(Message.FRAMES[frame])
-            message_str = Obj.create_fake_message(frame, notebook)
+            obj = NewMessageObject.create(Message.FRAMES[frame])
+            message_str = obj.create_fake_message(frame, notebook)
             message = Message(
                 message_id=str(fake.random_int(min=100000, max=100000000)),
                 number=notebook.pod.number,
                 source=choice(Message.SOURCES),
-                message=message_str,
+                message_content=message_str,
                 pod=notebook.pod,
                 notebook=notebook,
                 owner=notebook.owner
