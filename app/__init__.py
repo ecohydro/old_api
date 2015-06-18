@@ -23,9 +23,28 @@ from worker import conn
 post_q = Queue(connection=conn)  # This is the queue for parse/post jobs
 
 
+def make_db_connection(config=None):
+    if config:
+        url = ''.join([
+            'mongodb://',
+            config['MONGODB_SETTINGS']['USERNAME'], ':',
+            config['MONGODB_SETTINGS']['PASSWORD'], '@',
+            config['MONGODB_SETTINGS']['HOST'], ':',
+            str(config['MONGODB_SETTINGS']['PORT']), '/',
+            config['MONGODB_SETTINGS']['DB']
+        ])
+    else:
+        pass
+
+    return url
+
+
 def create_app(config_name):
 
     from config import config
+
+    print config[config_name]().eve_settings
+
     app = Eve(
         auth=config[config_name]().auth,
         settings=config[config_name]().eve_settings)
@@ -45,7 +64,8 @@ def create_app(config_name):
     # host = 'mongodb://' + app.config[]
     # Initialize MongoEngine (for all the mongo goodness)
     from mongoengine import connect
-    host = 'mongodb://tushivjek:cych2re7shu5quim@c74.candidate.36.mongolayer.com:10074,candidate.37.mongolayer.com:10074/pulsepod_restore?replicaSet=set-53f77604c8e0670a9a000231'
+    host = config[config_name]().MONGODB_SETTINGS['HOST']
+    # 'mongodb://tushivjek:cych2re7shu5quim@c74.candidate.36.mongolayer.com:10074,candidate.37.mongolayer.com:10074/pulsepod_restore?replicaSet=set-53f77604c8e0670a9a000231'
     connect(
         db='pulsepod-restore',
         host=host,

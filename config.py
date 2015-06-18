@@ -173,16 +173,9 @@ class TestingConfig(Config):
 class ProductionConfig(Config):
     def __init__(self):
         Config.__init__(self)
-        self.eve_settings['MONGO_DBNAME'] = os.environ.get('MONGO_DBNAME')
-        self.eve_settings['MONGO_HOST'] = os.environ.get('MONGO_HOST')
-        self.eve_settings['MONGO_PASSWORD'] = os.environ.get('MONGO_PASSWORD')
-        self.eve_settings['MONGO_PORT'] = int(os.environ.get('MONGO_PORT'))
-        self.eve_settings['MONGO_USERNAME'] = os.environ.get('MONGO_USERNAME')
-        self.eve_settings['MONGO_REPLICASET'] = os.environ.get(
-            'MONGO_REPLICASET')
         self.eve_settings['MONGO_URI'] = make_mongo_uri(
             host=os.environ.get('MONGO_HOST'),
-            port=int(os.environ.get('MONGO_PORT')),
+            port=None,  # port is defined in MONGO_HOST for replica sets
             database=os.environ.get('MONGO_DBNAME'),
             username=os.environ.get('MONGO_USERNAME'),
             password=os.environ.get('MONGO_PASSWORD'),
@@ -197,31 +190,28 @@ class ProductionConfig(Config):
     MONGO_DBNAME = os.environ.get('MONGO_DBNAME')
     MONGO_HOST = os.environ.get('MONGO_HOST')
     MONGO_PASSWORD = os.environ.get('MONGO_PASSWORD')
-    MONGO_PORT = int(os.environ.get('MONGO_PORT'))
     MONGO_USERNAME = os.environ.get('MONGO_USERNAME')
     MONGO_REPLICASET = os.environ.get('MONGO_REPLICASET')
-    # PYMONGO_DBNAME = os.environ.get('MONGO_DBNAME')
-    # PYMONGO_HOST = os.environ.get('MONGO_HOST')
-    PYMONGO_HOST = make_mongo_uri(
+    MONGO_URI = make_mongo_uri(
         host=os.environ.get('MONGO_HOST'),
-        port=int(os.environ.get('MONGO_PORT')),
+        port=None,  # port is defined in MONGO_HOST for replica sets
         database=os.environ.get('MONGO_DBNAME'),
         username=os.environ.get('MONGO_USERNAME'),
         password=os.environ.get('MONGO_PASSWORD'),
         replica_set=os.environ.get('MONGO_REPLICASET')
     )
-    # PYMONGO_PASSWORD = os.environ.get('MONGO_PASSWORD')
-    # PYMONGO_PORT = int(os.environ.get('MONGO_PORT'))
-    # PYMONGO_USERNAME = os.environ.get('MONGO_USERNAME')
+    PYMONGO_HOST = make_mongo_uri(
+        host=os.environ.get('MONGO_HOST'),
+        port=None,  # port is defined in MONGO_HOST for replica sets
+        database=os.environ.get('MONGO_DBNAME'),
+        username=os.environ.get('MONGO_USERNAME'),
+        password=os.environ.get('MONGO_PASSWORD'),
+        replica_set=os.environ.get('MONGO_REPLICASET')
+    )
     MONGODB_SETTINGS = {
-        # "DB": os.environ.get('MONGO_DBNAME'),
-        # "USERNAME": os.environ.get('MONGO_USERNAME'),
-        # "PASSWORD": os.environ.get('MONGO_PASSWORD'),
-        # "HOST": os.environ.get('MONGO_HOST'),
-        # "PORT": int(os.environ.get('MONGO_PORT'))
         "HOST": make_mongo_uri(
             host=os.environ.get('MONGO_HOST'),
-            port=int(os.environ.get('MONGO_PORT')),
+            port=None,  # port is defined in MONGO_HOST for replica sets
             database=os.environ.get('MONGO_DBNAME'),
             username=os.environ.get('MONGO_USERNAME'),
             password=os.environ.get('MONGO_PASSWORD'),
