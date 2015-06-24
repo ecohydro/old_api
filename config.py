@@ -43,34 +43,42 @@ class Config:
     auth = HMACAuth
     API_NAME = 'PulsePod API, Version 1.0'
     PREFERRED_URL_SCHEME = 'https'
+    # APP SECRET KEYS:
+    SECRET_KEY = os.environ.get('APP_SECRET')
+    GATEWAY_SECRET = os.environ.get('GATEWAY_SECRET')
     # Set Tokens and Auth:
     HIREFIRE_TOKEN = os.environ.get('HIREFIRE_TOKEN')
     API_AUTH_TOKEN = os.environ.get('API_AUTH_TOKEN')
     GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY')
+    # BITLY CONFIG:
     BITLY_API_TOKEN = os.environ.get('BITLY_API_TOKEN')
     BITLY_API_KEY = os.environ.get('BITLY_API_KEY')
     BITLY_USERNAME = os.environ.get('BITLY_USERNAME')
+    # AWS CONFIG:
     AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
     AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
     AWS_BUCKET = os.environ.get('AWS_BUCKET')
-    SECRET_KEY = os.environ.get('APP_SECRET')
+    # MAILGUN INFORMATION
     MAILGUN_DOMAIN = os.environ.get('MAILGUN_DOMAIN')
     MAILGUN_API_KEY = os.environ.get('MAILGUN_API_KEY')
+    # MAIL INFORMATION
     PULSEPOD_MAIL_SENDER = 'PulsePod Admin <postmaster@pulsepod.io>'
     PULSEPOD_MAIL_SUBJECT_PREFIX = '[PulsePod] '
     PULSEPOD_ADMIN = os.environ.get('PULSEPOD_ADMIN')
     REDIS_URL = os.getenv('REDISTOGO_URL', 'redis://localhost:6379')
-    APP_URL = os.getenv('http://app.pulsepod.io')
+    # TWILIO CONFIG
     TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
     TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
+    TWILIO_URL = 'https://api.twilio.com/2010-04-01/Accounts/'
     TWILIO_NUMBER = os.getenv('TWILIO_NUMBER')
+    # EARTH ENGINE CONFIG
     EE_CLIENT_ID = os.getenv('EE_CLIENT_ID')
-    STRIPE_API_KEY = os.getenv('STRIPE_DEV_API_KEY')
-    # TODO: Move this to ENV? Or get someother way?
     EE_CREDENTIALS = {
         "refresh_token":
         "1/Xn-HgT-pQbxPowGgsL164v3YXzs-id9EpUoHYgOVj3wMEudVrK5jSpoR30zcRFq6"
     }
+    # STRIPE CONFIG:
+    STRIPE_API_KEY = os.getenv('STRIPE_DEV_API_KEY')
     # Server config settings:
     FORM = 'application/x-www-form-urlencoded; charset=UTF-8'
     JSON = 'application/json'
@@ -105,7 +113,11 @@ class DevelopmentConfig(Config):
         )
     ASSETS_DEBUG = True
     DEBUG = True
-    API_URL = 'http://0.0.0.0:5000'
+    SERVER_NAME = '0.0.0.0:5000'
+    API_URL = 'http://' + SERVER_NAME
+    # TWILIO_POST_URL = API_URL + '/gateway/twilio'
+    # This is wrong, but we've set it to get twilio tests to work:
+    TWILIO_POST_URL = 'https://gateway.pulsepod.io/twilio'
     # MONGO_DBNAME = os.environ.get('MONGO_DEV_DBNAME')
     # MONGO_HOST = os.environ.get('MONGO_DEV_HOST')
     # MONGO_PASSWORD = os.environ.get('MONGO_DEV_PASSWORD')
@@ -149,8 +161,11 @@ class TestingConfig(Config):
     auth = HMACAuth
     ASSETS_DEBUG = True
     DEBUG = True
-    API_URL = 'http://0.0.0.0:5000'
     SERVER_NAME = '0.0.0.0:5000'
+    API_URL = 'http://' + SERVER_NAME
+    # TWILIO_POST_URL = API_URL + '/gateway/twilio'
+    # This is wrong, but we've set it to get twilio tests to work:
+    TWILIO_POST_URL = 'https://gateway.pulsepod.io/twilio'
     TESTING = True
     MONGO_DBNAME = 'testing'
     MONGO_HOST = 'localhost'
@@ -162,6 +177,7 @@ class TestingConfig(Config):
     PYMONGO_PASSWORD = ''
     PYMONGO_PORT = 27017
     PYMONGO_USERNAME = ''
+    CLOUDMQTT_URL = 'mqtt://localhost:1883'
     # PYMONGO_HOST = make_mongo_uri()
     MONGODB_SETTINGS = {
         "DB": 'testing',
@@ -181,9 +197,12 @@ class ProductionConfig(Config):
             password=os.environ.get('MONGO_PASSWORD'),
             replica_set=os.environ.get('MONGO_REPLICASET')
         )
-    API_URL = 'https://api.pulsepod.io'
     SERVER_NAME = 'api.pulsepod.io'
+    API_URL = 'https://' + SERVER_NAME
+    TWILIO_POST_URL = API_URL + '/gateway/twilio'
     REDISTOGO_URL = os.environ.get('REDISTOGO_URL')
+    SLACK_API_TOKEN = os.environ.get('SLACK_API_TOKEN')
+    CLOUDMQTT_URL = os.environ.get('CLOUDMQTT_URL')
     NEW_RELIC_APP_NAME = 'pulse-api'
     NEW_RELIC_LOG = 'stdout'
     NEW_RELIC_LICENSE_KEY = os.environ.get('NEW_RELIC_LICENSE_KEY')

@@ -56,10 +56,11 @@ class Sensor(db.Document):
         from faker import Faker
         fake = Faker()
         fake_sensors = []
-        for i in range(count):
+        i = 0
+        while i < count:
             sensor = Sensor(
                 name=fake.domain_word(),
-                sid=randint(1, 256),
+                sid=randint(1, 1024),
                 context=fake.word(),
                 variable=fake.word(),
                 info=fake.catch_phrase(),
@@ -68,6 +69,7 @@ class Sensor(db.Document):
             try:
                 sensor.save()
                 fake_sensors.append(sensor)
+                i += 1
             except:
-                print "Sensor save failed"
+                pass
         return fake_sensors

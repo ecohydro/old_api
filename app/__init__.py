@@ -1,16 +1,17 @@
 import json
+import os
 from basicauth import decode
 from eve import Eve
 from flask import jsonify
 from .posts import post_process_message, post_pod_create_qr
-from flask.ext.mailgun import Mailgun
 from flask.ext.pymongo import PyMongo
 from flask.ext.bootstrap import Bootstrap
 from eve_mongoengine import EveMongoengine
 from shared.models import db, login_manager
 from shared.utils import InvalidMessageException
+from slacker import Slacker
 
-mail = Mailgun()
+slack = Slacker(os.getenv('SLACK_API_TOKEN'))
 pymongo = PyMongo()
 eve_mongo = EveMongoengine()
 bootstrap = Bootstrap()
@@ -21,22 +22,8 @@ from worker import conn
 
 # Set up the worker queues:
 post_q = Queue(connection=conn)  # This is the queue for parse/post jobs
-
-
-def make_db_connection(config=None):
-    if config:
-        url = ''.join([
-            'mongodb://',
-            config['MONGODB_SETTINGS']['USERNAME'], ':',
-            config['MONGODB_SETTINGS']['PASSWORD'], '@',
-            config['MONGODB_SETTINGS']['HOST'], ':',
-            str(config['MONGODB_SETTINGS']['PORT']), '/',
-            config['MONGODB_SETTINGS']['DB']
-        ])
-    else:
-        pass
-
-    return url
+gateway_q = Queue(connection=conn)  # This is the queue for gateway jobs
+mqtt_q = Queue(connection=conn)  # This is the queue for MQTT pubs
 
 
 def create_app(config_name):
@@ -60,7 +47,6 @@ def create_app(config_name):
     # Initialize bootstrap (for evedocs)
     bootstrap.init_app(app)
 
-    # host = 'mongodb://' + app.config[]
     # Initialize MongoEngine (for all the mongo goodness)
     from mongoengine import connect
     host = config[config_name]().MONGODB_SETTINGS['HOST']
@@ -224,6 +210,9 @@ def create_app(config_name):
     from hirefire import hirefire as hirefire_module
     app.register_blueprint(hirefire_module)
 
+    from gateway import gateway
+    app.register_blueprint(gateway, url_prefix='/gateway')
+
     # Error handling with json output:
     @app.errorhandler(InvalidMessageException)
     def handle_invalid_message(error):
@@ -316,6 +305,7 @@ def create_app(config_name):
                 message.message_type = message.get_type()
                 message.save()
                 post_q.enqueue(post_process_message, message=message)
+                slack.chat.post_message('#backend', message.slack())
             else:
                 raise InvalidMessageException(
                     'MessageLog: Message not posted to API',

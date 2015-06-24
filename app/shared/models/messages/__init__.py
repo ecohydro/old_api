@@ -55,6 +55,9 @@ class Message(object):
             self.pod = self.message.pod
             self.notebook = self.message.notebook
 
+    def mqtt(self, content):
+        raise NotImplementedError
+
     def create_fake_message(*args, **kwargs):
         raise NotImplementedError
 

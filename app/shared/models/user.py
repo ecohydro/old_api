@@ -175,19 +175,21 @@ class User(UserMixin, db.Document):
         fake = Faker()
         # fake.seed(3123)
         fake_users = []
-        for i in range(count):
+        i = 0
+        while i < count:
             user = User(
                 confirmed=True,
                 username=fake.user_name(),
                 email=fake.safe_email(),
                 api_key=make_api_key()
             )
-            #try:
-            user.password = fake.md5()
-            user.save()
-            fake_users.append(user)
-            #except:
-            #    print "Unable to save user"
+            try:
+                user.password = fake.md5()
+                user.save()
+                fake_users.append(user)
+                i += 1
+            except:
+                pass
         return fake_users
 
 
