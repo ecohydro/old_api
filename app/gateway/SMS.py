@@ -201,7 +201,10 @@ class SMSSync(SMS):
             time.gmtime())
         self.data['status'] = 'queued'
         self.data['source'] = 'smssync'
-        self.data['number'] = format_number_E164(self.data['from'])
+        try:
+            self.data['number'] = format_number_E164(self.data['from'])
+        except:
+            self.data['number'] = self.data['from']
         self.data['message_id'] = self.data['message_id']
 
     def post(self):
