@@ -3,6 +3,7 @@ import qrcode
 import qrcode.image.svg
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key
+from flask import current_app as app
 
 
 def post_process_message(message=None):

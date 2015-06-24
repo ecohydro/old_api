@@ -154,6 +154,15 @@ class Message(db.Document):
     def __unicode__(self):
         return self.id
 
+    def slack_chat(self):
+        return "Processed a {type} message from {pod} writing to '{nbk}'.".format(
+            type=self.get_type(),
+            pod=self.notebook.pod.name,
+            nbk=self.notebook.name)
+
+    def slack_slash(self):
+        raise NotImplementedError
+
     def get_frame_id(self):
         try:
             return int(self.message_content[0:2], 16)

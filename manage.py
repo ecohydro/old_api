@@ -8,7 +8,7 @@ if os.path.exists('.env'):
         if len(var) == 2:
             os.environ[var[0]] = var[1]
 
-from app import create_app, eve_mongo, pymongo
+from app import create_app, eve_mongo, pymongo, slack
 from app.shared.models import db
 
 # Import Models for MongoEngine
@@ -25,6 +25,8 @@ print('Using CONFIG ' + os.getenv('FLASK_CONFIG'))
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
 manager = Manager(app)
 
+from mqtt import mqttc
+
 
 def make_shell_context():
     return dict(
@@ -39,7 +41,9 @@ def make_shell_context():
         Message=Message,
         client=app.test_client(),
         eve_mongo=eve_mongo,
-        NewMessage=NewMessage
+        NewMessage=NewMessage,
+        slack=slack,
+        mqttc=mqttc
     )
 
 manager.add_command("shell", Shell(make_context=make_shell_context))
@@ -76,8 +80,7 @@ def test():
         import nose
         nose.main(argv=[''])
     else:
-        print "Cannot run this command under %s config" % \
-            app.config['FLASK_CONFIG']
+        print "ERROR: Must use testing config"
 
 
 @manager.command
