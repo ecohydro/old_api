@@ -13,6 +13,7 @@ class HMACAuth(HMACAuth):
             self.token = token
         else:
             self.token = os.getenv('API_AUTH_TOKEN')
+        self.compute_signature = compute_signature
 
     def check_auth(self, userid, uri, data, hmac_hash, resource, method):
         if method in ['HEAD', 'OPTIONS']:  # Let it rain.
