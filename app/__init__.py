@@ -289,6 +289,7 @@ def create_app(config_name):
     # Do this one last...
     def after_POST_callback(res, request, r):
         print r.status_code
+        print json.dumps(r.get_data())
         # Check to make sure we're not dealing with
         # form data from twilio or nexmo:
         # If it's JSON,  then we're ready to parse this message

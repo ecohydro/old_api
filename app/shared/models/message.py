@@ -84,7 +84,7 @@ class Message(db.DynamicDocument):
             'source', 'status', 'message_type', 'pod', 'notebook'],
         'index_background': True,
         'ordering': ['-time_stamp'],
-        'collection': 'messages',
+        'collection': 'new_messages',
         'allow_inheritance': True
     }
 
