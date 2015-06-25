@@ -25,7 +25,7 @@ class NewMessageObject(object):
         return UnknownMessage()
 
 
-class Message(db.Document):
+class Message(db.DynamicDocument):
 
     STATUS = ['queued', 'parsed', 'posted', 'unknown', 'invalid']
     SOURCES = ['smssync', 'twilio', 'nexmo', 'pulsepi', 'unknown']
