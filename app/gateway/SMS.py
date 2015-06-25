@@ -1,11 +1,10 @@
 import time
 import json
 import requests
-from app.HMACAuth import HMACAuth
+from app.shared.utils import compute_signature
 from requests.auth import HTTPBasicAuth
 import phonenumbers
 from flask import current_app as app
-from app.shared.utils import compute_signature
 
 
 def SMSjob(SMS):
@@ -68,22 +67,11 @@ class SMS(object):
                     data=data)
             else:
                 assert 0, "Twilio requires message Id"
-        if resource == "nexmo":
-            if message_id:
-                return Nexmo(
-                    message_id=message_id,
-                    data=data)
-            else:
-                assert 0, "Nexmo requires message Id"
         if resource == "smssync":
             return SMSSync(
                 data=data,
                 message_id=message_id
             )
-        if resource == "pulsepi":
-            return PulsePi(
-                message_id=message_id,
-                data=data)
         assert 0, "Bad SMS creation: " + resource
 
     def clean(self):
@@ -214,7 +202,9 @@ class SMSSync(SMS):
             headers = {'Content-Type': 'application/json'}
             auth = HTTPBasicAuth(
                 'gateway',
-                HMACAuth(app.config['API_AUTH_TOKEN']).compute_signature(
-                    url, data))
+                compute_signature(
+                    app.config['API_AUTH_TOKEN'],
+                    url,
+                    data))
         r = requests.post(url, data=data, headers=headers, auth=auth)
         return r.raise_for_status() if r.raise_for_status() else r.json()
