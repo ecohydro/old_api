@@ -39,7 +39,7 @@ class SMS(object):
         self.message_id = message_id if message_id else None
         self.data = data if data else None
         self._keep = ['status', 'source', 'number',
-                      'time_stamp', 'message', 'mid']
+                      'time_stamp', 'message_content', 'message_id']
 
     @staticmethod
     def create(resource=None, message_id=None, data=None):
@@ -134,7 +134,7 @@ class Twilio(SMS):
             resource=resource,
             data=data)
         self._keep = ['status', 'source', 'number',
-                      'time_stamp', 'message', 'message_id']
+                      'time_stamp', 'message_content', 'message_id']
 
     def get(self):
         with app.app_context():
@@ -166,7 +166,7 @@ class Twilio(SMS):
                     self.data['time_stamp'] = time.strftime(
                         "%a, %d %b %Y %H:%M:%S GMT",
                         time.gmtime())
-                    self.data['message'] = self.data['body']
+                    self.data['message_content'] = self.data['body']
                     self.data['message_id'] = self.data['sid']
             else:
                 assert 0, "No Twilio Auth provided in app.config"
@@ -180,7 +180,7 @@ class SMSSync(SMS):
             message_id=message_id,
             data=data)
         self._keep = ['status', 'source', 'number',
-                      'time_stamp', 'message', 'message_id']
+                      'time_stamp', 'message_content', 'message_id']
 
     def get(self):
 
@@ -189,6 +189,7 @@ class SMSSync(SMS):
             time.gmtime())
         self.data['status'] = 'queued'
         self.data['source'] = 'smssync'
+        self.data['message_content'] = self.data['message']
         try:
             self.data['number'] = format_number_E164(self.data['from'])
         except:

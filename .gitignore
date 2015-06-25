@@ -36,7 +36,6 @@ parts/
 sdist/
 var/
 include/
-tests/
 cover/
 share/
 scripts/
