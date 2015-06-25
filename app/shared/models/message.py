@@ -54,7 +54,7 @@ class Message(db.DynamicDocument):
         max_length=40,
         db_field='message_id',
         required=True,
-        unique=True
+        unique=False
     )
     number = db.StringField(
         max_length=20,

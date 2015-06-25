@@ -326,6 +326,7 @@ def create_app(config_name):
                 message.save()
                 post_q.enqueue(post_process_message, message=message)
             else:
+                app.logger.debug(json.dumps(resp))
                 app.logger.error('MessageLog: Message not posted to API')
                 raise InvalidMessageException(
                     'MessageLog: Message not posted to API',
