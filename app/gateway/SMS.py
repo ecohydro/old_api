@@ -127,8 +127,11 @@ class Twilio(SMS):
             message_id=message_id,
             resource=resource,
             data=data)
-        self._keep = ['status', 'source', 'number',
-                      'time_stamp', 'message_content', 'message_id']
+        # We are only keeping the fields we need. Note that field names
+        # correspond to db_field names, and not mongoengine class properties.
+        # consult the message class in the models folder to sort this out.
+        self._keep = ['status', 'source', 'number',  # not message_id
+                      'time_stamp', 'message', 'mid']  # not messge_content
 
     def get(self):
         with app.app_context():
@@ -160,8 +163,11 @@ class Twilio(SMS):
                     self.data['time_stamp'] = time.strftime(
                         "%a, %d %b %Y %H:%M:%S GMT",
                         time.gmtime())
-                    self.data['message_content'] = self.data['body']
-                    self.data['message_id'] = self.data['sid']
+                    # We are setting these fields to match the db_fields and
+                    # not the mongoengine class properties. Consult the
+                    # message class definition for more details.
+                    self.data['message'] = self.data['body']
+                    self.data['mid'] = self.data['sid']
             else:
                 assert 0, "No Twilio Auth provided in app.config"
 
@@ -173,8 +179,11 @@ class SMSSync(SMS):
             resource=resource,
             message_id=message_id,
             data=data)
+        # We are only keeping the fields we need. Note that field names
+        # correspond to db_field names, and not mongoengine class properties.
+        # consult the message class in the models folder to sort this out.
         self._keep = ['status', 'source', 'number',
-                      'time_stamp', 'message_content', 'message_id']
+                      'time_stamp', 'message', 'mid']
 
     def get(self):
 
@@ -183,12 +192,12 @@ class SMSSync(SMS):
             time.gmtime())
         self.data['status'] = 'queued'
         self.data['source'] = 'smssync'
-        self.data['message_content'] = self.data['message']
         try:
             self.data['number'] = format_number_E164(self.data['from'])
         except:
             self.data['number'] = self.data['from']
-        self.data['message_id'] = self.data['message_id']
+        # Use the db field name instead of the mongoengine field name:
+        self.data['mid'] = self.data['message_id']
 
     def post(self):
         with app.app_context():

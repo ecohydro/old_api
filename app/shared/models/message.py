@@ -38,6 +38,8 @@ class Message(db.DynamicDocument):
         9999: 'invalid'
     }
 
+    # WARNING! THE API WILL EXPECT POSTS TO INCLUDE DB_FIELDS.
+    # DO NOT SEND MONGOENGINE FIELDS. THIS IS A KNOWN ISSUE (BUG)
     message_content = db.StringField(
         max_length=170,
         default=None,
