@@ -154,7 +154,7 @@ class Message(db.Document):
     def __unicode__(self):
         return self.id
 
-    def slack_chat(self):
+    def slack(self):
         return "Processed a {type} message from {pod} writing to '{nbk}'.".format(
             type=self.get_type(),
             pod=self.notebook.pod.name,
