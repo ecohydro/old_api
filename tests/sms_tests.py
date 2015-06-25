@@ -281,4 +281,4 @@ class SMSTestsClean(TestBase):
         Then.SMS_data_message_is('02dogbarf')
         Then.SMS_data_keys_are_only(
             ['status', 'source', 'number',
-             'time_stamp', 'message_content', 'message_id'])
+             'time_stamp', 'message', 'mid'])
