@@ -88,7 +88,7 @@ def SMS_data_is(expected):
 
 @step
 def SMS_data_message_is(message):
-    assert message == world.SMS.data['message']
+    assert message == world.SMS.data['message_content']
 
 
 @step

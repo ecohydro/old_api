@@ -44,7 +44,7 @@ class Message(db.DynamicDocument):
         max_length=170,
         default=None,
         required=True,
-        db_field='message',
+        db_field='message_content',
     )
     status = db.StringField(
         choices=STATUS,
@@ -52,7 +52,7 @@ class Message(db.DynamicDocument):
     )
     message_id = db.StringField(
         max_length=40,
-        db_field='mid',
+        db_field='message_id',
         required=True,
         unique=True
     )
@@ -206,11 +206,11 @@ class Message(db.DynamicDocument):
         from app.shared.utils import compute_signature
         import json
         data = {}
-        data['message'] = self.message_content
+        data['message_content'] = self.message_content
         data['time_stamp'] = self.get_time()
         data['source'] = self.source
         data['number'] = self.number
-        data['mid'] = self.message_id
+        data['message_id'] = self.message_id
         url = current_app.config['API_URL'] + '/messages/' + self.source
         print url
         return compute_signature(
@@ -220,11 +220,11 @@ class Message(db.DynamicDocument):
 
     def get_data(self):
         data = {}
-        data['message'] = self.message_content
+        data['message_content'] = self.message_content
         data['time_stamp'] = self.get_time()
         data['source'] = self.source
         data['number'] = self.number
-        data['mid'] = self.message_id
+        data['message_id'] = self.message_id
         return data
 
     def init(self):
