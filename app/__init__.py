@@ -10,7 +10,6 @@ from eve_mongoengine import EveMongoengine
 from shared.models import db, login_manager
 from shared.utils import InvalidMessageException
 from slacker import Slacker
-import rq_dashboard
 
 slack = Slacker(os.getenv('SLACK_API_TOKEN'))
 pymongo = PyMongo()
