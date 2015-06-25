@@ -362,6 +362,8 @@ class DeployMessage(Message):
     def post(self):
         from ..pod import Pod
         from ..user import User
+        from app import mqtt_q, slack
+        slack_post = ''
         if self.status is not 'posted':
             try:
                 self.notebook.save()
@@ -375,12 +377,19 @@ class DeployMessage(Message):
                 )
                 self.message.status = 'posted'
                 self.message.save()
-                print "Added notebook %s to the database" % \
+                slack_post += "Added notebook %s to the database\n" % \
                     self.notebook.__repr__()
-                print "Incremented notebooks for %s and %s" % \
+                slack_post += "Incremented notebooks for %s and %s\n" % \
                     (self.pod.__repr__(), self.pod.owner.__repr__())
-                print "Changed current notebook on %s to %s" % \
+                slack_post += "Changed current notebook on %s to %s\n" % \
                     (self.pod.__repr__(), self.notebook.__repr__())
+                mqtt_q.enqueue(
+                    slack.chat.post_message,
+                    "#api",
+                    slack_post,
+                    username='api.pulsepod',
+                    icon_emoji=':computer:'
+                )
             except:
                 assert 0, 'MessageParse: Error saving new notebook'
             if self.notebook.owner.phone_number:

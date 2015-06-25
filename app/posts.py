@@ -7,6 +7,7 @@ from flask import current_app as app
 
 
 def post_process_message(message=None):
+    from app import mqtt_q
     print "Message Log [REDIS]: Starting Job"
     if message is None:
         assert 0, "Must provide message"
@@ -16,9 +17,23 @@ def post_process_message(message=None):
             message.parse()
             message.post()
             message.save()
+            mqtt_q.enqueue(
+                slack.chat.post_message,
+                '#api',
+                message.slack(),
+                username='api.pulsepod',
+                icon_emoji=':computer:'
+            )
         except:
             message.status = 'invalid'
             message.save()
+            mqtt_q.enqueue(
+                slack.chat.post_message,
+                '#api',
+                message.slack(invalid=True),
+                username='api.pulsepod',
+                icon_emoji=':computer:'
+            )
 
 
 def post_pod_create_qr(pod):

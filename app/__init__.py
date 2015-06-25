@@ -305,7 +305,6 @@ def create_app(config_name):
                 message.message_type = message.get_type()
                 message.save()
                 post_q.enqueue(post_process_message, message=message)
-                slack.chat.post_message('#backend', message.slack())
             else:
                 raise InvalidMessageException(
                     'MessageLog: Message not posted to API',

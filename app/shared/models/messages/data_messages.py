@@ -134,10 +134,12 @@ class DataMessage(Message):
             self.nobs_dict = nobs_dict
 
     def post(self):
+        from app import mqtt_q, slack
         from ..notebook import Notebook
         from ..sensor import Sensor
         from ..pod import Pod
         from ..user import User
+        slack_post = ''
         # Update the voltage (if we have a new value):
         voltage = self.notebook.voltage
         for data_item in self.data_list:
@@ -159,7 +161,7 @@ class DataMessage(Message):
             Sensor.objects(id=sensor.id).update_one(
                 inc__observations=nobs
             )
-            print "Added %d observations to %s" % \
+            slack_post += "Added %d observations to %s\n" % \
                 (nobs, sensor.__repr__())
         # Update notebooks, pods, and user:
         Notebook.objects(id=self.notebook.id).update_one(
@@ -181,15 +183,22 @@ class DataMessage(Message):
         self.message.save()
         [data_item.save() for data_item in self.data_list]
         for data_item in self.data_list:
-            print "Added %s from %s with %s" % \
+            slack_post += "Added %s from %s with %s\n" % \
                 (data_item.__repr__(),
                  data_item.sensor.__repr__(),
                  self.notebook.__repr__())
-        print "Incremented %s, %s, and %s with %d observations" % \
+        slack_post += "Incremented %s, %s, and %s with %d observations\n" % \
             (self.pod.__repr__(),
              self.notebook.__repr__(),
              self.notebook.owner.__repr__(),
              self.total_nobs)
+        mqtt_q.enqueue(
+            slack.chat.post_message,
+            "#api",
+            slack_post,
+            username='api.pulsepod',
+            icon_emoji=':computer:'
+        )
 
     def patch(self):
         pass

@@ -154,11 +154,22 @@ class Message(db.Document):
     def __unicode__(self):
         return self.id
 
-    def slack(self):
-        return "Processed a {type} message from {pod} writing to '{nbk}'.".format(
-            type=self.get_type(),
-            pod=self.notebook.pod.name,
-            nbk=self.notebook.name)
+    def slack(self, invalid=False):
+        if invalid is False:
+            return "Processed a {type} message from {pod} writing to '{nbk}'.\n Message Id [{id}]:{content}".format(
+                type=self.get_type(),
+                pod=self.notebook.pod.name,
+                nbk=self.notebook.name,
+                id=self.get_id(),
+                content=self.message_content
+            )
+        else:
+            return "Recieved an {type} message from {pod} writing to '{nbk}'.\n Message Id [{id}]:{content}".format(
+                type=self.get_type(),
+                pod=self.notebook.pod.name,
+                nbk=self.notebook.name,
+                id=self.get_id(),
+                content=self.message_content)
 
     def slack_slash(self):
         raise NotImplementedError
@@ -190,7 +201,7 @@ class Message(db.Document):
         return self.time_stamp.strftime("%a, %d %b %Y %H:%M:%S GMT")
 
     def compute_signature(self):
-        from app.HMACAuth import compute_signature
+        from app.shared.utils import compute_signature
         import json
         data = {}
         data['message'] = self.message_content
