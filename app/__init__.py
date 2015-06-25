@@ -10,6 +10,7 @@ from eve_mongoengine import EveMongoengine
 from shared.models import db, login_manager
 from shared.utils import InvalidMessageException
 from slacker import Slacker
+import rq_dashboard
 
 slack = Slacker(os.getenv('SLACK_API_TOKEN'))
 pymongo = PyMongo()
@@ -37,12 +38,25 @@ def create_app(config_name):
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)
 
+    # Setup logging to stderr
+    # log to stderr
+    import logging
+    from logging import StreamHandler
+    file_handler = StreamHandler()
+    app.logger.setLevel(logging.DEBUG)  # set the desired logging level here
+    app.logger.addHandler(file_handler)
+
     # Initialize the login manager (for API keys)
     login_manager.init_app(app)
 
     # Initialize pymongo connection for database migrations
     if config_name is 'testing':
+        print "setting up testing stuff"
         pymongo.init_app(app, config_prefix='PYMONGO')
+
+    # app.register_blueprint(
+    #     rq_dashboard.blueprint, url_prefix='/rq_dashboard'
+    # )
 
     # Initialize bootstrap (for evedocs)
     bootstrap.init_app(app)
@@ -237,7 +251,7 @@ def create_app(config_name):
             # If querying pods, filter to owner only:
             elif resource in ['pod']:
                 if user.role == 'admin':
-                    print "do nothing"
+                    app.logger.debug("user is admin: do nothing")
                     return
                 else:
                     lookup['owner'] = user.id
@@ -252,10 +266,10 @@ def create_app(config_name):
     # BEFORE INSERT METHODS
     def before_insert_pods(documents):
         for d in documents:
-            print 'Adding ' + d['name'] + ' to the database'
+            app.logger.debug('Adding ' + d['name'] + ' to the database')
             d['nbk_name'] = str(d['name']) + "'s Default Notebook"
             d['qr'] = 'https://s3.amazonaws.com/' + app.config['AWS_BUCKET'] \
-                      + '/' + str(d['name']) + '.svg'
+                + '/' + str(d['name']) + '.svg'
 
     # app.on_post_POST functions:
     # These functions prepare gateway-specific responses to the client
@@ -267,6 +281,7 @@ def create_app(config_name):
                 pod = Pod.objects(id=objId).first()
                 post_q.enqueue(post_pod_create_qr, pod)
             else:
+                app.logger.error('Pod not posted to API')
                 raise InvalidMessageException(
                     'Pod not posted to API',
                     status_code=400,
@@ -283,7 +298,7 @@ def create_app(config_name):
                 and not r.status_code == 401:
             resp = json.loads(r.get_data())
             if resp[app.config['STATUS']] != app.config['STATUS_ERR']:
-                print json.dumps(resp)
+                app.logger.debug(json.dumps(resp))
                 objId = str(resp[app.config['ITEM_LOOKUP_FIELD']])
                 if res is 'twiliomessage':
                     message = TwilioMessage.objects(id=objId).first()
@@ -294,18 +309,25 @@ def create_app(config_name):
                 else:
                     message = Message.objects(id=objId).first()
                 # Assign the message frame id:
-                print "MessageLog: parsing message from %s" % message.source
+                app.logger.debug(
+                    "MessageLog: parsing message from %s" % message.source
+                )
                 # db = app.extensions['pymongo']['MONGO'][1]
-                print "MessageLog: objectId: " + message.get_id()
-                print "MessageLog: assigning %s as frame id" % \
+                app.logger.debug("MessageLog: objectId: " + message.get_id())
+                app.logger.debug(
+                    "MessageLog: assigning %s as frame id" %
                     message.get_frame_id()
+                )
                 message.frame_id = message.get_frame_id()
-                print "MessageLog: assiging %s as message type" % \
+                app.logger.debug(
+                    "MessageLog: assiging %s as message type" %
                     message.get_type()
+                )
                 message.message_type = message.get_type()
                 message.save()
                 post_q.enqueue(post_process_message, message=message)
             else:
+                app.logger.error('MessageLog: Message not posted to API')
                 raise InvalidMessageException(
                     'MessageLog: Message not posted to API',
                     status_code=400, payload=resp)

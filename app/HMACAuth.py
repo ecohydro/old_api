@@ -13,7 +13,6 @@ class HMACAuth(HMACAuth):
             self.token = token
         else:
             self.token = os.getenv('API_AUTH_TOKEN')
-        self.compute_signature = compute_signature
 
     def check_auth(self, userid, uri, data, hmac_hash, resource, method):
         if method in ['HEAD', 'OPTIONS']:  # Let it rain.
@@ -44,7 +43,9 @@ class HMACAuth(HMACAuth):
         else:
             return False
         if user:
-            print "%s found with key %s!" % (user.username, api_key)
+            current_app.logger.debug(
+                "%s found with key %s!" % (user.username, api_key)
+            )
             resource_config = current_app.config['DOMAIN'][resource]
             if len(resource_config['allowed_roles']) > 0:
                 if user.role in resource_config['allowed_roles']:

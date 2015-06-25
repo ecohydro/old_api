@@ -1,11 +1,17 @@
 from flask import make_response, request
 from flask import current_app as app
 from app import gateway_q
-from .SMS import SMS, SMSjob
+from .SMS import SMS
 from app.make_error import make_error
 from twilio.util import RequestValidator as validator
 
 from . import gateway
+
+
+def SMSjob(SMS):
+    SMS.get()
+    SMS.clean()
+    SMS.post()
 
 
 @gateway.route('/smssync', methods=['POST'])

@@ -7,12 +7,6 @@ import phonenumbers
 from flask import current_app as app
 
 
-def SMSjob(SMS):
-    SMS.get()
-    SMS.clean()
-    SMS.post()
-
-
 def format_number_E164(number, country=None):
     return phonenumbers.format_number(
         phonenumbers.parse(number, country),
@@ -200,6 +194,7 @@ class SMSSync(SMS):
         with app.app_context():
             url = app.config['API_URL'] + '/messages/' + 'smssync'
             data = json.dumps(self.data)
+            print data
             headers = {'Content-Type': 'application/json'}
             auth = HTTPBasicAuth(
                 'gateway',
