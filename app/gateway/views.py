@@ -34,7 +34,8 @@ def post_smssync():
         if 'message_id' in data:
             message_id = data['message_id']
         else:
-            message_id = None
+            from random import randint
+            message_id = str([randint(0, 9) for x in range(31)])
         thisSMS = SMS.create(
             resource='smssync',
             message_id=message_id,
