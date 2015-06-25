@@ -7,7 +7,7 @@ from flask import current_app as app
 
 
 def post_process_message(message=None):
-    from app import mqtt_q
+    from app import mqtt_q, slack
     print "Message Log [REDIS]: Starting Job"
     if message is None:
         assert 0, "Must provide message"

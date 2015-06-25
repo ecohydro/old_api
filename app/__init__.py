@@ -264,11 +264,7 @@ def create_app(config_name):
 
     # BEFORE INSERT METHODS
     def before_insert_pods(documents):
-        for d in documents:
-            app.logger.debug('Adding ' + d['name'] + ' to the database')
-            d['nbk_name'] = str(d['name']) + "'s Default Notebook"
-            d['qr'] = 'https://s3.amazonaws.com/' + app.config['AWS_BUCKET'] \
-                + '/' + str(d['name']) + '.svg'
+        pass
 
     # app.on_post_POST functions:
     # These functions prepare gateway-specific responses to the client

@@ -182,7 +182,7 @@ class TestPodFixture(object):
             'imei': '0000000000000000',
             'mode': 'inactive',
             'name': 'Test-Pod-0001',
-            'nbk_name': "Test-Pod-0001's Default Notebook",
+            'current_notebook': "Test-Pod-0001's Default Notebook",
             'number': '18005551212',
             'owner': 'pulsepod',
             'pod_id': 1,
