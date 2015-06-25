@@ -203,4 +203,5 @@ class SMSSync(SMS):
                     url,
                     data))
         r = requests.post(url, data=data, headers=headers, auth=auth)
+        print r.json()
         return r.raise_for_status() if r.raise_for_status() else r.json()
