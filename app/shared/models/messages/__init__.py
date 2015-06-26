@@ -72,6 +72,9 @@ class Message(object):
     def create_fake_message(*args, **kwargs):
         raise NotImplementedError
 
+    def emoji(self):
+        raise NotImplementedError
+
     def create_fake_header(self, frame_id, notebook):
         header_str = ''
         header_str += ('%x' % int(frame_id)).zfill(2)
@@ -173,3 +176,4 @@ class Message(object):
 
     def qa_qc(self, sensor, value):
         pass
+

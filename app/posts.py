@@ -17,22 +17,16 @@ def post_process_message(message=None):
             message.parse()
             message.post()
             message.save()
-            mqtt_q.enqueue(
-                slack.chat.post_message,
-                '#api',
-                message.slack(),
-                username='api.pulsepod',
-                icon_emoji=':computer:'
-            )
+            message.slack()
         except:
             message.status = 'invalid'
             message.save()
             mqtt_q.enqueue(
                 slack.chat.post_message,
                 '#api',
-                'ERROR: ' + message.slack(),
+                'Warning: Bad message recieved by API',
                 username='api.pulsepod',
-                icon_emoji=':computer:'
+                icon_emoji=':warning:'
             )
 
 

@@ -141,28 +141,24 @@ class DataMessage(Message):
         # from ..user import User
         msg = ''
         msg += 'New data recieved for {notebook}\n\n'.format(
-            notebook=self.notebook.__repr__())
+            notebook=self.notebook.name)
         for sensor in self.sensor_list:
-            msg += "Added {nobs} observations of {sensor}\n".format(
+            msg += "Added {nobs} observation{plural} of {sensor}\n".format(
+                plural='s' if self.nobs_dict[sensor.id] > 1 else '',
                 nobs=self.nobs_dict[sensor.id],
-                sensor=sensor.__repr__())
-        for data_item in self.data_list:
-            msg += "Added {data} from {sensor}\n".format(
-                data=data_item.__repr__(),
-                sensor=data_item.sensor.__repr__()
-            )
+                sensor=sensor.variable)
         msg += "\nIncremented observations to "
         msg += "{pod}, {notebook}, and {owner} by {nobs}\n".format(
-            pod=self.pod.__repr__(),
-            notebook=self.notebook.__repr__(),
-            owner=self.notebook.owner.__repr__(),
+            pod=self.pod.name,
+            notebook=self.notebook.name,
+            owner=self.notebook.owner.username,
             nobs=self.total_nobs)
         mqtt_q.enqueue(
             slack.chat.post_message,
             "#api",
             msg,
             username='api.pulsepod',
-            icon_emoji=':computer:'
+            icon_emoji=':rabbit:'
         )
 
     def post(self):

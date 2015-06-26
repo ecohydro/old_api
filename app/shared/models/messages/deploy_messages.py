@@ -280,7 +280,7 @@ class DeployMessage(Message):
             "#api",
             msg,
             username='api.pulsepod',
-            icon_emoji=':computer:'
+            icon_emoji=':pig:'
         )
 
     def google_geocoding_api(self, loc):
