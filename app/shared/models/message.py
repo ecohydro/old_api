@@ -90,6 +90,11 @@ class Message(db.DynamicDocument):
 
     @staticmethod
     def send_message(number=None, content=None):
+        """ Send a message to the Twilio client for testing purposes.
+        Uses twilio authentication and account information
+        Returns a twilio message object.
+
+        """
         from twilio.rest import TwilioRestClient
         import phonenumbers
         if number is None:
@@ -110,6 +115,19 @@ class Message(db.DynamicDocument):
 
     @staticmethod
     def generate_fake(count=1, frame_id=None):
+        """ Generate a fake message for use in testing
+
+        count - The number of fake messages to generate. Default is 1.
+
+        frame_id - The message type to generate. Default is None.
+
+        frame_id must be one of the values of FRAMES
+        If no frame_id is provided, a random one is choosen.
+
+        Returns a list of messages. Use a = generate_fake()[0]
+        to obtain a single message object
+
+        """
         from random import choice, randint
         from faker import Faker
         from .notebook import Notebook
@@ -156,39 +174,31 @@ class Message(db.DynamicDocument):
     def __unicode__(self):
         return self.id
 
-    def slack(self, invalid=False):
-        if invalid is False:
-            return "Processed a {type} message from {pod} writing to '{nbk}'.\n Message Id [{id}]:{content}".format(
-                type=self.get_type(),
-                pod=self.notebook.pod.name,
-                nbk=self.notebook.name,
-                id=self.get_id(),
-                content=self.message_content
-            )
-        else:
-            return "Recieved an {type} message from {pod} writing to '{nbk}'.\n Message Id [{id}]:{content}".format(
-                type=self.get_type(),
-                pod=self.notebook.pod.name,
-                nbk=self.notebook.name,
-                id=self.get_id(),
-                content=self.message_content)
-
     def slack_slash(self):
         raise NotImplementedError
 
     def get_frame_id(self):
+        """ Return the frame_id of a message, based on message content
+        """
         try:
             return int(self.message_content[0:2], 16)
         except ValueError:
             return 9999
 
     def get_type(self):
+        """ Return the message type, based on the frame_id
+        """
         try:
             return Message.FRAMES[self.get_frame_id()]
         except KeyError:
             return 'invalid'
 
     def pod_id(self):
+        """ Return the pod_id of this message, taken from message content
+
+        Returns None for invalid message.
+        Assumes we are using long pod_ids.
+        """
         try:
             return int(self.message_content[2:6], 16)
         except ValueError:
@@ -197,20 +207,31 @@ class Message(db.DynamicDocument):
             return None
 
     def get_id(self):
+        """ Returns the database id of the current message
+
+        Only available after a message has been saved to the database.
+        """
         return unicode(self.id)
 
     def get_time(self):
+        """ Returns the message time_stamp in JSON-friendly format
+        """
         return self.time_stamp.strftime("%a, %d %b %Y %H:%M:%S GMT")
 
     def compute_signature(self):
+        """ Generate an encrypted authentication signature for a message.
+
+        Uses get_data to construct the necessary data dictionary.
+        Then use compute_signature from utils.py to generate an
+        authentication string. This string would be
+        used in the HTTPBasicAuth string to verify the authenticity of a
+        message posted to the API. The API_AUTH_TOKEN is used to hash
+        message content.
+
+        """
         from app.shared.utils import compute_signature
         import json
-        data = {}
-        data['message_content'] = self.message_content
-        data['time_stamp'] = self.get_time()
-        data['source'] = self.source
-        data['number'] = self.number
-        data['message_id'] = self.message_id
+        data = self.get_data()
         url = current_app.config['API_URL'] + '/messages/' + self.source
         print url
         return compute_signature(
@@ -219,6 +240,11 @@ class Message(db.DynamicDocument):
             json.dumps(data))
 
     def get_data(self):
+        """ Returns the message data in an API-conformant dictionary
+
+        This is the basic structure that all messages should present when
+        posting to the API
+        """
         data = {}
         data['message_content'] = self.message_content
         data['time_stamp'] = self.get_time()
@@ -228,11 +254,19 @@ class Message(db.DynamicDocument):
         return data
 
     def init(self):
-        MessageObject = NewMessageObject.create(self.get_type())
-        MessageObject.init(self)
-        self.parse = MessageObject.parse
-        self.post = MessageObject.post
-        self.Message = MessageObject
+        """ Initialize the message class using the class factory function
+
+        Also assigns type-specific parse, post, and slack functions.
+
+        """
+        message_object = NewMessageObject.create(self.get_type())
+        message_object.init(self)
+        # Setup the parse, post, and alert functions for this class:
+        self.parse = message_object.parse
+        self.post = message_object.post
+        self.slack = message_object.slack
+        # Store the MessageObject in the message itself:
+        self.Message = message_object
 
 
 class TwilioMessage(Message):

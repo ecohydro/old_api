@@ -133,13 +133,43 @@ class DataMessage(Message):
             self.sensor_list = sensor_list
             self.nobs_dict = nobs_dict
 
-    def post(self):
+    def slack(self):
         from app import mqtt_q, slack
+        # from ..notebook import Notebook
+        # from ..sensor import Sensor
+        # from ..pod import Pod
+        # from ..user import User
+        msg = ''
+        msg += 'New data recieved for {notebook}\n\n'.format(
+            notebook=self.notebook.__repr__())
+        for sensor in self.sensor_list:
+            msg += "Added {nobs} observations of {sensor}\n".format(
+                nobs=self.nobs_dict[sensor.id],
+                sensor=sensor.__repr__())
+        for data_item in self.data_list:
+            msg += "Added {data} from {sensor}\n".format(
+                data=data_item.__repr__(),
+                sensor=data_item.sensor.__repr__()
+            )
+        msg += "\nIncremented observations to "
+        msg += "{pod}, {notebook}, and {owner} by {nobs}\n".format(
+            pod=self.pod.__repr__(),
+            notebook=self.notebook.__repr__(),
+            owner=self.notebook.owner.__repr__(),
+            nobs=self.total_nobs)
+        mqtt_q.enqueue(
+            slack.chat.post_message,
+            "#api",
+            msg,
+            username='api.pulsepod',
+            icon_emoji=':computer:'
+        )
+
+    def post(self):
         from ..notebook import Notebook
         from ..sensor import Sensor
         from ..pod import Pod
         from ..user import User
-        slack_post = ''
         # Update the voltage (if we have a new value):
         voltage = self.notebook.voltage
         for data_item in self.data_list:
@@ -161,8 +191,6 @@ class DataMessage(Message):
             Sensor.objects(id=sensor.id).update_one(
                 inc__observations=nobs
             )
-            slack_post += "Added %d observations to %s\n" % \
-                (nobs, sensor.__repr__())
         # Update notebooks, pods, and user:
         Notebook.objects(id=self.notebook.id).update_one(
             inc__observations=self.total_nobs,

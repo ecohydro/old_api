@@ -55,6 +55,17 @@ class Message(object):
             self.pod = self.message.pod
             self.notebook = self.message.notebook
 
+    # These functions need to be defined in each of the message
+    # subclasses:
+    def post(self):
+        raise NotImplementedError
+
+    def parse(self):
+        raise NotImplementedError
+
+    def slack(self):
+        raise NotImplementedError
+
     def mqtt(self, content):
         raise NotImplementedError
 
@@ -107,12 +118,6 @@ class Message(object):
 
     def get_items(self):
         return [item['name'] for item in self.format]
-
-    def post(self):
-        raise NotImplementedError
-
-    def parse(self):
-        raise NotImplementedError
 
     def get_sid(self, i):
         return int(self.content[i:i + self.SID_LENGTH], 16)

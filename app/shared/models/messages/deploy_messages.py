@@ -205,7 +205,7 @@ class DeployMessage(Message):
             except:
                 self.message.status = 'invalid'
                 self.message.save()
-                assert 0, 'error extracting cell information from message content'
+                assert 0, 'error extracting cell info from message content'
         else:
             [towers.append(this_tower) for this_tower in tower]
         api_key = current_app.config['GOOGLE_API_KEY']
@@ -262,6 +262,26 @@ class DeployMessage(Message):
                 return 0
         else:
             return 0
+
+    def slack(self):
+        from app import mqtt_q, slack
+        msg = ''
+        msg += 'Deployed {pod} (SN:{pod_id}) owned by {owner}.\n'.format(
+            pod=self.pod.name,
+            pod_id=self.pod.pod_id,
+            owner=self.pod.owner.username)
+        msg += '"{notebook}" is now recording {sensors}.\n'.format(
+            sensors=', '.join([str(x.name) for x in self.notebook.sensors]),
+            notebook=self.notebook.name)
+        msg += 'Current pod voltage is {voltage}.\n'.format(
+            voltage=self.notebook.voltage)
+        mqtt_q.enqueue(
+            slack.chat.post_message,
+            "#api",
+            msg,
+            username='api.pulsepod',
+            icon_emoji=':computer:'
+        )
 
     def google_geocoding_api(self, loc):
         import requests
