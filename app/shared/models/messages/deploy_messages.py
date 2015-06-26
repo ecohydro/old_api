@@ -405,7 +405,7 @@ class DeployMessage(Message):
                     (self.pod.__repr__(), self.notebook.__repr__())
                 mqtt_q.enqueue(
                     slack.chat.post_message,
-                    "#api",
+                    "#oplog",
                     slack_post,
                     username='api.pulsepod',
                     icon_emoji=':computer:'
