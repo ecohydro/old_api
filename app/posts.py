@@ -30,7 +30,7 @@ def post_process_message(message=None):
             mqtt_q.enqueue(
                 slack.chat.post_message,
                 '#api',
-                message.slack(invalid=True),
+                'ERROR: ' + message.slack(),
                 username='api.pulsepod',
                 icon_emoji=':computer:'
             )
