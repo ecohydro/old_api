@@ -1,4 +1,5 @@
 from . import db
+from datetime import datetime
 
 
 class Sensor(db.Document):
@@ -39,7 +40,12 @@ class Sensor(db.Document):
     observations = db.IntField(
         default=0
     )
-
+    updated = db.DateTimeField(
+        default=datetime.utcnow()
+    )
+    created = db.DateTimeField(
+        default=datetime.utcnow()
+    )
     meta = {
         'collection': 'sensors'
     }

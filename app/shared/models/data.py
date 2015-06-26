@@ -19,7 +19,12 @@ class Data(db.Document):
     pod_name = db.StringField(db_field='p')
     owner = db.ReferenceField('User', db_field='owner')
     public = db.BooleanField(default=True)
-
+    updated = db.DateTimeField(
+        default=datetime.datetime.utcnow()
+    )
+    created = db.DateTimeField(
+        default=datetime.datetime.utcnow()
+    )
     meta = {
         'collection': 'data',
         'ordering': ['-time_stamp'],

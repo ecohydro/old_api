@@ -197,20 +197,3 @@ class SMSSync(SMS):
         except:
             self.data['number'] = self.data['from']
         self.data['message_content'] = self.data['message']
-
-    def post(self):
-        with app.app_context():
-            url = app.config['API_URL'] + '/messages/' + 'smssync'
-            data = json.dumps(self.data)
-            print data
-            headers = {'Content-Type': 'application/json'}
-            auth = HTTPBasicAuth(
-                'gateway',
-                compute_signature(
-                    app.config['API_AUTH_TOKEN'],
-                    url,
-                    data))
-        r = requests.post(url, data=data, headers=headers, auth=auth)
-        if not r.raise_for_status():
-            print r.json()
-        return r.raise_for_status() if r.raise_for_status() else r.json()

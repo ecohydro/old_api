@@ -92,3 +92,27 @@ class TestClient(TestBase):
         resp = client.open(url, method=method, headers=headers)
         meta = json.loads(resp.data)['_meta']
         self.assertTrue(meta['total'] == owned_or_public)
+
+    def test_post_message(self):
+        import base64
+        app = self.app
+        deploy_message = self.Message.generate_fake(frame_id=3)[0]
+        deploy_message.source = 'smssync'
+        data = deploy_message.get_data()
+        username = 'gateway'
+        signature = deploy_message.compute_signature()
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': 'Basic ' + base64.b64encode(
+                username + ":" + signature)
+        }
+        url = app.config['API_URL'] + '/messages/smssync'
+        method = 'POST'
+        client = self.test_client
+        resp = client.open(
+            url,
+            data=json.dumps(data),
+            method=method,
+            headers=headers
+        )
+        self.assertTrue(resp.status_code is 201)

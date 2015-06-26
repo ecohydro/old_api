@@ -37,7 +37,12 @@ class Notebook(db.Document):
         default=0
     )
     tags = db.ListField(db.StringField())
-
+    updated = db.DateTimeField(
+        default=datetime.datetime.utcnow()
+    )
+    created = db.DateTimeField(
+        default=datetime.datetime.utcnow()
+    )
     meta = {
         'collection': 'notebooks',
         'index_background': True,

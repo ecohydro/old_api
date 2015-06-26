@@ -36,7 +36,9 @@ class Config:
         self.eve_settings = {
             'PUBLIC_METHODS': ['GET'],
             'PUBLIC_ITEM_METHODS': ['GET'],
-            'DOMAIN': {'stub': {}}
+            'DOMAIN': {'stub': {}},
+            'LAST_UPDATED': 'updated',
+            'DATE_CREATED': 'created'
         }
     PAGINATION_DEFAULT = 200
     PAGINATION_LIMIT = 400

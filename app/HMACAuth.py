@@ -60,9 +60,8 @@ class HMACAuth(HMACAuth):
         """Validate a request to the API
 
         :param uri: full URI that was requested on your server
-        :param params: post vars that were sent with the request
+        :param data: json that was sent with the request
         :param signature: expexcted signature in HTTP Authorization header
-        :param auth: tuple with (account_sid, token)
 
         :returns: True if the request passes validation, False if not
         """

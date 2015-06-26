@@ -28,7 +28,7 @@ class NewMessageObject(object):
 class Message(db.Document):
 
     STATUS = ['queued', 'parsed', 'posted', 'unknown', 'invalid']
-    SOURCES = ['smssync', 'twilio', 'nexmo', 'pulsepi', 'unknown']
+    SOURCES = ['smssync', 'twilio', 'wifi', 'cellular']
 
     FRAMES = {
         1: 'status',
@@ -75,6 +75,12 @@ class Message(db.Document):
         choices=FRAMES.keys(),
         db_field='frame_id',
         default=None
+    )
+    updated = db.DateTimeField(
+        default=datetime.datetime.utcnow()
+    )
+    created = db.DateTimeField(
+        default=datetime.datetime.utcnow()
     )
     pod = db.ReferenceField('Pod')
     notebook = db.ReferenceField('Notebook')
