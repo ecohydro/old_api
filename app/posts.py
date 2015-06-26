@@ -21,13 +21,15 @@ def post_process_message(message=None):
         except:
             message.status = 'invalid'
             message.save()
-            mqtt_q.enqueue(
-                slack.chat.post_message,
-                '#api',
-                'Warning: Bad message recieved by API',
-                username='api.pulsepod',
-                icon_emoji=':warning:'
-            )
+            # Don't bother slackbot during tests.
+            if not app.testing:
+                mqtt_q.enqueue(
+                    slack.chat.post_message,
+                    '#api',
+                    'Warning: Bad message recieved by API',
+                    username='api.pulsepod',
+                    icon_emoji=':warning:'
+                )
 
 
 def post_pod_create_qr(pod):
