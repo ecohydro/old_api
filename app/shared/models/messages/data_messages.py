@@ -140,15 +140,17 @@ class DataMessage(Message):
         # from ..pod import Pod
         # from ..user import User
         msg = ''
-        msg += 'New data recieved for {notebook}\n\n'.format(
+        msg += 'New data recieved for _{notebook}_\n\n'.format(
             notebook=self.notebook.name)
-        for sensor in self.sensor_list:
-            msg += "Added {nobs} observation{plural} of {sensor}\n".format(
-                plural='s' if self.nobs_dict[sensor.id] > 1 else '',
-                nobs=self.nobs_dict[sensor.id],
-                sensor=sensor.variable)
+        for data in self.data_list:
+            msg += "*{context} {sensor}* was {value} at {time}\n".format(
+                context=data.sensor.context,
+                sensor=data.sensor.variable,
+                value=data.value,
+                time=data.time_stamp
+            )
         msg += "\nIncremented observations to "
-        msg += "{pod}, {notebook}, and {owner} by {nobs}\n".format(
+        msg += "_{pod}_, _{notebook}_, and _{owner}_ by {nobs}\n".format(
             pod=self.pod.name,
             notebook=self.notebook.name,
             owner=self.notebook.owner.username,
@@ -206,23 +208,6 @@ class DataMessage(Message):
         self.message.status = 'posted'
         self.message.save()
         [data_item.save() for data_item in self.data_list]
-        for data_item in self.data_list:
-            slack_post += "Added %s from %s with %s\n" % \
-                (data_item.__repr__(),
-                 data_item.sensor.__repr__(),
-                 self.notebook.__repr__())
-        slack_post += "Incremented %s, %s, and %s with %d observations\n" % \
-            (self.pod.__repr__(),
-             self.notebook.__repr__(),
-             self.notebook.owner.__repr__(),
-             self.total_nobs)
-        mqtt_q.enqueue(
-            slack.chat.post_message,
-            "#api",
-            slack_post,
-            username='api.pulsepod',
-            icon_emoji=':computer:'
-        )
 
     def patch(self):
         pass
