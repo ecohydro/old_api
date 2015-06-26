@@ -8,9 +8,9 @@ from flask import current_app as app
 
 def post_process_message(message=None):
     from app import mqtt_q, slack
-    print "Message Log [REDIS]: Starting Job"
+    app.logger.info("Starting post process job")
     if message is None:
-        assert 0, "Must provide message"
+        app.logger.error("Must provide message")
     message.init()
     if message.status == 'queued':
         try:
@@ -21,15 +21,7 @@ def post_process_message(message=None):
         except:
             message.status = 'invalid'
             message.save()
-            # Don't bother slackbot during tests.
-            if not app.testing:
-                mqtt_q.enqueue(
-                    slack.chat.post_message,
-                    '#api',
-                    'Warning: Bad message recieved by API',
-                    username='api.pulsepod',
-                    icon_emoji=':warning:'
-                )
+            app.logger.warning('Bad message recieved by API')
 
 
 def post_pod_create_qr(pod):
@@ -52,7 +44,7 @@ def post_pod_create_qr(pod):
                                  if d["title"] == "PulsePods")]['bundle_link']
             c.bundle_link_add(bundle_link, bitly_link)
         except:
-            return "Error creating Bitly link"
+            app.logger.error("creating Bitly link failed")
 
         try:
             # Make the QR Code:
@@ -63,7 +55,7 @@ def post_pod_create_qr(pod):
             img.save(f)
             f.close()
         except:
-            return "Error in making QR code file"
+            app.logger.error("Making QR code file failed")
 
         try:
             # UPLOAD THE QRFILE TO S3:
@@ -75,6 +67,6 @@ def post_pod_create_qr(pod):
             k.set_contents_from_filename(tmp_file)
             bucket.set_acl('public-read', pod_qr_file)
         except:
-            return "Error writing file to Amazon S3"
+            app.logger.error("Writing file to Amazon S3 failed")
 
-        return "QR file successfully created"
+        app.logger.info("QR file successfully created")

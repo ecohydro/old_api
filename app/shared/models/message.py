@@ -76,12 +76,8 @@ class Message(db.Document):
         db_field='frame_id',
         default=None
     )
-    updated = db.DateTimeField(
-        default=datetime.datetime.utcnow()
-    )
-    created = db.DateTimeField(
-        default=datetime.datetime.utcnow()
-    )
+    # updated = db.DateTimeField()
+    # created = db.DateTimeField()
     pod = db.ReferenceField('Pod')
     notebook = db.ReferenceField('Notebook')
     owner = db.ReferenceField('User')

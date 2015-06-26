@@ -40,12 +40,8 @@ class Sensor(db.Document):
     observations = db.IntField(
         default=0
     )
-    updated = db.DateTimeField(
-        default=datetime.utcnow()
-    )
-    created = db.DateTimeField(
-        default=datetime.utcnow()
-    )
+    # updated = db.DateTimeField()
+    # created = db.DateTimeField()
     meta = {
         'collection': 'sensors'
     }

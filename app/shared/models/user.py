@@ -45,12 +45,8 @@ class User(UserMixin, db.Document):
         default='user')
 
     phone_number = db.StringField()
-    updated = db.DateTimeField(
-        default=datetime.utcnow()
-    )
-    created = db.DateTimeField(
-        default=datetime.utcnow()
-    )
+    # updated = db.DateTimeField()
+    # created = db.DateTimeField()
     meta = {
         'indexes': ['email', 'username', 'api_key'],
         'collection': 'users',

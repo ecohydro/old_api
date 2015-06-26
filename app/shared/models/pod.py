@@ -40,12 +40,8 @@ class Pod(db.Document):
     about = db.StringField(
         default='No additional information available for this pod'
     )
-    updated = db.DateTimeField(
-        default=datetime.datetime.utcnow()
-    )
-    created = db.DateTimeField(
-        default=datetime.datetime.utcnow()
-    )
+    # updated = db.DateTimeField()
+    # created = db.DateTimeField()
     meta = {
         'collection': 'pods',
         'indexes': [
