@@ -142,14 +142,14 @@ class DataMessage(Message):
         msg = ''
         msg += 'New data recieved for _{notebook}_\n\n'.format(
             notebook=self.notebook.name)
-        for data in self.data_list:
-            msg += "*{context} {sensor}* was {value} at {time}\n".format(
-                context=data.sensor.context,
-                sensor=data.sensor.variable,
-                value=data.value,
-                time=data.time_stamp
-            )
-        msg += "\nIncremented observations to "
+        # for data in self.data_list:
+        #     msg += "*{context} {sensor}* was {value} at {time}\n".format(
+        #         context=data.sensor.context,
+        #         sensor=data.sensor.variable,
+        #         value=data.value,
+        #         time=data.time_stamp
+        #     )
+        # msg += "\nIncremented observations to "
         msg += "_{pod}_, _{notebook}_, and _{owner}_ by {nobs}\n".format(
             pod=self.pod.name,
             notebook=self.notebook.name,
