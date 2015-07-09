@@ -11,6 +11,8 @@ class Data(db.Document):
         db_field='v',
         default=None)
     location = db.PointField(db_field='loc')
+    created = db.DateTimeField(default=datetime.datetime.now())
+    updated = db.DateTimeField(default=datetime.datetime.now())
     # Define links to Pod, Notebook, and Sensor collections:
     notebook = db.ReferenceField('Notebook', db_field='nbk')
     pod = db.ReferenceField('Pod', db_field='pod')

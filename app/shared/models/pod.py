@@ -9,6 +9,8 @@ class Pod(db.Document):
     RADIOS = ['gsm', 'cdma', 'wcdma', 'wifi', 'irridium']
 
     name = db.StringField()
+    created = db.DateTimeField(default=datetime.datetime.now())
+    updated = db.DateTimeField(default=datetime.datetime.now())
     owner = db.ReferenceField('User')
     pod_id = db.IntField()
     qr = db.StringField(

@@ -12,6 +12,8 @@ class Sensor(db.Document):
         'd': 8}
 
     name = db.StringField()
+    created = db.DateTimeField(default=datetime.now())
+    updated = db.DateTimeField(default=datetime.now())
     sid = db.IntField(unique=True)
     context = db.StringField()
     context_short = db.StringField()
