@@ -102,7 +102,9 @@ class DataMessage(Message):
 
                 while nobs > 0:
                     try:
-                        time_stamp = self.get_time(i)  # Get timestamp
+                        # Using datetime now, so call get_datetime.
+                        # time_stamp = self.get_time(i)  # Get timestamp
+                        time_stamp = self.get_datetime(i)
                     except:
                         self.message.status = 'invalid'
                         self.message.save()
