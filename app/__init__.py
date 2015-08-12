@@ -217,11 +217,11 @@ def create_app(config_name):
     )
 
     # Add API blueprints:
-    from eve_docs import eve_docs
-    app.register_blueprint(eve_docs, url_prefix='/docs')
+    # from eve_docs import eve_docs
+    # app.register_blueprint(eve_docs, url_prefix='/docs')
 
-    from hirefire import hirefire as hirefire_module
-    app.register_blueprint(hirefire_module)
+    # from hirefire import hirefire as hirefire_module
+    # app.register_blueprint(hirefire_module)
 
     from gateway import gateway
     app.register_blueprint(gateway, url_prefix='/gateway')
