@@ -90,7 +90,7 @@ def create_app(config_name):
     eve_mongo.add_model(
         Data,
         url='data',
-        resource_methods=['GET'],
+        resource_methods=['GET', 'POST'],
         item_methods=['GET'],
         public_methods=[],
         public_item_methods=[],

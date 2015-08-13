@@ -1,6 +1,13 @@
 #!/usr/bin/python
 import os
 
+COV = None
+if os.environ.get('FLASK_COVERAGE'):
+    import coverage
+    COV = coverage.coverage(branch=True, include='app/*')
+    COV.start()
+    print('Starting coverage')
+
 if os.path.exists('.env'):
     print('Importing environment from .env...')
     for line in open('.env'):
@@ -74,9 +81,26 @@ def reset():
 
 
 @manager.command
-def test():
+def test(coverage=False):
     if app.testing:
+        print "Starting Tests"
+        if coverage and not os.environ.get('FLASK_COVERAGE'):
+            import sys
+            print "Reloading for coverage"
+            os.environ['FLASK_COVERAGE'] = '1'
+            print sys.argv
+            os.execvp(sys.executable, [sys.executable] + sys.argv)
         """Run the tests (using nose)"""
+        if COV:
+            COV.stop()
+            COV.save()
+            print('Coverage Summary:')
+            COV.report()
+            basedir = os.path.abspath(os.path.dirname(__file__))
+            covdir = os.path.join(basedir, 'cover')
+            COV.html_report(directory=covdir)
+            print('HTML version: file://%s/index.html' % covdir)
+            COV.erase()
         import nose
         nose.main(argv=[''])
     else:

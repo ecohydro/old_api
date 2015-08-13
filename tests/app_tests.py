@@ -23,7 +23,7 @@ class TestApp(TestBase):
     def test_app_settings(self):
         self.assertTrue(
             self.app.settings['DOMAIN']['data']['resource_methods'] ==
-            ['GET']
+            ['GET', 'POST']
         )
         self.assertTrue(
             self.app.settings['DOMAIN']['sensor']['resource_methods'] ==
