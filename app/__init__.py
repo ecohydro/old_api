@@ -99,7 +99,7 @@ def create_app(config_name):
         public_field='public',
         datasource={
             'projection': {
-                'nbk': 0,
+                'notebook': 0,
                 'pod': 0,
                 'owner': 0,
             }
