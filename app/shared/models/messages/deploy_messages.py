@@ -413,12 +413,13 @@ class DeployMessage(Message):
             except:
                 assert 0, 'MessageParse: Error saving new notebook'
             if self.notebook.owner.phone_number:
-                alerts = self.create_alert(self.notebook)
-                for alert in alerts:
-                    self.message.send_message(
-                        number=self.notebook.owner.phone_number,
-                        content=alert
-                    )
+                pass
+                # alerts = self.create_alert(self.notebook)
+                # for alert in alerts:
+                #     self.message.send_message(
+                #         number=self.notebook.owner.phone_number,
+                #         content=alert
+                #     )
             elif 'email' in dir(self.notebook.owner):
                 print 'sending deploy alert email [NOT FUNCTIONAL]'
             else:
