@@ -111,7 +111,8 @@ def test(coverage=False):
 def serve():
     from waitress import serve
     port = int(os.getenv('PORT', 5000))
-    serve(app, port=port, threads=6)
+    threads = int(os.getenv('WAITRESS_THREADS', 8))
+    serve(app, port=port, threads=threads)
 
 if __name__ == '__main__':
     manager.run()
