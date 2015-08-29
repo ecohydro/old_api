@@ -262,6 +262,10 @@ def create_app(config_name):
                 else:
                     lookup['$or'] = [{'public': True}, {'owner': user.id}]
 
+    @app.route('/loaderio-7e21270bc3a54a888c6b5d3ad8cb3b2c')
+    def loader():
+        return 'loaderio-7e21270bc3a54a888c6b5d3ad8cb3b2c'
+
     # BEFORE INSERT METHODS
     def before_insert_pods(documents):
         pass
