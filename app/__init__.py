@@ -24,6 +24,7 @@ from worker import conn
 post_q = Queue(connection=conn)  # This is the queue for parse/post jobs
 gateway_q = Queue(connection=conn)  # This is the queue for gateway jobs
 mqtt_q = Queue(connection=conn)  # This is the queue for MQTT pubs
+# hirefire_q = Queue(connection=conn)  # This is the queue for Hirefire.io
 
 
 def create_app(config_name):

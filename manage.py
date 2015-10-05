@@ -1,5 +1,7 @@
 #!/usr/bin/python
 import os
+import rand
+
 
 COV = None
 if os.environ.get('FLASK_COVERAGE'):
@@ -111,7 +113,7 @@ def test(coverage=False):
 def serve():
     from waitress import serve
     port = int(os.getenv('PORT', 5000))
-    threads = int(os.getenv('WAITRESS_THREADS', 8))
+    threads = int(os.getenv('WAITRESS_THREADS', 4))
     serve(app, port=port, threads=threads)
 
 if __name__ == '__main__':
