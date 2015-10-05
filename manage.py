@@ -1,7 +1,5 @@
 #!/usr/bin/python
 import os
-import rand
-
 
 COV = None
 if os.environ.get('FLASK_COVERAGE'):
