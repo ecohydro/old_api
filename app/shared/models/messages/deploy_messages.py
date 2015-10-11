@@ -233,8 +233,10 @@ class DeployMessage(Message):
             ]
             return location
         else:
-            print response
-            return 0
+            location['coordinates'] = [
+                -74.6702, 40.3571
+            ]
+            return location
 
     def google_elevation_api(self, loc=None):
         import requests
