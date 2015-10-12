@@ -45,7 +45,8 @@ class Sensor(db.Document):
     # updated = db.DateTimeField()
     # created = db.DateTimeField()
     meta = {
-        'collection': 'sensors'
+        'collection': 'sensors',
+        'allow_inheritance': True  # Allows us to use subclasses
     }
 
     def __repr__(self):
@@ -53,6 +54,9 @@ class Sensor(db.Document):
 
     def get_id(self):
         return unicode(self.id)
+
+    def qaqc(self, value):
+        return value
 
     @staticmethod
     def generate_fake(count=100):
@@ -77,3 +81,37 @@ class Sensor(db.Document):
             except:
                 pass
         return fake_sensors
+
+
+# Define sensor subclasses that allow us to create Sensor-specific
+# qaqc functions to use during API writes.
+#
+# These subclasses must correspond to defined subclasses within the API.
+# Creating a new subclass of sensors requires updating the Sensor objects
+# in the database so that they are defined as members of the new subclass.
+# By default, Sensors do not have a subclass, and therefore use the
+# Sensor class qaqc function. This function just returns the data value
+# without modification.
+
+class TemperatureSensor(Sensor):
+
+    def qaqc(self, value):
+        if value > 100:
+            return value - 88  # Need to get exact value from Ben.
+        else:
+            return value
+
+    def __repr__(self):
+        return '<TemperatureSensor %r>' % self.name
+
+
+class RelativeHumiditySensor(Sensor):
+
+    def qaqc(self, value):
+        if value > 100:
+            return 100
+        else:
+            return value
+
+    def __repr__(self):
+        return '<RelativeHumiditySensor %r>' % self.name
