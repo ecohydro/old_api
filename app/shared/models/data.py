@@ -39,17 +39,6 @@ class Data(db.Document):
     def __repr__(self):
         return '<Data %r>' % self.value
 
-    def clean(self):
-        # The clean() function is called before every write in
-        # MongoEngine. Here we are using the Sensor's qaqc function
-        # to clean data before submission to the API. We subclass
-        # the Sensor objects to allow us to create sensor-specific
-        # qaqc functions that can apply to specific categories of sensors
-        # For example, the TemperatureSensor subclass has a different
-        # qaqc function than the RelativeHumiditySensor subclass. The
-        # default Sensor qaqc function simply returns the Data valur.
-        self.Sensor.qaqc(self.value)
-
     def get_id(self):
         return unicode(self.id)
 

@@ -87,7 +87,7 @@ class Message(db.Document):
         'index_background': True,
         'ordering': ['-time_stamp'],
         'collection': 'new_messages',
-        'allow_inheritance': True  # Allows us to use subclasses
+        'allow_inheritance': True
     }
 
     @staticmethod

@@ -84,9 +84,8 @@ class Message(object):
     def get_length(self, value):
         seq = self.format
         try:
-            return (
-                item for item in seq if item["name"] == value
-            ).next()['length']
+            return (item for item in seq if item["name"] == value).next(
+                )['length']
         except StopIteration:
             raise StopIteration("%s not found in format" % value)
 
@@ -186,8 +185,7 @@ class Message(object):
         try:
             value = struct.unpack(
                 str(sensor['byteorder'] + sensor['fmt']),
-                self.content[i:i + (2 * int(sensor['nbytes']))].decode(
-                    'hex'))[0]
+                self.content[i:i + (2 * int(sensor['nbytes']))].decode('hex'))[0]
         except:
             raise InvalidMessageException(
                 'Error parsing format string',
@@ -201,3 +199,4 @@ class Message(object):
 
     def qa_qc(self, sensor, value):
         pass
+
