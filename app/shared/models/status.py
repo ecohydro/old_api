@@ -2,47 +2,25 @@ from . import db
 import datetime
 
 '''
-
  Generic  status object for a status collection on the API.
- This object allows API workers to generate daily
- status reports on any object within the API
+ This object allows API workers to generate time-specific
+ (e.g. daily, or hourly) status reports on any object within the API
 
 '''
 
 STATUS_TYPES = ['notebook', 'user', 'pod', 'sensor']
 
 
-class NewStatusObject(object):
-    @staticmethod
-    def create(status_type=None):
-        if status_type is None:
-            assert 0, "Must provide a status_type"
-        if status_type == "notebook":
-            return NotebookStatus()
-        if status_type == "user":
-            return UserStatus()
-        if status_type == "pod":
-                return PodStatus()
-        if status_type == "sensor":
-                return SensorStatus()
-
-
 class Status(db.Document):
 
-    date = db.DateTimeField(
-        db_field='date',
-        default=datetime.datetime.today())
+    time_stamp = db.DateTimeField(
+        db_field='time_stamp',
+        default=datetime.datetime.now())
     created = db.DateTimeField(default=datetime.datetime.now())
     updated = db.DateTimeField(default=datetime.datetime.now())
     status_type = db.StringField(
         choices=STATUS_TYPES,
         required=True,
-    )
-    actual_observations = db.IntField(
-        default=0
-    )
-    expected_observations = db.IntField(
-        default=0
     )
     # Define links to Pod, Notebook, Sensor, and User collections:
     notebook = db.ReferenceField(
@@ -70,8 +48,7 @@ class Status(db.Document):
             'user',
             'pod',
             'sensor',
-        ],
-        'allow_inheritance': True,
+        ]
     }
 
     def __repr__(self):
@@ -86,7 +63,7 @@ class Status(db.Document):
     @staticmethod
     def generate_fake(count=10):
         from faker import Faker
-        from random import randint, choice
+        from random import random, randint, choice
         from .notebook import Notebook
         from .sensor import Sensor
         from .pod import Pod
@@ -147,16 +124,11 @@ class Status(db.Document):
                     ]
                 except:
                     return "Error: No User objects defined."
-            # Define the actual and expected observations:
-            actual_observations = randint(0, 100)
-            expected_observations = actual_observations - \
-                randint(0, actual_observations)
             status = Status(
                 status_type=status_type,
-                date=fake.date_time_this_month(),
+                time_stamp=fake.date_time_this_month(),
                 # Sensor and pod names are fixed.
-                actual_observations=actual_observations,
-                expected_observations=expected_observations,
+                value=random() * 100,
                 pod=pod,
                 sensor=sensor,
                 notebook=notebook,
@@ -168,27 +140,3 @@ class Status(db.Document):
                 return "Error: Data save failed"
             fake_status.append(status)
         return fake_status
-
-
-class NotebookStatus(Status):
-
-    def __repr__(self):
-        return '<NotebookStatus %r>' % self.notebook.name
-
-
-class PodStatus(Status):
-
-    def __repr__(self):
-        return '<PodStatus %r>' % self.notebook.name
-
-
-class UserStatus(Status):
-
-    def __repr__(self):
-        return '<UserStatus %r>' % self.user.id
-
-
-class SensorStatus(Status):
-
-    def __repr__(self):
-        return '<SensorStatus %r>' % self.sensor.name
