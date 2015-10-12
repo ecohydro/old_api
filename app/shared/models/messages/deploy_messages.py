@@ -261,10 +261,7 @@ class DeployMessage(Message):
                     'resolution': response['results'][0]['resolution']
                 }
             else:
-                return {
-                    'elevation': 0,
-                    'resolution': 0
-                }
+                return 0
         else:
             return 0
 
