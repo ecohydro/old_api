@@ -1,6 +1,6 @@
 """An example config.py file."""
 import ee
-from flask import current_app
+from flask import current_app as app
 
 # The URL of the Earth Engine API.
 EE_URL = 'https://earthengine.googleapis.com'
@@ -8,7 +8,7 @@ EE_URL = 'https://earthengine.googleapis.com'
 # The service account email address authorized by your Google contact.
 # Set up a service account as described here:
 EE_ACCOUNT = ''.join([
-    current_app.config['EE_CLIENT_ID'],
+    app.config['EE_CLIENT_ID'],
     '@developer.gserviceaccount.com'
 ])
 

@@ -1,6 +1,8 @@
 from flask.ext.mongoengine import MongoEngine
 from flask.ext.login import LoginManager
+from ..utils import GoogleAPI
 
+g = GoogleAPI()
 db = MongoEngine()
 login_manager = LoginManager()
 

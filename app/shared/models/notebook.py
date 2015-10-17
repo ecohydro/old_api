@@ -80,14 +80,14 @@ class Notebook(db.Document):
 
     def get_address(self):
         if self.location:
-            from ..utils import google_geocoding_api
-            self.address = google_geocoding_api(location=self.location)
+            from . import g
+            self.address = g.geocoding(location=self.location)
             self.save()
 
     def get_elevation(self):
         if self.location:
-            from ..utils import google_elevation_api
-            self.elevation = google_elevation_api(location=self.location)
+            from . import g
+            self.elevation = g.elevation(location=self.location)
             self.save()
 
     def xls(self, filename=None):
