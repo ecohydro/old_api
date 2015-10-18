@@ -82,7 +82,7 @@ class Notebook(db.Document):
         if self.location:
             # Import Google API object
             from . import g
-            self.address = g.geocoding(location=self.location)
+            self.address = g.geocode(location=self.location)
             self.save()
 
     def get_elevation(self):
