@@ -5,7 +5,7 @@ from eve import Eve
 from flask import jsonify
 from .posts import post_process_message, post_pod_create_qr
 from flask.ext.pymongo import PyMongo
-from flask.ext.bootstrap import Bootstrap
+# from flask.ext.bootstrap import Bootstrap
 from eve_mongoengine import EveMongoengine
 from shared.models import db, login_manager
 from shared.utils import InvalidMessageException
@@ -14,7 +14,7 @@ from slacker import Slacker
 slack = Slacker(os.getenv('SLACK_API_TOKEN'))
 pymongo = PyMongo()
 eve_mongo = EveMongoengine()
-bootstrap = Bootstrap()
+# bootstrap = Bootstrap()
 
 # Create an rq queue from rq and worker.py:
 from rq import Queue
@@ -59,7 +59,7 @@ def create_app(config_name):
     # )
 
     # Initialize bootstrap (for evedocs)
-    bootstrap.init_app(app)
+    # bootstrap.init_app(app)
 
     # Initialize MongoEngine (for all the mongo goodness)
     from mongoengine import connect
