@@ -59,13 +59,6 @@ def create_app(config_name):
         print "setting up testing stuff"
         pymongo.init_app(app, config_prefix='PYMONGO')
 
-    # app.register_blueprint(
-    #     rq_dashboard.blueprint, url_prefix='/rq_dashboard'
-    # )
-
-    # Initialize bootstrap (for evedocs)
-    # bootstrap.init_app(app)
-
     # Initialize MongoEngine (for all the mongo goodness)
     from mongoengine import connect
     host = config[config_name]().MONGODB_SETTINGS['HOST']

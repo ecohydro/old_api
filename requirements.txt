@@ -18,14 +18,11 @@ WTForms==2.0.1
 Werkzeug==0.9.6
 argh==0.26.1
 basicauth==0.3
-bitly-api==0.3
 blessings==1.6
 blinker==1.3
-boto==2.27.0
 cffi==1.1.2
 coverage==3.7.1
 cryptography==0.9.1
-earthengine-api==0.1.41
 enum34==1.0.4
 # fake-factory==0.4.2
 git+https://github.com/kcaylor/faker.git
