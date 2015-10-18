@@ -18,8 +18,6 @@ class NewMessageObject(object):
             return StatusMessage()
         if message_type == "deploy":
                 return DeployMessage()
-        if message_type == "deploy_long":
-                return DeployMessageLong()
         if message_type == "invalid":
             return InvalidMessage()
         return UnknownMessage()
@@ -34,7 +32,6 @@ class Message(db.Document):
         1: 'status',
         2: 'data',
         3: 'deploy',
-        4: 'deploy_long',
         9999: 'invalid'
     }
 

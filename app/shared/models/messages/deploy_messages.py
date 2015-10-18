@@ -53,7 +53,7 @@ class DeployMessage(Message):
             '<f',
             float(3.6 + random() / 2)).encode('hex').zfill(
             self.get_length('voltage'))
-        sensors = [choice(Sensor.objects()) for i in range(n_sensors)]
+        sensors = sample(Sensor.objects(), n_sensors)
         deploy_str += ('%i' % int(mcc)).zfill(self.get_length('mcc'))
         deploy_str += ('%i' % int(mnc)).zfill(self.get_length('mnc'))
         deploy_str += ('%x' % int(lac)).zfill(self.get_length('lac'))
@@ -333,63 +333,3 @@ class DeployMessage(Message):
                 print "no user data available for alerts"
         else:
             return "message already posted"
-
-
-class DeployMessageLong(DeployMessage):
-
-    def __init__(self, message=None):
-        super(DeployMessageLong, self).__init__()
-        self.type = 'deploy_long'
-        self.frame = self.__class__.__name__
-        self.format = []
-        self.format.extend([
-            {'name': 'frame_id', 'length': 2},
-            {'name': 'pod_id', 'length': 4},
-            {'name': 'mcc', 'length': 3},
-            {'name': 'mnc', 'length': 3},
-            {'name': 'voltage', 'length': 8},
-            {'name': 'n_towers', 'length': 1},
-            {'name': 'n_sensors', 'length': 2},
-            {'name': 'lac', 'length': 4},
-            {'name': 'cell_id', 'length': 8},
-            # {'name': 'rx_level', 'length': 2},  # Not implemented!
-            {'name': 'sid', 'length': 2}
-        ])
-
-    def tower_length(self):
-        return self.get_length('cell_id') + \
-            self.get_length('lac') + self.get_length('rx_level')
-
-    def create_fake_message(self, frame_id, notebook):
-        deploy_str = self.create_fake_header(frame_id, notebook)
-        import struct
-        from random import random, sample
-        from ..sensor import Sensor
-        mcc = 310
-        mnc = 26
-        lac = 802
-        cell_id = 10693
-        n_sensors = 3
-        n_towers = 1
-        rx_level = 99
-        voltage = struct.pack(
-            '<f',
-            float(3.6 + random() / 2)).encode('hex').zfill(
-            self.get_length('voltage'))
-        sensors = [Sensor.objects()[i] for i in sorted(
-            sample(range(Sensor.objects().count()), n_sensors)
-        )]
-        deploy_str += ('%i' % int(mcc)).zfill(self.get_length('mcc'))
-        deploy_str += ('%i' % int(mnc)).zfill(self.get_length('mnc'))
-        deploy_str += voltage
-        deploy_str += ('%x' % int(n_towers)).zfill(
-            self.get_length('n_towers'))
-        deploy_str += ('%x' % int(n_sensors)).zfill(
-            self.get_length('n_sensors'))
-        deploy_str += ('%x' % int(lac)).zfill(self.get_length('lac'))
-        deploy_str += ('%x' % int(cell_id)).zfill(
-            self.get_length('cell_id'))
-        deploy_str += ''.join(
-            [('%x' % int(x)).zfill(self.SID_LENGTH) for x in
-                [str(sensor.sid) for sensor in sensors]])
-        return deploy_str
