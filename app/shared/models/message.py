@@ -4,7 +4,7 @@ import datetime
 from messages.invalid_message import InvalidMessage, UnknownMessage
 from messages.status_message import StatusMessage
 from messages.data_messages import DataMessage
-from messages.deploy_messages import DeployMessage, DeployMessageLong
+from messages.deploy_messages import DeployMessage
 
 
 class NewMessageObject(object):
@@ -127,28 +127,27 @@ class Message(db.Document):
         to obtain a single message object
 
         """
-        from random import choice, randint
+        from random import choice
         from faker import Faker
         from .notebook import Notebook
         fake = Faker()
-        # fake.seed(3123)
         fake_messages = []
         n_notebooks = Notebook.objects().count()
         for i in range(count):
             try:
                 if n_notebooks > 0:
-                    notebook = Notebook.objects()[randint(
-                        0, n_notebooks - 1)]
+                    notebook = choice(Notebook.objects())
                 else:
                     notebook = Notebook.generate_fake(1)[0]
             except:
                 return 'Error: No Notebook objects defined'
             if frame_id is None:
-                frame = choice(Message.FRAMES.keys())
-            else:
-                frame = frame_id
-            obj = NewMessageObject.create(Message.FRAMES[frame])
-            message_str = obj.create_fake_message(frame, notebook)
+                frame_id = choice(Message.FRAMES.keys())
+            # Create the actual fake message using the object-specific
+            # create_fake_message function
+            obj = NewMessageObject.create(Message.FRAMES[frame_id])
+            message_str = obj.create_fake_message(frame_id, notebook)
+            # Create fake message instance
             message = Message(
                 message_id=str(fake.random_int(min=100000, max=100000000)),
                 number=notebook.pod.number,
