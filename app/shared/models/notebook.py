@@ -78,28 +78,6 @@ class Notebook(db.Document):
         self.observations = Data.objects(notebook=self).count()
         self.save()
 
-    @property
-    def address(self):
-        if not self.address:
-            # Import Google API object
-            from . import g
-            self.address = g.geocode(location=self.location)
-            self.save()
-            return self.address
-        else:
-            return self.address
-
-    @property
-    def elevation(self):
-        if not self.elevation:
-            # Import Google API object
-            from . import g
-            self.elevation = g.elevation(location=self.location)
-            self.save()
-            return self.elevation
-        else:
-            return self.elevation
-
     def xls(self, filename=None):
         import xlsxwriter
         from .data import Data

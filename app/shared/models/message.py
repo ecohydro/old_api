@@ -91,6 +91,10 @@ class Message(db.Document):
     def send_message(number=None, content=None):
         """ Send a message to the Twilio client for testing purposes.
         Uses twilio authentication and account information
+
+        :param number: The 'from' phone number for this message
+        :param content: The message content
+
         Returns a twilio message object.
 
         """
@@ -176,7 +180,10 @@ class Message(db.Document):
         raise NotImplementedError
 
     def get_frame_id(self):
-        """ Return the frame_id of a message, based on message content
+        """
+
+        Return the frame_id of a message, based on message content
+
         """
         try:
             return int(self.message_content[0:2], 16)
@@ -184,7 +191,8 @@ class Message(db.Document):
             return 9999
 
     def get_type(self):
-        """ Return the message type, based on the frame_id
+        """ 
+        Return the message type, based on the frame_id
         """
         try:
             return Message.FRAMES[self.get_frame_id()]
