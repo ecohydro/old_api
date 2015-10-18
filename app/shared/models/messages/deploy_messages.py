@@ -42,7 +42,7 @@ class DeployMessage(Message):
         """
         deploy_str = self.create_fake_header(frame_id, notebook)
         import struct
-        from random import random, choice
+        from random import random, sample
         from ..sensor import Sensor
         mcc = 310
         mnc = 26
