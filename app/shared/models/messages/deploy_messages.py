@@ -236,7 +236,7 @@ class DeployMessage(Message):
         if self.status is not 'invalid':
             try:
                 # Using Google API object
-                location = g.tower_locate(list(self.make_tower()))
+                location = g.tower_locate([self.make_tower()])
                 elevation = g.elevation(location)
                 address = g.geocode(location)
             except:
