@@ -7,7 +7,7 @@ from .posts import post_process_message
 from flask.ext.pymongo import PyMongo
 # from flask.ext.bootstrap import Bootstrap
 from eve_mongoengine import EveMongoengine
-from shared.models import db, login_manager
+from shared.models import db, login_manager, g
 from shared.utils import InvalidMessageException
 from slacker import Slacker
 
@@ -75,6 +75,9 @@ def create_app(config_name):
     )
     if config_name is 'testing':
         db.init_app(app)
+
+    # Initialize the GoogleAPI object (for Google API functions)
+    g.init_app(app)
 
     # Initialize EveMongoEngine (for setting up resources)
     eve_mongo.init_app(app)

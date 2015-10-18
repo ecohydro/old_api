@@ -1,13 +1,10 @@
 
-
 class GoogleAPI(object):
     """
     GoogleAPI object for accessing google API functions.
 
     """
-    def __init__(self):
-        # Use the current flask app to get app-specific config:
-        from flask import current_app as app
+    def init_app(self, app):
         # Initialize this class using the app's Google API Key.
         self.api_key = app.config['GOOGLE_API_KEY']
 
@@ -119,9 +116,9 @@ class GoogleAPI(object):
         import json
         import requests
         baseurl = 'https://www.googleapis.com/geolocation/v1/geolocate?key='
-        url = baseurl + api_key
+        url = baseurl + self.api_key
         headers = {'content-type': 'application/json'}
-        data = {'cellTowers': towers}
+        data = {'cellTowers': tower}
         response = requests.post(
             url,
             data=json.dumps(data),
