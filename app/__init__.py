@@ -3,18 +3,18 @@ import os
 from basicauth import decode
 from eve import Eve
 from flask import jsonify
-from .posts import post_process_message, post_pod_create_qr
+from .posts import post_process_message
 from flask.ext.pymongo import PyMongo
-from flask.ext.bootstrap import Bootstrap
+# from flask.ext.bootstrap import Bootstrap
 from eve_mongoengine import EveMongoengine
-from shared.models import db, login_manager
+from shared.models import db, login_manager, g
 from shared.utils import InvalidMessageException
 from slacker import Slacker
 
 slack = Slacker(os.getenv('SLACK_API_TOKEN'))
 pymongo = PyMongo()
 eve_mongo = EveMongoengine()
-bootstrap = Bootstrap()
+# bootstrap = Bootstrap()
 
 # Create an rq queue from rq and worker.py:
 from rq import Queue
@@ -28,7 +28,12 @@ mqtt_q = Queue(connection=conn)  # This is the queue for MQTT pubs
 
 
 def create_app(config_name):
+    """
 
+
+
+
+    """
     from config import config
 
     app = Eve(
@@ -54,13 +59,6 @@ def create_app(config_name):
         print "setting up testing stuff"
         pymongo.init_app(app, config_prefix='PYMONGO')
 
-    # app.register_blueprint(
-    #     rq_dashboard.blueprint, url_prefix='/rq_dashboard'
-    # )
-
-    # Initialize bootstrap (for evedocs)
-    bootstrap.init_app(app)
-
     # Initialize MongoEngine (for all the mongo goodness)
     from mongoengine import connect
     host = config[config_name]().MONGODB_SETTINGS['HOST']
@@ -70,6 +68,9 @@ def create_app(config_name):
     )
     if config_name is 'testing':
         db.init_app(app)
+
+    # Initialize the GoogleAPI object (for Google API functions)
+    g.init_app(app)
 
     # Initialize EveMongoEngine (for setting up resources)
     eve_mongo.init_app(app)
@@ -267,26 +268,6 @@ def create_app(config_name):
     def loader():
         return 'loaderio-7e21270bc3a54a888c6b5d3ad8cb3b2c'
 
-    # BEFORE INSERT METHODS
-    def before_insert_pods(documents):
-        pass
-
-    # app.on_post_POST functions:
-    # These functions prepare gateway-specific responses to the client
-    def after_POST_pods_callback(request, r):
-        if r.status_code is 201:
-            resp = json.loads(r.get_data())
-            if resp[app.config['STATUS']] is not app.config['STATUS_ERR']:
-                objId = str(resp[app.config['ITEM_LOOKUP_FIELD']])
-                pod = Pod.objects(id=objId).first()
-                post_q.enqueue(post_pod_create_qr, pod)
-            else:
-                app.logger.error('Pod not posted to API')
-                raise InvalidMessageException(
-                    'Pod not posted to API',
-                    status_code=400,
-                    payload=resp)
-
     # Do this one last...
     def after_POST_callback(res, request, r):
         print r.status_code
@@ -299,15 +280,15 @@ def create_app(config_name):
             resp = json.loads(r.get_data())
             if resp[app.config['STATUS']] != app.config['STATUS_ERR']:
                 app.logger.debug(json.dumps(resp))
-                objId = str(resp[app.config['ITEM_LOOKUP_FIELD']])
+                obj_id = str(resp[app.config['ITEM_LOOKUP_FIELD']])
                 if res is 'twiliomessage':
-                    message = TwilioMessage.objects(id=objId).first()
+                    message = TwilioMessage.objects(id=obj_id).first()
                 elif res is 'pulsepimessage':
-                    message = PulsePiMessage.objects(id=objId).first()
+                    message = PulsePiMessage.objects(id=obj_id).first()
                 elif res is 'smssyncmessage':
-                    message = SMSSyncMessage.objects(id=objId).first()
+                    message = SMSSyncMessage.objects(id=obj_id).first()
                 else:
-                    message = Message.objects(id=objId).first()
+                    message = Message.objects(id=obj_id).first()
                 # Assign the message frame id:
                 app.logger.debug(
                     "MessageLog: parsing message from %s" % message.source
@@ -333,8 +314,6 @@ def create_app(config_name):
                     'MessageLog: Message not posted to API',
                     status_code=400, payload=resp)
 
-    app.on_insert_pods += before_insert_pods
-    app.on_post_POST_pods += after_POST_pods_callback
     app.on_post_POST += after_POST_callback
     app.on_pre_GET += pre_GET
 

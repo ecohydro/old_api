@@ -11,6 +11,13 @@ class DataMessage(Message):
             self.init(message=message)
 
     def create_fake_message(self, frame_id, notebook):
+        """
+        Create fake message content for Data messages
+
+        :param frame_id: Should always be 2
+        :param notebook: The fake notebook used to make the data
+
+        """
         data_str = self.create_fake_header(frame_id, notebook)
         from random import randint, random
         from time import time

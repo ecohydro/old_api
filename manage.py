@@ -16,7 +16,7 @@ if os.path.exists('.env'):
             os.environ[var[0]] = var[1]
 
 from app import create_app, eve_mongo, pymongo, slack
-from app.shared.models import db
+from app.shared.models import db, g
 
 # Import Models for MongoEngine
 from app.shared.models.user import User
@@ -50,7 +50,8 @@ def make_shell_context():
         eve_mongo=eve_mongo,
         NewMessage=NewMessage,
         slack=slack,
-        mqttc=mqttc
+        mqttc=mqttc,
+        g=g
     )
 
 manager.add_command("shell", Shell(make_context=make_shell_context))
