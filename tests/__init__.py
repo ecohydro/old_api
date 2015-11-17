@@ -147,6 +147,12 @@ class TestMinimal(pea.TestCase):
         self.Notebook = models.Notebook
         self.Sensor = models.Sensor
         self.Data = models.Data
+        self.Pod.drop_collection()
+        self.User.drop_collection()
+        self.Message.drop_collection()
+        self.Notebook.drop_collection()
+        self.Sensor.drop_collection()
+        self.Data.drop_collection()
         self.bulk_insert()
 
     def dropDB(self):
@@ -154,6 +160,12 @@ class TestMinimal(pea.TestCase):
         self.connection = MongoClient(
             settings['HOST'],
             settings['PORT'])
+        self.Pod.drop_collection()
+        self.User.drop_collection()
+        self.Message.drop_collection()
+        self.Notebook.drop_collection()
+        self.Sensor.drop_collection()
+        self.Data.drop_collection()
         self.connection.drop_database(settings['DB'])
         self.connection.close()
 
@@ -162,10 +174,9 @@ class TestBase(TestMinimal):
 
     def setUp(self):
         super(TestBase, self).setUp()
+        print "Setting up TestBase"
         self.pymongo = self.app.extensions['pymongo']['PYMONGO'][0]
         self.db = self.app.extensions['mongoengine']
-        if not self.connection.host is 'localhost':
-            assert 0, "Must run tests on localhost!"
 
     def bulk_insert(self):
         self.User.generate_fake(known_users)

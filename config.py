@@ -45,6 +45,8 @@ class Config:
     auth = HMACAuth
     API_NAME = 'PulsePod API, Version 1.0'
     PREFERRED_URL_SCHEME = 'https'
+    # Set the Schema Endpoint:
+    SCHEMA_ENDPOINT = 'schema'
     # APP SECRET KEYS:
     SECRET_KEY = os.environ.get('APP_SECRET')
     GATEWAY_SECRET = os.environ.get('GATEWAY_SECRET')
@@ -174,13 +176,13 @@ class TestingConfig(Config):
     MONGO_PASSWORD = ''
     MONGO_PORT = 27017
     MONGO_USERNAME = ''
-    PYMONGO_DBNAME = 'testing'
-    PYMONGO_HOST = 'localhost'
-    PYMONGO_PASSWORD = ''
-    PYMONGO_PORT = 27017
-    PYMONGO_USERNAME = ''
+    # PYMONGO_DBNAME = 'testing'
+    # PYMONGO_HOST = 'localhost'
+    # PYMONGO_PASSWORD = ''
+    # PYMONGO_PORT = 27017
+    # PYMONGO_USERNAME = ''
     CLOUDMQTT_URL = 'mqtt://localhost:1883'
-    # PYMONGO_HOST = make_mongo_uri()
+    PYMONGO_HOST = make_mongo_uri()
     MONGODB_SETTINGS = {
         "DB": 'testing',
         "HOST": 'localhost',

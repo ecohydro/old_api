@@ -218,6 +218,9 @@ def create_app(config_name):
         allowed_roles=['admin']
     )
 
+    # Now we need to re-initialize the schema endpoint:
+    app._init_schema_endpoint()
+
     # Add API blueprints:
     # from eve_docs import eve_docs
     # app.register_blueprint(eve_docs, url_prefix='/docs')
