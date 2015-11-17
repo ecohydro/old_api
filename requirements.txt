@@ -21,7 +21,7 @@ cffi==1.1.2
 coverage==3.7.1
 cryptography==0.9.1
 enum34==1.0.4
-git+https://github.com/MongoEngine/eve-mongoenginemongoengine
+git+https://github.com/MongoEngine/eve-mongoengine
 git+https://github.com/kcaylor/faker.git
 flake8==2.1.0
 flask-mongoengine==0.7.0
