@@ -1,6 +1,5 @@
 from . import db
 import datetime
-from flask import current_app
 
 
 class Pod(db.Document):
@@ -94,6 +93,3 @@ class Pod(db.Document):
             except:
                 "Pod save failed"
         return fake_pods
-
-    def create_qr(self):
-        raise NotImplementedError

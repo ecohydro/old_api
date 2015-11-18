@@ -63,24 +63,6 @@ class TestMessages(TestBase):
             "%a, %d %b %Y %H:%M:%S GMT"
         )
 
-    def test_generate_one_fake_deploy_long_message(self):
-        When.I_generate_a_fake_message_with(count=1, frame_id=4)
-        And.I_init_my_message_object()
-        Then.my_message_object_type_returns('deploy_long')
-        And.my_Message_objects_has_length(1)
-        And.my_message_object_frame_id_returns(4)
-        And.my_messageMessage_frame_is('DeployMessageLong')
-        And.my_MessageObject_format_length_is(37)
-        And.my_MessageObject_header_length_is(6)
-        And.my_MessageObject_format_items_are_only(
-            ['frame_id', 'pod_id', 'mcc', 'mnc', 'voltage',
-             'n_towers', 'n_sensors', 'lac', 'cell_id', 'sid']
-        )
-        And.my_MessageObject_raises_StopIterations_when_value_not_in_format()
-        And.my_MessageObject_get_now_returns_format(
-            "%a, %d %b %Y %H:%M:%S GMT"
-        )
-
     def test_generate_a_ton_of_fake_messages(self):
         When.I_generate_a_fake_message_with(count=100)
         Then.my_Message_objects_has_length(100)
@@ -96,10 +78,6 @@ class TestMessages(TestBase):
         self.assertRaises(
             AssertionError,
             lambda: NewMessageObject.create(message_type=None)
-        )
-        self.assertTrue(
-            NewMessageObject.create(message_type='deploy_long').frame ==
-            'DeployMessageLong'
         )
         self.assertTrue(
             NewMessageObject.create(message_type='invalid').frame ==

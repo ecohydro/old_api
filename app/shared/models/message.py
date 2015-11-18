@@ -4,7 +4,7 @@ import datetime
 from messages.invalid_message import InvalidMessage, UnknownMessage
 from messages.status_message import StatusMessage
 from messages.data_messages import DataMessage
-from messages.deploy_messages import DeployMessage, DeployMessageLong
+from messages.deploy_messages import DeployMessage
 
 
 class NewMessageObject(object):
@@ -18,8 +18,6 @@ class NewMessageObject(object):
             return StatusMessage()
         if message_type == "deploy":
                 return DeployMessage()
-        if message_type == "deploy_long":
-                return DeployMessageLong()
         if message_type == "invalid":
             return InvalidMessage()
         return UnknownMessage()
@@ -34,7 +32,6 @@ class Message(db.Document):
         1: 'status',
         2: 'data',
         3: 'deploy',
-        4: 'deploy_long',
         9999: 'invalid'
     }
 
@@ -94,6 +91,10 @@ class Message(db.Document):
     def send_message(number=None, content=None):
         """ Send a message to the Twilio client for testing purposes.
         Uses twilio authentication and account information
+
+        :param number: The 'from' phone number for this message
+        :param content: The message content
+
         Returns a twilio message object.
 
         """
@@ -130,28 +131,27 @@ class Message(db.Document):
         to obtain a single message object
 
         """
-        from random import choice, randint
+        from random import choice
         from faker import Faker
         from .notebook import Notebook
         fake = Faker()
-        # fake.seed(3123)
         fake_messages = []
         n_notebooks = Notebook.objects().count()
         for i in range(count):
             try:
                 if n_notebooks > 0:
-                    notebook = Notebook.objects()[randint(
-                        0, n_notebooks - 1)]
+                    notebook = choice(Notebook.objects())
                 else:
                     notebook = Notebook.generate_fake(1)[0]
             except:
                 return 'Error: No Notebook objects defined'
             if frame_id is None:
-                frame = choice(Message.FRAMES.keys())
-            else:
-                frame = frame_id
-            obj = NewMessageObject.create(Message.FRAMES[frame])
-            message_str = obj.create_fake_message(frame, notebook)
+                frame_id = choice(Message.FRAMES.keys())
+            # Create the actual fake message using the object-specific
+            # create_fake_message function
+            obj = NewMessageObject.create(Message.FRAMES[frame_id])
+            message_str = obj.create_fake_message(frame_id, notebook)
+            # Create fake message instance
             message = Message(
                 message_id=str(fake.random_int(min=100000, max=100000000)),
                 number=notebook.pod.number,
@@ -180,7 +180,10 @@ class Message(db.Document):
         raise NotImplementedError
 
     def get_frame_id(self):
-        """ Return the frame_id of a message, based on message content
+        """
+
+        Return the frame_id of a message, based on message content
+
         """
         try:
             return int(self.message_content[0:2], 16)
@@ -188,7 +191,8 @@ class Message(db.Document):
             return 9999
 
     def get_type(self):
-        """ Return the message type, based on the frame_id
+        """ 
+        Return the message type, based on the frame_id
         """
         try:
             return Message.FRAMES[self.get_frame_id()]

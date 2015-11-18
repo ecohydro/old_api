@@ -82,8 +82,9 @@ class Notebook(db.Document):
         import xlsxwriter
         from .data import Data
         from flask import current_app as app
+        # Where to put this new file?
         xlsx_path = app.config['XLSX_PATH']
-        # Go get all the data for this notebook
+        # Go get all the data for this notebook (pre-cache??)
         data = Data.objects(notebook=self.id)
         # Initalize the workbook
         if not filename:
@@ -228,9 +229,14 @@ class Notebook(db.Document):
         workbook.close()
 
         # Put the file on Amazon...?
+        # [YES]
         # Why? Just que it and re-generate on each request...
+        # [NO. THIS TAKES TOO LONG]
         # Or write it to Amazon, and then re-write on each new post.
+        # [NO. THIS CAUSES TO MUCH REPLICATION. SHOULD ONLY ADD NEW DATA]
         # Or write it to the User's dropbox account if they've linked?
+        # [MAYBE]
+        # How to handle this?
 
     @staticmethod
     def generate_fake(count=100):
